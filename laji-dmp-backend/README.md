@@ -1,5 +1,5 @@
 Setup:
-1. install ghc, cabal, stack
+1. install ghc, cabal
 2. clone the repo
 3. `cabal update && cabal build`
 4. `cabal run`
