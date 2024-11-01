@@ -1,0 +1,28 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Main</title>
+  <script src="../dist/elm.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="myapp"></div>
+  <script>
+    var storedData = localStorage.getItem('login');
+    let flags = storedData ? JSON.parse(storedData) : null;
+    var app = Elm.Main.init({
+      node: document.getElementById('myapp'),
+      flags: flags
+    });
+    app.ports.updateLocalStorage.subscribe(message => {
+      localStorage.setItem("login", JSON.stringify(message));
+    });
+  </script>
+</body>
+</html>
+ 
