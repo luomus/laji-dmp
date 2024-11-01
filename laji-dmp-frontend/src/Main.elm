@@ -16,6 +16,7 @@ import Pages.DmpNew
 import List exposing (map)
 import Http
 import User exposing (LoginSession(..))
+import Views.Navigation
 
 -- Loosely based on https://github.com/rtfeldman/elm-spa-example
 
@@ -126,13 +127,21 @@ mapDocument f document =
 
 view : Model -> Browser.Document Msg
 view model =
-  case model.routeModel of
-    NoModel -> { title = "", body = [] }
-    FrontModel m -> mapDocument (\msg -> GotFrontMsg msg) (Pages.Front.view m)
-    DmpIndexModel m -> mapDocument (\msg -> GotDmpIndexMsg msg) (Pages.DmpIndex.view m)
-    DmpInfoModel m -> mapDocument (\msg -> GotDmpInfoMsg msg) (Pages.DmpInfo.view m)
-    DmpEditModel m -> mapDocument (\msg -> GotDmpEditMsg msg) (Pages.DmpEdit.view m)
-    DmpNewModel m -> mapDocument (\msg -> GotDmpNewMsg msg) (Pages.DmpNew.view m)
+  let
+    viewPage toMsg subView =
+      { title = subView.title, body =
+        [ Views.Navigation.navigation
+        , Html.map (\msg -> toMsg msg) subView.body
+        ]
+      }
+  in
+    case model.routeModel of
+      NoModel -> { title = "", body = [] }
+      FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
+      DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel
+      DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view subModel
+      DmpEditModel subModel -> viewPage GotDmpEditMsg <| Pages.DmpEdit.view subModel
+      DmpNewModel subModel -> viewPage GotDmpNewMsg <| Pages.DmpNew.view subModel
 
 main : Program Json.Decode.Value Model Msg
 main =

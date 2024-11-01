@@ -5,6 +5,7 @@ import Html.Attributes exposing (href)
 import Html exposing (a)
 import Html exposing (text)
 import Views.Navigation exposing (navigation)
+import Html exposing (Html)
 
 type alias Model = {}
 
@@ -17,8 +18,8 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   (model, Cmd.none)
 
-view : Model -> Browser.Document Msg
+view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp New View"
-  , body = [ navigation ]
+  , body = text "DMP New"
   }

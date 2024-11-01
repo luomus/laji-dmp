@@ -6,6 +6,8 @@ import Html exposing (text)
 import Views.Navigation exposing (navigation)
 import Html exposing (ul)
 import Html exposing (li)
+import Html exposing (Html)
+import Html exposing (div)
 
 type alias Model = {}
 
@@ -18,12 +20,11 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   (model, Cmd.none)
 
-view : Model -> Browser.Document Msg
+view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp Index View"
-  , body =
-    [ navigation
-    , ul []
+  , body = div []
+    [ ul []
       [ li []
         [ a [href "/dmp/123"] [text "DMP 123"] ]
       ]
