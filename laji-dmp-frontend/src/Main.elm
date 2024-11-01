@@ -131,6 +131,12 @@ view model =
     viewPage toMsg subView =
       { title = subView.title, body =
         [ Views.Navigation.navigation
+        , Html.div []
+          [ Html.text <| case model.loginSession of
+            LoggedIn token person -> person.id ++ " " ++ person.fullName
+            NotLoggedIn -> "Not logged in"
+            LoadingPerson token -> "Loading person..."
+          ]
         , Html.map (\msg -> toMsg msg) subView.body
         ]
       }
