@@ -14,6 +14,7 @@ import Servant ( Get
                )
 import Servant.Server (Handler, Server, Application, serve)
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Cors
 import Network.Wai (Application, responseLBS, Request (pathInfo))
 import Network.HTTP.Types (status404)
 import Control.Monad.IO.Class (liftIO)
@@ -76,8 +77,14 @@ apiServer conn =
 server :: Connection -> Server APIWithSwagger
 server conn = swaggerSchemaUIServer apiSwagger :<|> apiServer conn
 
+customCorsPolicy :: CorsResourcePolicy
+customCorsPolicy = simpleCorsResourcePolicy
+  { corsOrigins = Just (["http://localhost:8000"], True)
+  , corsRequestHeaders = ["Content-Type"]
+  }
+
 app :: Connection -> Application
-app conn = serve (Proxy :: Proxy APIWithSwagger) (server conn)
+app conn = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIWithSwagger) (server conn)
 
 main :: IO ()
 main = do
