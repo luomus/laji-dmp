@@ -17,6 +17,7 @@ import List exposing (map)
 import Http
 import User exposing (LoginSession(..))
 import Views.Navigation
+import Html.Events
 
 -- Loosely based on https://github.com/rtfeldman/elm-spa-example
 
@@ -45,6 +46,8 @@ type Msg
   | GotDmpEditMsg Pages.DmpEdit.Msg
   | GotDmpNewMsg Pages.DmpNew.Msg
   | GotPerson String (Result Http.Error User.PersonResponse)
+  | OnDeleteToken String
+  | DeletedToken (Result Http.Error String)
 
 init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
@@ -110,20 +113,25 @@ update msg model =
         case res of
           Ok person ->
             let session = LoggedIn token person
-            in ( Debug.log "model after login" { model | loginSession = session }, updateLocalStorage <| User.encodeLogin session )
-          Err e -> ( { model | loginSession = NotLoggedIn }, Cmd.none )
+            in ( { model | loginSession = session }, updateLocalStorage <| User.encodeLogin session )
+          Err e ->
+            let _ = Debug.log "Unable to get person" e
+            in ( { model | loginSession = NotLoggedIn }, updateLocalStorage <| User.encodeLogin NotLoggedIn)
+      (OnDeleteToken token, _) ->
+        ({ model | loginSession = DeletingToken token }, User.deleteToken token DeletedToken)
+      (DeletedToken res, _) ->
+        case res of
+          Ok str ->
+            let session = NotLoggedIn
+            in ( { model | loginSession = session }, updateLocalStorage <| User.encodeLogin session)
+          Err e ->
+            let _ = Debug.log "Unable to delete person token" e
+            in (model, Cmd.none)
       (_, _) -> (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
   Sub.none
-
--- https://github.com/Janiczek/browser-extra/blob/1.1.0/src/Browser/Extra.elm
-mapDocument : (a -> b) -> Browser.Document a -> Browser.Document b
-mapDocument f document =
-    { title = document.title
-    , body = List.map (Html.map f) document.body
-    }
 
 view : Model -> Browser.Document Msg
 view model =
@@ -132,10 +140,14 @@ view model =
       { title = subView.title, body =
         [ Views.Navigation.navigation
         , Html.div []
-          [ Html.text <| case model.loginSession of
-            LoggedIn token person -> person.id ++ " " ++ person.fullName
-            NotLoggedIn -> "Not logged in"
-            LoadingPerson token -> "Loading person..."
+          [ case model.loginSession of
+            LoggedIn token person -> Html.div []
+              [ text <| person.id ++ " " ++ person.fullName
+              , Html.button [ Html.Events.onClick <| OnDeleteToken token] [Html.text "Log out"]
+              ]
+            NotLoggedIn -> Html.text "Not logged in"
+            LoadingPerson token -> Html.text "Logging in..."
+            DeletingToken token -> Html.text "Logging out..."
           ]
         , Html.map (\msg -> toMsg msg) subView.body
         ]

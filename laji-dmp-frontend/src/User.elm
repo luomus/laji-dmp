@@ -19,6 +19,7 @@ type alias PersonResponse =
 type LoginSession
   = NotLoggedIn
   | LoadingPerson String
+  | DeletingToken String
   | LoggedIn String PersonResponse
 
 encodeLogin : LoginSession -> Json.Encode.Value
@@ -27,6 +28,8 @@ encodeLogin loginSession =
     LoggedIn token personResponse ->
       Json.Encode.string token
     LoadingPerson token ->
+      Json.Encode.string token
+    DeletingToken token ->
       Json.Encode.string token
     NotLoggedIn ->
       Json.Encode.null
@@ -57,4 +60,16 @@ getPerson token msg =
   Http.get
     { url = "https://dev.laji.fi/api/person/" ++ token
     , expect = Http.expectJson msg personDecoder
+    }
+
+deleteToken : String -> (Result Http.Error String -> msg) -> Cmd msg
+deleteToken token msg =
+  Http.request
+    { method = "DELETE"
+    , headers = []
+    , url = "https://dev.laji.fi/api/person-token/" ++ token
+    , body = Http.emptyBody
+    , expect = Http.expectString msg
+    , timeout = Nothing
+    , tracker = Nothing
     }
