@@ -20,7 +20,7 @@ import Database.SQLite.Simple
 import Data.Swagger
 
 data DataManagementPlan = DataManagementPlan
-  { plan_id :: Int,
+  { plan_id :: Maybe Int,
     test_field :: String
   } deriving (Generic, Show)
 
@@ -48,7 +48,7 @@ getDataManagementPlans conn = query_ conn
   "SELECT plan_id, test_field FROM data_management_plans"
 
 createDataManagementPlan :: Connection -> DataManagementPlan -> IO ()
-createDataManagementPlan conn plan = execute conn "INSERT INTO data_management_plans (test_field) VALUES (?)" ["asdfsdaf" :: String]
+createDataManagementPlan conn plan = execute conn "INSERT INTO data_management_plans (test_field) VALUES (?)" [test_field plan]
 
 getDataManagementPlan :: Connection -> Int -> IO [DataManagementPlan]
 getDataManagementPlan conn plan_id = query conn "SELECT * FROM data_management_plans WHERE plan_id = ?" [plan_id]

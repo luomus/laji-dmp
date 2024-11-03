@@ -68,9 +68,9 @@ changeRouteTo maybeRoute model =
       Nothing -> ( model, Cmd.none )
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
       Just DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg Pages.DmpIndex.init
-      Just (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg Pages.DmpInfo.init
+      Just (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
       Just (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg Pages.DmpEdit.init
-      Just DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg Pages.DmpNew.init
+      Just DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of
           (Just token, next) ->

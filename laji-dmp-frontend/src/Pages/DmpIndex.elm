@@ -11,38 +11,16 @@ import Html exposing (li)
 import Html exposing (Html)
 import Html exposing (div)
 import Config exposing (config)
-import Json.Decode
-import Json.Decode.Pipeline
 import Array
 import Platform.Cmd as Cmd
 import Platform.Cmd as Cmd
+import DmpApi exposing (DmpList)
+import DmpApi exposing (getDmpList)
+import DmpApi exposing (DataManagementPlan)
 
-type Model = Loading | Error | DmpList DmpListResponse
+type Model = Loading | Error | DmpList DmpList
 
-type Msg = GotDmpListResponse (Result Http.Error DmpListResponse)
-
-type alias DmpListResponseElement =
-  { id: Int
-  , testField: String
-  }
-
-type alias DmpListResponse = Array.Array DmpListResponseElement
-
-dmpListElementDecoder : Json.Decode.Decoder DmpListResponseElement
-dmpListElementDecoder =
-  Json.Decode.succeed DmpListResponseElement
-    |> Json.Decode.Pipeline.required "plan_id" Json.Decode.int
-    |> Json.Decode.Pipeline.required "test_field" Json.Decode.string
-
-dmpListDecoder : Json.Decode.Decoder DmpListResponse
-dmpListDecoder = Json.Decode.array dmpListElementDecoder
-
-getDmpList : (Result Http.Error DmpListResponse -> msg) -> Cmd msg
-getDmpList msg =
-  Http.get
-    { url = config.dmpApiUrl ++ "dmp"
-    , expect = Http.expectJson msg dmpListDecoder
-    }
+type Msg = GotDmpListResponse (Result Http.Error DmpList)
 
 init : ( Model, Cmd Msg )
 init = (Loading, getDmpList GotDmpListResponse)
@@ -57,9 +35,12 @@ update msg model =
           let _ = Debug.log "Error loading DMP list" e
           in (Error, Cmd.none)
 
-dmpListElementView : DmpListResponseElement -> Html msg
+dmpListElementView : DataManagementPlan -> Html msg
 dmpListElementView elem =
-  li [] [ a [href <| "dmp/" ++ String.fromInt elem.id] [text elem.testField] ]
+  case elem.id of
+    Just id ->
+      li [] [ a [href <| "dmp/" ++ String.fromInt id] [text elem.testField] ]
+    Nothing -> li [] [text "Error: expected DMP to have an id"]
 
 view : Model -> { title : String, body : Html Msg }
 view model =

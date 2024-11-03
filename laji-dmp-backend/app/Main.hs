@@ -80,7 +80,10 @@ server conn = swaggerSchemaUIServer apiSwagger :<|> apiServer conn
 customCorsPolicy :: CorsResourcePolicy
 customCorsPolicy = simpleCorsResourcePolicy
   { corsOrigins = Just (["http://localhost:8000"], True)
-  , corsRequestHeaders = ["Content-Type"]
+  , corsRequestHeaders = ["Content-Type", "Authorization"]
+  , corsMethods = ["GET", "POST", "OPTIONS", "PUT", "DELETE"]
+  , corsRequireOrigin = False
+  , corsIgnoreFailures = False
   }
 
 app :: Connection -> Application
