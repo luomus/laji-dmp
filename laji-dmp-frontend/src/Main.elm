@@ -13,13 +13,10 @@ import Pages.DmpIndex
 import Pages.DmpInfo
 import Pages.DmpEdit
 import Pages.DmpNew
-import List exposing (map)
 import Http
 import User exposing (LoginSession(..))
 import Views.Navigation
 import Html.Events
-
--- Loosely based on https://github.com/rtfeldman/elm-spa-example
 
 port updateLocalStorage : Json.Encode.Value -> Cmd msg
 
@@ -69,7 +66,7 @@ changeRouteTo maybeRoute model =
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
       Just DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg Pages.DmpIndex.init
       Just (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
-      Just (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg Pages.DmpEdit.init
+      Just (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
       Just DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of

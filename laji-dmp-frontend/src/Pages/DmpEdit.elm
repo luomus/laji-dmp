@@ -1,25 +1,21 @@
 module Pages.DmpEdit exposing (..)
 
-import Browser
-import Html.Attributes exposing (href)
-import Html exposing (a)
-import Html exposing (text)
-import Views.Navigation exposing (navigation)
 import Html exposing (Html)
+import Browser.Navigation as Nav
+import Views.DmpEditor exposing (EditorMode(..))
 
-type alias Model = {}
+type alias Model = Views.DmpEditor.Model
 
-type Msg = Empty
+type alias Msg = Views.DmpEditor.Msg
 
-init : ( Model, Cmd Msg )
-init = ({}, Cmd.none)
+init : Nav.Key -> String -> ( Model, Cmd Msg )
+init key id = Views.DmpEditor.init key <| Edit id
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
-  (model, Cmd.none)
+update = Views.DmpEditor.update
 
 view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp Edit View"
-  , body = text "DMP Edit"
+  , body = Views.DmpEditor.view model
   }

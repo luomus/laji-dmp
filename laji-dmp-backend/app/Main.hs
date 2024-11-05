@@ -54,9 +54,9 @@ handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "t
 type API =
   "dmp" :>
     (     Get '[JSON] [DataManagementPlan]
-    :<|>  ReqBody '[JSON] DataManagementPlan :> Put '[JSON] NoContent
+    :<|>  ReqBody '[JSON] DataManagementPlan :> Post '[JSON] NoContent
     :<|>  Capture "id" Int :> Get '[JSON] DataManagementPlan
-    :<|>  Capture "id" Int :> ReqBody '[JSON] DataManagementPlan :> Post '[JSON] NoContent
+    :<|>  Capture "id" Int :> ReqBody '[JSON] DataManagementPlan :> Put '[JSON] NoContent
     )
   :<|>  Raw
 

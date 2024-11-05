@@ -50,9 +50,21 @@ getDmp id msg =
 newDmp : DataManagementPlan -> (Result Http.Error String -> msg) -> Cmd msg
 newDmp dmp msg =
   Http.request
-    { method = "PUT"
+    { method = "POST"
     , headers = []
     , url = config.dmpApiUrl ++ "dmp"
+    , body = Http.jsonBody <| encodeDmp dmp
+    , expect = Http.expectString msg
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+editDmp : String -> DataManagementPlan -> (Result Http.Error String -> msg) -> Cmd msg
+editDmp id dmp msg =
+  Http.request
+    { method = "PUT"
+    , headers = []
+    , url = config.dmpApiUrl ++ "dmp/" ++ id
     , body = Http.jsonBody <| encodeDmp dmp
     , expect = Http.expectString msg
     , timeout = Nothing
