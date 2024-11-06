@@ -70,3 +70,15 @@ editDmp id dmp msg =
     , timeout = Nothing
     , tracker = Nothing
     }
+
+deleteDmp : String -> (Result Http.Error String -> msg) -> Cmd msg
+deleteDmp id msg =
+  Http.request
+    { method = "DELETE"
+    , headers = []
+    , url = config.dmpApiUrl ++ "dmp/" ++ id
+    , body = Http.jsonBody <| Json.Encode.null
+    , expect = Http.expectString msg
+    , timeout = Nothing
+    , tracker = Nothing
+    }

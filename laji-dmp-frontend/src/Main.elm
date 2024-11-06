@@ -19,6 +19,7 @@ import Views.Navigation
 import Html.Events
 
 port updateLocalStorage : Json.Encode.Value -> Cmd msg
+port toggleDialog : String -> Cmd msg
 
 type alias Model =
   { key: Nav.Key
@@ -103,7 +104,10 @@ update msg model =
       (GotDmpInfoMsg subMsg, DmpInfoModel mod) ->
         mapPageUpdate DmpInfoModel GotDmpInfoMsg (Pages.DmpInfo.update subMsg mod)
       (GotDmpEditMsg subMsg, DmpEditModel mod) ->
-        mapPageUpdate DmpEditModel GotDmpEditMsg (Pages.DmpEdit.update subMsg mod)
+        case subMsg of
+          Pages.DmpEdit.OnDelete -> (model, toggleDialog Pages.DmpEdit.deleteDialogId)
+          Pages.DmpEdit.OnCancelDelete -> (model, toggleDialog Pages.DmpEdit.deleteDialogId)
+          _ -> mapPageUpdate DmpEditModel GotDmpEditMsg (Pages.DmpEdit.update subMsg mod)
       (GotDmpNewMsg subMsg, DmpNewModel mod) ->
         mapPageUpdate DmpNewModel GotDmpNewMsg (Pages.DmpNew.update subMsg mod)
       (GotPerson token res, _) ->

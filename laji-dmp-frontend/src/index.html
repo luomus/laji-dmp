@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Main</title>
-  <script src="../dist/elm.js"></script>
+  <script src="/dist/elm.js"></script>
   <style>
     body {
       margin: 0;
@@ -19,8 +19,17 @@
       node: document.getElementById('myapp'),
       flags: flags
     });
+
     app.ports.updateLocalStorage.subscribe(message => {
       localStorage.setItem("login", JSON.stringify(message));
+    });
+    app.ports.toggleDialog.subscribe(id => {
+      const dialog = document.querySelector(`#${id}`)
+      if (dialog.open) {
+        dialog.close();
+      } else {
+        dialog.showModal();
+      }
     });
   </script>
 </body>

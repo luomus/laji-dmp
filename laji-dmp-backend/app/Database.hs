@@ -12,6 +12,7 @@ module Database
   , getDataManagementPlans
   , createDataManagementPlan
   , updateDataManagementPlan
+  , deleteDataManagementPlan
   ) where
 
 import Data.Aeson (ToJSON, FromJSON)
@@ -60,4 +61,7 @@ updateDataManagementPlan conn plan_id (DataManagementPlan _ test_field) =
   \SET test_field = ? \
   \WHERE plan_id = ? \
   \" (test_field, plan_id)
+
+deleteDataManagementPlan :: Connection -> Int -> IO [DataManagementPlan]
+deleteDataManagementPlan conn plan_id = query conn "DELETE FROM data_management_plans WHERE plan_id = ?" [plan_id]
 

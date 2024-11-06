@@ -10,7 +10,7 @@ import Servant ( Get
                , Proxy(..)
                , type (:>)
                , type (:<|>)
-               , (:<|>)(..), Put, Capture, JSON, Post, ReqBody, Raw, NoContent (..)
+               , (:<|>)(..), Put, Capture, JSON, Post, ReqBody, Raw, NoContent (..), Delete
                )
 import Servant.Server (Handler, Server, Application, serve)
 import Network.Wai.Handler.Warp (run)
@@ -48,6 +48,11 @@ handlerDmpPost conn plan_id plan = do
   liftIO $ updateDataManagementPlan conn plan_id plan
   return NoContent
 
+handlerDmpDelete :: Connection -> Int -> Handler NoContent
+handlerDmpDelete conn plan_id = do
+  liftIO $ deleteDataManagementPlan conn plan_id
+  return NoContent
+
 handlerNotFound :: Application
 handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "text/plain")] "404 - Route Not Found"
 
@@ -57,8 +62,9 @@ type API =
     :<|>  ReqBody '[JSON] DataManagementPlan :> Post '[JSON] NoContent
     :<|>  Capture "id" Int :> Get '[JSON] DataManagementPlan
     :<|>  Capture "id" Int :> ReqBody '[JSON] DataManagementPlan :> Put '[JSON] NoContent
+    :<|>  Capture "id" Int :> Delete '[JSON] NoContent
     )
-  :<|>  Raw
+  :<|> Raw
 
 type APIWithSwagger = SwaggerSchemaUI "swagger-ui" "swagger.json" :<|> API
 
@@ -71,6 +77,7 @@ apiServer conn =
   :<|>  handlerDmpPut   conn
   :<|>  handlerDmpGet   conn
   :<|>  handlerDmpPost  conn
+  :<|>  handlerDmpDelete  conn
   )
   :<|>  Tagged handlerNotFound
 
