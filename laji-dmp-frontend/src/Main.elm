@@ -17,6 +17,7 @@ import Http
 import User exposing (LoginSession(..))
 import Views.Navigation
 import Html.Events
+import Html.Attributes
 
 port updateLocalStorage : Json.Encode.Value -> Cmd msg
 port toggleDialog : String -> Cmd msg
@@ -139,18 +140,20 @@ view model =
   let
     viewPage toMsg subView =
       { title = subView.title, body =
-        [ Views.Navigation.navigation
-        , Html.div []
-          [ case model.loginSession of
-            LoggedIn token person -> Html.div []
-              [ text <| person.id ++ " " ++ person.fullName
-              , Html.button [ Html.Events.onClick <| OnDeleteToken token] [Html.text "Log out"]
-              ]
-            NotLoggedIn -> Html.text "Not logged in"
-            LoadingPerson token -> Html.text "Logging in..."
-            DeletingToken token -> Html.text "Logging out..."
+        [ Html.div [Html.Attributes.class "main"]
+          [ Views.Navigation.navigation
+          , Html.div []
+            [ case model.loginSession of
+              LoggedIn token person -> Html.div []
+                [ text <| person.id ++ " " ++ person.fullName
+                , Html.button [ Html.Events.onClick <| OnDeleteToken token] [Html.text "Log out"]
+                ]
+              NotLoggedIn -> Html.text "Not logged in"
+              LoadingPerson token -> Html.text "Logging in..."
+              DeletingToken token -> Html.text "Logging out..."
+            ]
+          , Html.map (\msg -> toMsg msg) subView.body
           ]
-        , Html.map (\msg -> toMsg msg) subView.body
         ]
       }
   in
