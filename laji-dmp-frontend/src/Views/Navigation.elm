@@ -17,6 +17,9 @@ import Routes exposing (Route)
 import Routes exposing (fromUrl)
 import Url exposing (Url)
 import Routes exposing (Route(..))
+import Routes exposing (DmpSubRoute(..))
+import Routes exposing (DmpElementSubRoute(..))
+import Html exposing (span)
 
 loginView : LoginSession -> (String -> msg) -> Html msg
 loginView loginSession deleteMsg =
@@ -31,18 +34,34 @@ loginView loginSession deleteMsg =
       DeletingToken token -> Html.text "Logging out..."
     ]
 
+breadcrumbs : Route -> Html msg
+breadcrumbs currentRoute =
+  let
+    link url desc = a [href url, class "breadcrumbs-element"] [text desc]
+    current desc = span [class "breadcrumbs-current"] [text desc]
+    sep = span [class "breadcrumbs-separator"] [text ">"]
+  in
+    div [class "breadcrumbs"] <| case currentRoute of
+      DmpRoute dmpRoute -> case dmpRoute of
+        DmpIndexRoute -> [current "Index"]
+        DmpNewRoute -> [link "/dmp" "Index", sep, current "New DMP"]
+        DmpElementRoute dmpElementRoute -> case dmpElementRoute of
+          DmpInfoRoute id -> [link "/dmp" "Index", sep, current <| "DMP " ++ id]
+          DmpEditRoute id -> [link "/dmp" "Index", sep, link ("/dmp/" ++ id) <| "DMP " ++ id, sep, current "Edit"]
+      _ -> []
+
 navigation : LoginSession -> Maybe Route -> (String -> msg) -> Html msg
-navigation loginSession currentRoute deleteMsg = 
+navigation loginSession maybeCurrentRoute deleteMsg = 
   let
     getLinkAttribs : String -> List (Html.Attribute msg)
     getLinkAttribs url =
       let
         activeLinkAttribs = [href url, class "nav-link nav-link-active"]
         defaultLinkAttribs = [href url, class "nav-link"]
-      in case currentRoute of
-        Just definitelyCurrentRoute -> case (Url.fromString <| "http://0.0.0.0" ++ url) of
+      in case maybeCurrentRoute of
+        Just currentRoute -> case (Url.fromString <| "http://0.0.0.0" ++ url) of
           Just definitelyUrl -> case fromUrl definitelyUrl of
-            Just route -> case (route, definitelyCurrentRoute) of
+            Just route -> case (route, currentRoute) of
               (FrontRoute, FrontRoute) -> activeLinkAttribs
               (DmpRoute _, DmpRoute _) -> activeLinkAttribs
               (_, _) -> defaultLinkAttribs
@@ -59,4 +78,9 @@ navigation loginSession currentRoute deleteMsg =
           ]
         , loginView loginSession deleteMsg
         ]
+      , case maybeCurrentRoute of
+        Nothing -> div [] []
+        Just currentRoute -> case currentRoute of
+          DmpRoute _ -> breadcrumbs currentRoute
+          _ -> div [] []
       ]

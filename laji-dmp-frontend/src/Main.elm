@@ -87,9 +87,10 @@ changeRouteTo maybeRoute model =
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
       Just (DmpRoute dmpRoute) -> case dmpRoute of
         DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg Pages.DmpIndex.init
-        (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
-        (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
         DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
+        DmpElementRoute dmpElementRoute -> case dmpElementRoute of
+          (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
+          (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of
           (Just token, next) ->

@@ -18,6 +18,7 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  margin-bottom: 32px;
 }
 
 li:first-child .nav-link {
@@ -65,4 +66,24 @@ li:first-child .nav-link {
   flex-direction: row;
   gap: 16px;
   align-items: center;
+}
+
+.breadcrumbs {
+  margin: 32px 0px;
+  padding: 8px 0px;
+  border-bottom: 1px solid var(--neutral-4);
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.breadcrumbs-element {
+}
+
+.breadcrumbs-separator {
+  color: var(--neutral-5);
+}
+
+.breadcrumbs-current {
+  color: var(--neutral-6);
 }

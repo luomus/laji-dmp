@@ -11,23 +11,31 @@ type Route
 
 type DmpSubRoute
   = DmpIndexRoute
-  | DmpInfoRoute String
-  | DmpEditRoute String
   | DmpNewRoute
+  | DmpElementRoute DmpElementSubRoute
+
+type DmpElementSubRoute
+  = DmpInfoRoute String
+  | DmpEditRoute String
+
+dmpElementRouteParser : Parser (DmpElementSubRoute -> a) a
+dmpElementRouteParser = oneOf
+  [ map DmpInfoRoute (string)
+  , map DmpEditRoute (string </> s "edit")
+  ]
 
 dmpRouteParser : Parser (DmpSubRoute -> a) a
 dmpRouteParser = oneOf
-  [ map DmpIndexRoute (s "dmp")
-  , map DmpNewRoute (s "dmp" </> s "new")
-  , map DmpInfoRoute (s "dmp" </> string)
-  , map DmpEditRoute (s "dmp" </> string </> s "edit")
+  [ map DmpIndexRoute top
+  , map DmpNewRoute (s "new")
+  , map DmpElementRoute dmpElementRouteParser
   ]
 
 routeParser : Parser (Route -> a) a
 routeParser =
   oneOf
     [ map FrontRoute top
-    , map DmpRoute dmpRouteParser
+    , s "dmp" </> (map DmpRoute dmpRouteParser)
     , map LoginRoute (s "login" <?> Query.string "access_token" <?> Query.string "next")
     ]
 
