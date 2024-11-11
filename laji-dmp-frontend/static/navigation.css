@@ -7,11 +7,17 @@
   list-style: none;
   display: flex;
   flex-direction: row;
+  margin: 0px;
+  padding: 0px;
+}
+
+.navbar {
   border-radius: 16px;
   background-color: var(--neutral-1);
   box-shadow: 0px 16px 32px 0px rgba(0, 0, 0, 0.05);
-  margin: 0px;
-  padding: 0px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 li:first-child .nav-link {
@@ -21,14 +27,19 @@ li:first-child .nav-link {
 }
 
 .nav-link {
-  padding: 32px 16px;
+  padding: 32px 24px;
   display: block;
   text-decoration: none;
 }
 
-.nav-link:hover {
-  background-color: var(--primary-6);
-  color: var(--primary-1);
+.nav-link:hover, .nav-link.nav-link-active {
+  background-color: var(--neutral-2);
+  box-shadow: inset 0px -2px 0px 0px var(--primary-5);
+}
+
+.nav-link.nav-link-active {
+  pointer-events: none;
+  cursor: default;
 }
 
 .nav-link:visited {
@@ -36,11 +47,22 @@ li:first-child .nav-link {
 }
 
 .nav-link:visited:hover {
-  color: var(--primary-1);
 }
 
 .nav-title {
   color: var(--primary-5);
   font-size: 32px;
   font-weight: 600;
+}
+
+.login-container {
+  align-self: center;
+  margin-right: 32px;
+}
+
+.logged-in {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
 }

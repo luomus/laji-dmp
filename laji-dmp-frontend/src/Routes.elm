@@ -6,20 +6,28 @@ import Url.Parser.Query as Query
 
 type Route
   = FrontRoute
-  | DmpIndexRoute
+  | DmpRoute DmpSubRoute
+  | LoginRoute (Maybe String) (Maybe String)
+
+type DmpSubRoute
+  = DmpIndexRoute
   | DmpInfoRoute String
   | DmpEditRoute String
   | DmpNewRoute
-  | LoginRoute (Maybe String) (Maybe String)
+
+dmpRouteParser : Parser (DmpSubRoute -> a) a
+dmpRouteParser = oneOf
+  [ map DmpIndexRoute (s "dmp")
+  , map DmpNewRoute (s "dmp" </> s "new")
+  , map DmpInfoRoute (s "dmp" </> string)
+  , map DmpEditRoute (s "dmp" </> string </> s "edit")
+  ]
 
 routeParser : Parser (Route -> a) a
 routeParser =
   oneOf
     [ map FrontRoute top
-    , map DmpIndexRoute (s "dmp")
-    , map DmpNewRoute (s "dmp" </> s "new")
-    , map DmpInfoRoute (s "dmp" </> string)
-    , map DmpEditRoute (s "dmp" </> string </> s "edit")
+    , map DmpRoute dmpRouteParser
     , map LoginRoute (s "login" <?> Query.string "access_token" <?> Query.string "next")
     ]
 

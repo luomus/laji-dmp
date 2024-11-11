@@ -1,15 +1,19 @@
 :root {
-  --neutral-1: hsl(175, 10%, 98%);
-  --neutral-2: hsl(175, 6%, 94%);
-  --neutral-3: hsl(175, 4%, 88%);
-  --neutral-4: hsl(175, 2%, 60%);
-  --neutral-5: hsl(175, 1%, 40%);
-  --neutral-6: hsl(175, 2%, 30%);
-  --neutral-7: hsl(175, 4%, 20%);
-  --neutral-8: hsl(175, 6%, 10%);
-  --neutral-9: hsl(175, 10%, 2%);
+  --neutral-1: hsl(175deg, 10%, 98%);
+  --neutral-2: hsl(175deg, 6%, 94%);
+  --neutral-3: hsl(175deg, 4%, 92%);
+  --neutral-4: hsl(175deg, 2%, 86%);
+  --neutral-5: hsl(175deg, 1%, 80%);
+  --neutral-6: hsl(175deg, 2%, 30%);
+  --neutral-7: hsl(175deg, 4%, 20%);
+  --neutral-8: hsl(175deg, 6%, 10%);
+  --neutral-9: hsl(175deg, 10%, 2%);
 
-  --primary-1: hsl(175, 80%, 98%);
-  --primary-5: hsl(175, 80%, 40%);
-  --primary-6: hsl(175, 80%, 30%);
+  --primary-1: hsl(175deg, 80%, 98%);
+  --primary-5: hsl(175deg, 80%, 40%);
+  --primary-6: hsl(175deg, 80%, 30%);
+  /* At this point I realized that you still need sass */
+  --primary-7-unwrapped: 175deg, 80%, 24%;
+  --primary-7: hsl(var(--primary-7-unwrapped));
+  --primary-8: hsl(175deg, 90%, 18%);
 }

@@ -17,6 +17,7 @@ import Platform.Cmd as Cmd
 import DmpApi exposing (DmpList)
 import DmpApi exposing (getDmpList)
 import DmpApi exposing (DataManagementPlan)
+import Html.Attributes exposing (class)
 
 type Model = Loading | Error | DmpList DmpList
 
@@ -45,7 +46,7 @@ dmpListElementView elem =
 view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp Index View"
-  , body = div []
+  , body = div [class "dmp-index"]
     <| case model of
       Error -> [ text "Failed to load the list of DMPs." ]
       Loading -> [ text "Loading the list of DMPs..." ]
@@ -53,6 +54,6 @@ view model =
         [
           ul []
             <| Array.toList <| Array.map dmpListElementView dmpList
-          , a [href "/dmp/new"] [text "New DMP"]
+          , a [href "/dmp/new", class "btn btn-primary"] [text "+ New DMP"]
         ]
   }

@@ -26,6 +26,7 @@ type alias Model =
   { key: Nav.Key
   , loginSession: LoginSession
   , routeModel: RouteModel
+  , currentRoute: Maybe Route
   }
 
 type RouteModel
@@ -48,28 +49,47 @@ type Msg
   | OnDeleteToken String
   | DeletedToken (Result Http.Error String)
 
+unwrapMaybeRoute route = case route of
+  Just r -> r
+  Nothing -> FrontRoute
+
 init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
   let
     maybeToken = User.decodeLogin flags
+    route = fromUrl url
   in
     case maybeToken of
-      Nothing -> changeRouteTo (fromUrl url) { key = key, routeModel = NoModel, loginSession = NotLoggedIn }
-      Just token -> Tuple.mapSecond (\c -> Cmd.batch [ c, User.getPerson token <| GotPerson token ]) ( changeRouteTo (fromUrl url) { key = key, routeModel = NoModel, loginSession = LoadingPerson token } )
+      Nothing -> changeRouteTo route
+        { key = key
+        , routeModel = NoModel
+        , loginSession = NotLoggedIn
+        , currentRoute = route
+        }
+      Just token -> Tuple.mapSecond
+        (\c -> Cmd.batch [ c, User.getPerson token <| GotPerson token ])
+        ( changeRouteTo (fromUrl url)
+          { key = key
+          , routeModel = NoModel
+          , loginSession = LoadingPerson token
+          , currentRoute = route
+          }
+        )
 
 changeRouteTo : Maybe Route -> Model -> (Model, Cmd Msg)
 changeRouteTo maybeRoute model =
   let
     mapPageInit : (m -> RouteModel) -> (c -> Msg) -> (m, Cmd c) -> (Model, Cmd Msg)
-    mapPageInit newRouteModel newMsg initFn = Tuple.mapBoth (\m -> { model | routeModel = newRouteModel m}) (\c -> Cmd.map newMsg c) initFn
+    mapPageInit newRouteModel newMsg initFn = Tuple.mapBoth (\m -> { model | routeModel = newRouteModel m, currentRoute = maybeRoute}) (\c -> Cmd.map newMsg c) initFn
   in
     case maybeRoute of
       Nothing -> ( model, Cmd.none )
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
-      Just DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg Pages.DmpIndex.init
-      Just (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
-      Just (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
-      Just DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
+      Just (DmpRoute dmpRoute) -> case dmpRoute of
+        DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg Pages.DmpIndex.init
+        (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
+        (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
+        DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of
           (Just token, next) ->
@@ -141,17 +161,7 @@ view model =
     viewPage toMsg subView =
       { title = subView.title, body =
         [ Html.div [Html.Attributes.class "main"]
-          [ Views.Navigation.navigation
-          , Html.div []
-            [ case model.loginSession of
-              LoggedIn token person -> Html.div []
-                [ text <| person.id ++ " " ++ person.fullName
-                , Html.button [ Html.Events.onClick <| OnDeleteToken token] [Html.text "Log out"]
-                ]
-              NotLoggedIn -> Html.text "Not logged in"
-              LoadingPerson token -> Html.text "Logging in..."
-              DeletingToken token -> Html.text "Logging out..."
-            ]
+          [ Views.Navigation.navigation model.loginSession model.currentRoute OnDeleteToken
           , Html.map (\msg -> toMsg msg) subView.body
           ]
         ]
