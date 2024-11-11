@@ -18,6 +18,10 @@ import DmpApi exposing (DmpList)
 import DmpApi exposing (getDmpList)
 import DmpApi exposing (DataManagementPlan)
 import Html.Attributes exposing (class)
+import Html exposing (table)
+import Html exposing (tr)
+import Html exposing (th)
+import Html exposing (td)
 
 type Model = Loading | Error | DmpList DmpList
 
@@ -36,12 +40,19 @@ update msg model =
           let _ = Debug.log "Error loading DMP list" e
           in (Error, Cmd.none)
 
-dmpListElementView : DataManagementPlan -> Html msg
-dmpListElementView elem =
+dmpTableRowView : DataManagementPlan -> Html msg
+dmpTableRowView elem =
   case elem.id of
-    Just id ->
-      li [] [ a [href <| "dmp/" ++ String.fromInt id] [text elem.testField] ]
+    Just id -> tr []
+      [ td [] [ a [href <| "dmp/" ++ String.fromInt id] [text <| String.fromInt id] ]
+      , td [] [ text elem.testField ]
+      ]
     Nothing -> li [] [text "Error: expected DMP to have an id"]
+
+dmpTableView : DmpList -> Html Msg
+dmpTableView dmpList = table [] <|
+  [ tr [] [th [] [text "Id"], th [] [text "Test field"]]
+  ] ++ (Array.toList <| Array.map dmpTableRowView dmpList)
 
 view : Model -> { title : String, body : Html Msg }
 view model =
@@ -52,8 +63,7 @@ view model =
       Loading -> [ text "Loading the list of DMPs..." ]
       DmpList dmpList -> 
         [
-          ul []
-            <| Array.toList <| Array.map dmpListElementView dmpList
+          dmpTableView dmpList
           , a [href "/dmp/new", class "btn btn-primary"] [text "+ New DMP"]
         ]
   }

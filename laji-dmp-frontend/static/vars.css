@@ -10,6 +10,8 @@
   --neutral-9: hsl(175deg, 10%, 2%);
 
   --primary-1: hsl(175deg, 80%, 98%);
+  --primary-3: hsl(175deg, 80%, 80%);
+  --primary-3: hsl(175deg, 80%, 70%);
   --primary-5: hsl(175deg, 80%, 40%);
   --primary-6: hsl(175deg, 80%, 30%);
   /* At this point I realized that you still need sass */
