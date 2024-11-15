@@ -19,7 +19,8 @@ import Network.Wai (Application, responseLBS, Request (pathInfo))
 import Network.HTTP.Types (status404)
 import Control.Monad.IO.Class (liftIO)
 import Database.SQLite.Simple
-import Servant (Tagged(Tagged), NoContent)
+import Servant (Tagged(Tagged), NoContent, err404)
+import Servant
 
 import Data.Swagger
 import Servant.Swagger
@@ -34,17 +35,20 @@ handlerDmpIndex :: Connection -> Handler [DataManagementPlan]
 handlerDmpIndex conn = do
   liftIO $ getDataManagementPlans conn
 
-handlerDmpPut :: Connection -> DataManagementPlan -> Handler NoContent
-handlerDmpPut conn plan = do
+handlerDmpPost :: Connection -> DataManagementPlan -> Handler NoContent
+handlerDmpPost conn plan = do
   liftIO $ createDataManagementPlan conn plan
   return NoContent
 
 handlerDmpGet :: Connection -> Int -> Handler DataManagementPlan
 handlerDmpGet conn id = do
-  liftIO $ head <$> getDataManagementPlan conn id
+  maybeDmp <- liftIO $ Data.Maybe.listToMaybe <$> getDataManagementPlan conn id
+  case maybeDmp of
+    Just dmp -> return dmp
+    Nothing -> throwError err404 { errBody = "No such DMP was found." }
 
-handlerDmpPost :: Connection -> Int -> DataManagementPlan -> Handler NoContent
-handlerDmpPost conn plan_id plan = do
+handlerDmpPut :: Connection -> Int -> DataManagementPlan -> Handler NoContent
+handlerDmpPut conn plan_id plan = do
   liftIO $ updateDataManagementPlan conn plan_id plan
   return NoContent
 
@@ -74,9 +78,9 @@ apiSwagger = toSwagger (Proxy :: Proxy API)
 apiServer :: Connection -> Server API
 apiServer conn =
   (     handlerDmpIndex conn
-  :<|>  handlerDmpPut   conn
+  :<|>  handlerDmpPost   conn
   :<|>  handlerDmpGet   conn
-  :<|>  handlerDmpPost  conn
+  :<|>  handlerDmpPut  conn
   :<|>  handlerDmpDelete  conn
   )
   :<|>  Tagged handlerNotFound
@@ -86,7 +90,7 @@ server conn = swaggerSchemaUIServer apiSwagger :<|> apiServer conn
 
 customCorsPolicy :: CorsResourcePolicy
 customCorsPolicy = simpleCorsResourcePolicy
-  { corsOrigins = Just (["http://localhost:8000"], True)
+  { corsOrigins = Just (["http://localhost:8000", "chrome-extension://dabkfpeebkikmgdianbkchblbdibbfhl"], True)
   , corsRequestHeaders = ["Content-Type", "Authorization"]
   , corsMethods = ["GET", "POST", "OPTIONS", "PUT", "DELETE"]
   , corsRequireOrigin = False
@@ -100,6 +104,7 @@ main :: IO ()
 main = do
   dbPath <- lookupEnv "LAJI_DMP_DATABASE" <&> Data.Maybe.fromMaybe "laji-dmp.db"
   conn <- open dbPath
+  enableForeignKeys conn
   createDataManagementPlanTable conn
   print ("Hosting on port 4000" :: String)
   run 4000 (app conn)
