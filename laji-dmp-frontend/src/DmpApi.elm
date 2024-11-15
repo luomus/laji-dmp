@@ -5,32 +5,137 @@ import Json.Decode.Pipeline
 import Array
 import Http
 import Config exposing (config)
-import Json.Encode
+import Json.Encode as E
+import Json.Decode as D
+import Json.Decode.Pipeline as DP
+
+type DataAccess = Open | Shared | Closed
+type PersonalData = Yes | No | Unknown
+
+type alias Host =
+  { backupFrequency: Maybe String
+  , geoLocation: Maybe String
+  }
+
+type alias Distribution =
+  { dataAccess: DataAccess
+  , accessUrl: Maybe String
+  , host: Maybe Host
+  }
+
+type alias Dataset =
+  { title: String
+  , personalData: PersonalData
+  , distributions: Array.Array Distribution
+  }
 
 type alias DataManagementPlan =
   { id: Maybe Int
-  , testField: String
+  , datasets: Array.Array Dataset
   }
 
 type alias DmpList = Array.Array DataManagementPlan
 
+hostDecoder : Json.Decode.Decoder Host
+hostDecoder = Json.Decode.succeed Host
+  |> DP.optional "backup_frequency" (D.nullable D.string) Nothing
+  |> DP.optional "geo_location" (D.nullable D.string) Nothing
+
+dataAccessDecoder : Json.Decode.Decoder DataAccess
+dataAccessDecoder =
+  let
+    f str = case str of
+      "Open" -> Open
+      "Shared" -> Shared
+      _ -> Closed
+  in Json.Decode.map f Json.Decode.string
+
+distributionDecoder : Json.Decode.Decoder Distribution
+distributionDecoder = Json.Decode.succeed Distribution
+  |> DP.required "data_access" dataAccessDecoder
+  |> DP.optional "access_url" (D.nullable D.string) Nothing
+  |> DP.optional "host" (D.nullable hostDecoder) Nothing
+
+personalDataDecoder : Json.Decode.Decoder PersonalData
+personalDataDecoder =
+  let
+    f str = case str of
+      "Yes" -> Yes
+      "No" -> No
+      _ -> Unknown
+  in Json.Decode.map f D.string
+
+datasetDecoder : Json.Decode.Decoder Dataset
+datasetDecoder = Json.Decode.succeed Dataset
+  |> DP.required "title" D.string
+  |> DP.required "personal_data" personalDataDecoder
+  |> DP.required "distributions" (Json.Decode.array distributionDecoder)
+
 dmpDecoder : Json.Decode.Decoder DataManagementPlan
-dmpDecoder =
-  Json.Decode.succeed DataManagementPlan
-    |> Json.Decode.Pipeline.optional "plan_id" (Json.Decode.map (\x -> Just x) Json.Decode.int) Nothing
-    |> Json.Decode.Pipeline.required "test_field" Json.Decode.string
+dmpDecoder = Json.Decode.succeed DataManagementPlan
+  |> DP.optional "plan_id" (Json.Decode.map (\x -> Just x) Json.Decode.int) Nothing
+  |> DP.required "datasets" (Json.Decode.array datasetDecoder)
 
 dmpListDecoder : Json.Decode.Decoder DmpList
 dmpListDecoder = Json.Decode.array dmpDecoder
 
-encodeDmp : DataManagementPlan -> Json.Encode.Value
-encodeDmp dmp = Json.Encode.object
-  [ ( "plan_id"
-    , case dmp.id of
-      Just id -> Json.Encode.int id
-      Nothing -> Json.Encode.null
+encodeHost : Host -> E.Value
+encodeHost host = E.object
+  [ ( "backup_frequency"
+    , case host.backupFrequency of
+      Just bf -> E.string bf
+      Nothing -> E.null
     )
-  , ( "test_field", Json.Encode.string dmp.testField )
+  , ( "geo_location"
+    , case host.geoLocation of
+      Just geo -> E.string geo
+      Nothing -> E.null
+    )
+  ]
+
+encodeDataAccess : DataAccess -> E.Value
+encodeDataAccess dataAccess = E.string
+  <| case dataAccess of
+    Open -> "Open"
+    Shared -> "Shared"
+    Closed -> "Closed"
+
+encodeDistribution : Distribution -> E.Value
+encodeDistribution distribution = E.object
+  [ ( "data_access", encodeDataAccess distribution.dataAccess )
+  , ( "access_url"
+    , case distribution.accessUrl of
+      Just url -> E.string url
+      Nothing -> E.null
+    )
+  , ( "host"
+    , case distribution.host of
+      Just h -> encodeHost h
+      Nothing -> E.null
+    )
+  ]
+
+encodePersonalData : PersonalData -> E.Value
+encodePersonalData personalData = E.string
+  <| case personalData of
+    Yes -> "Yes"
+    No -> "No"
+    Unknown -> "Unknown"
+
+encodeDataset : Dataset -> E.Value
+encodeDataset dataset = E.object
+  [ ( "title", E.string dataset.title )
+  , ( "personal_data", encodePersonalData dataset.personalData )
+  , ( "distributions", E.array encodeDistribution dataset.distributions )
+  ]
+
+encodeDmp : DataManagementPlan -> E.Value
+encodeDmp dmp = E.object
+  [ ( "plan_id", case dmp.id of
+      Just id -> E.int id
+      Nothing -> E.null
+    )
+  , ( "datasets", E.array encodeDataset dmp.datasets )
   ]
 
 getDmpList : (Result Http.Error DmpList -> msg) -> Cmd msg
@@ -77,7 +182,7 @@ deleteDmp id msg =
     { method = "DELETE"
     , headers = []
     , url = config.dmpApiUrl ++ "dmp/" ++ id
-    , body = Http.jsonBody <| Json.Encode.null
+    , body = Http.jsonBody <| E.null
     , expect = Http.expectString msg
     , timeout = Nothing
     , tracker = Nothing

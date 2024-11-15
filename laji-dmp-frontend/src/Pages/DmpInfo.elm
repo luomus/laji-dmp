@@ -12,6 +12,10 @@ import Pages.DmpIndex exposing (Msg(..))
 import Http
 import Platform.Cmd as Cmd
 import Html exposing (div)
+import DmpApi exposing (Dataset)
+import Array
+import DmpApi exposing (Distribution)
+import DmpApi exposing (Host)
 
 type Model = Error | Loading | Dmp DataManagementPlan
 
@@ -35,6 +39,28 @@ update msg model =
           let _ = Debug.log "Error loading DMP" e
           in (Error, Cmd.none)
 
+hostView : Maybe Host -> Html Msg
+hostView maybeHost = case maybeHost of
+  Just host -> div []
+    [ div [] [text <| Debug.toString host.backupFrequency]
+    , div [] [text <| Debug.toString host.geoLocation]
+    ]
+  Nothing -> div [] []
+
+distributionView : Distribution -> Html Msg
+distributionView distribution = div []
+  [ div [] [text <| Debug.toString distribution.dataAccess] -- TODO
+  , div [] [text <| Debug.toString distribution.accessUrl] -- TODO
+  , hostView distribution.host
+  ]
+
+datasetView : Dataset -> Html Msg
+datasetView dataset = div []
+  [ div [] [text dataset.title]
+  , div [] [text <| Debug.toString dataset.personalData] -- TODO
+  , div [] <| Array.toList <| Array.map distributionView dataset.distributions
+  ]
+
 view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp Info View"
@@ -45,7 +71,7 @@ view model =
           Just id ->
             [ div [] [ a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit"] [text "Edit"] ]
             , div [] [ text <| "Id: " ++ (String.fromInt id) ]
-            , div [] [ text <| "Test field: " ++ dmp.testField ]
+            , div [] <| Array.toList <| Array.map datasetView dmp.datasets
             ]
           Nothing -> [text "Error: expected DMP to have an id"]
       Loading -> [text "Loading data management plan..."]

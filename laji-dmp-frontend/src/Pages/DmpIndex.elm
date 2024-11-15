@@ -45,7 +45,7 @@ dmpTableRowView elem =
   case elem.id of
     Just id -> tr []
       [ td [] [ a [href <| "dmp/" ++ String.fromInt id] [text <| String.fromInt id] ]
-      , td [] [ text elem.testField ]
+      , td [] [ text "some other field" ]
       ]
     Nothing -> li [] [text "Error: expected DMP to have an id"]
 
