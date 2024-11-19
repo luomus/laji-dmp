@@ -5,5 +5,10 @@ export default defineConfig({
   server: {
     port: 8000,
   },
-  plugins: [elmPlugin()],
+  plugins: [
+    elmPlugin({
+      debug: false,
+      optimize: false
+    })
+  ],
 });
