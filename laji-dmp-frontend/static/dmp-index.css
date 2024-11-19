@@ -1,3 +1,26 @@
 .dmp-index > ul {
   margin-bottom: 32px;
 }
+
+.dmp-index-dmp-box {
+  font-size: 16px;
+  display: block;
+  text-decoration: none;
+  color: var(--neutral-8);
+  background-color: var(--neutral-1);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0px 2px 16px 0px hsla(var(--primary-6-unwrapped), 0.2);
+  border-radius: 5px;
+  padding: 16px 32px;
+  margin-bottom: 32px;
+}
+
+.dmp-index-dmp-box:visited {
+  color: inherit;
+}
+
+
+.dmp-index-dmp-box:hover {
+  background-color: var(--primary-1);
+}

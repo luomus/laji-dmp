@@ -28,6 +28,7 @@ li:first-child .nav-link {
 }
 
 .nav-link {
+  color: var(--neutral-8);
   padding: 32px 24px;
   display: block;
   text-decoration: none;
@@ -70,7 +71,7 @@ li:first-child .nav-link {
 
 .breadcrumbs {
   margin: 32px 0px;
-  padding: 8px 0px;
+  padding: 16px 0px;
   border-bottom: 1px solid var(--neutral-4);
   display: flex;
   flex-direction: row;

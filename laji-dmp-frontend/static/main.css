@@ -2,6 +2,9 @@
 @import './vars.css';
 @import './navigation.css';
 @import './dmp-index.css';
+@import './dmp-edit.css';
+@import './dmp-editor.css';
+@import './dmp-info.css';
 
 body {
   color: var(--neutral-8);
@@ -16,24 +19,54 @@ body {
   box-sizing: border-box;
 }
 
+hr {
+  border-top: none;
+  border-color: var(--neutral-4);
+  margin: 32px 0px;
+}
+
+h2 {
+  color: var(--neutral-8);
+  font-size: 24px;
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+
+h3, h4, h5 {
+  color: var(--neutral-7);
+  font-size: 16px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+h6 {
+  color: var(--neutral-6);
+  font-size: 16px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
 .main {
   flex-grow: 1;
+  min-height: fit-content;
   max-width: 1000px;
   background-color: var(--neutral-2);
   padding: 16px 32px;
+  padding-bottom: 64px;
   box-shadow: 0px 0px 128px 0px rgba(0, 0, 0, 0.04);
 }
 
 .btn {
+  font-size: 16px;
   display: inline-block;
   text-decoration: none;
   color: var(--neutral-8);
   background-color: var(--neutral-1);
   border: none;
   cursor: pointer;
-  box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.05);
+  box-shadow: 0px 2px 8px 0px hsla(var(--primary-6-unwrapped), 0.2);
   border-radius: 5px;
-  padding: 16px 32px;
+  padding: 12px 24px;
 }
 
 .btn:visited {
@@ -41,17 +74,27 @@ body {
 }
 
 .btn:hover {
-  background-color: var(--neutral-2);
+  background-color: var(--primary-1);
 }
 
 .btn.btn-primary {
   color: var(--primary-1);
   background-color: var(--primary-6);
-  box-shadow: 0px 2px 16px 0px hsla(var(--primary-7-unwrapped), 0.2);
+  box-shadow: 0px 2px 12px 0px hsla(var(--primary-7-unwrapped), 0.2);
 }
 
 .btn.btn-primary:hover {
   background-color: var(--primary-7);
+}
+
+.btn.btn-danger {
+  color: var(--danger-8);
+  background-color: var(--danger-1);
+  box-shadow: 0px 2px 8px 0px hsla(var(--danger-6-unwrapped), 0.15);
+}
+
+.btn.btn-danger:hover {
+  background-color: var(--danger-2);
 }
 
 table {
@@ -74,5 +117,15 @@ table tr > th, table tr > td {
 table th {
   font-weight: 600;
   color: var(--neutral-7);
-  border-bottom: 1px solid var(--primary-3);
+  border-bottom: 1px solid var(--primary-5);
+}
+
+.form-field {
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.form-field > label {
+  display: block;
+  color: var(--neutral-7);
 }

@@ -32,6 +32,15 @@ import DmpApi exposing (DataAccess)
 import Platform.Cmd as Cmd
 import DmpApi exposing (DataAccess(..))
 import Maybe exposing (withDefault)
+import Html exposing (h3)
+import Html exposing (h4)
+import Html exposing (h6)
+import Html exposing (h5)
+import Html exposing (h2)
+import Html exposing (select)
+import Html exposing (option)
+import Html exposing (hr)
+import Html.Attributes exposing (selected)
 
 type ModelStatus = Editing | Submitting | SubmitError Error
 
@@ -199,86 +208,105 @@ update msg model =
       Err e ->
         ({ model | status = SubmitError e }, Cmd.none)
 
-hostEditorView : Maybe Host -> Int -> Int -> Bool -> Html Msg
-hostEditorView maybeHost datasetIdx distributionIdx d = div []
-  [ div [] <| case maybeHost of
-    Just host ->
-      [ div []
-        [ label [ for "host-backup-frequency" ] [ text "Backup frequency" ]
-        , input
-          [ id "host-backup-frequency"
-          , value <| withDefault "" host.backupFrequency
-          , disabled d
-          , onInput <| (\str -> OnModifyHostBackupFrequency datasetIdx distributionIdx (
-            case str of
-              "" -> Nothing
-              s -> Just s
-          ))
-          ]
-          []
+hostEditorView : Host -> Int -> Int -> Bool -> Html Msg
+hostEditorView host datasetIdx distributionIdx d = div [ class "dmp-editor-host" ]
+  [ div []
+    [ h5 [] [ text <| "Host"]
+    , div [ class "form-field" ]
+      [ label [ for "host-backup-frequency" ] [ text "Backup frequency" ]
+      , input
+        [ id "host-backup-frequency"
+        , value <| withDefault "" host.backupFrequency
+        , disabled d
+        , onInput <| (\str -> OnModifyHostBackupFrequency datasetIdx distributionIdx (
+          case str of
+            "" -> Nothing
+            s -> Just s
+        ))
         ]
-      , div []
-        [ label [ for "host-geo-location" ] [ text "Geo location" ]
-        , input
-          [ id "host-geo-location"
-          , value <| withDefault "" host.geoLocation
-          , disabled d
-          , onInput <| (\str -> OnModifyHostGeoLocation datasetIdx distributionIdx (
-            case str of
-              "" -> Nothing
-              s -> Just s
-          ))
-          ]
-          []
-        ]
+        []
       ]
-    Nothing -> []
-  , button
-    [ onClick <| OnToggleHost datasetIdx distributionIdx
-    , disabled d
-    , class "btn"
+    , div [ class "form-field" ]
+      [ label [ for "host-geo-location" ] [ text "Geo location" ]
+      , input
+        [ id "host-geo-location"
+        , value <| withDefault "" host.geoLocation
+        , disabled d
+        , onInput <| (\str -> OnModifyHostGeoLocation datasetIdx distributionIdx (
+          case str of
+            "" -> Nothing
+            s -> Just s
+        ))
+        ]
+        []
+      ]
     ]
-    [ text "Toggle Host" ]
   ]
 
 distributionEditorView : Distribution -> Int -> Int -> Bool -> Html Msg
-distributionEditorView distribution datasetIdx distributionIdx d = div []
-  [ div []
-    [ label [ for "distribution-data-access" ] [ text "Data access" ]
-    , input -- TODO should be <select>
-      [ id "distribution-data-access"
-      , value <| Debug.toString distribution.dataAccess
-      , disabled d
-      , onInput <| OnModifyDatasetTitle datasetIdx
+distributionEditorView distribution datasetIdx distributionIdx d = div [ class "dmp-editor-distribution" ]
+  [ h4 [] [ text <| "Distribution " ++ String.fromInt distributionIdx ]
+  , div [ class "dmp-editor-distribution-fields" ]
+    [ div [ class "form-field" ]
+      [ label [ for "distribution-data-access" ] [ text "Data access" ]
+      , select
+        [ id "distribution-data-access"
+        , value <| case distribution.dataAccess of
+          Open -> "Open"
+          Shared -> "Shared"
+          Closed -> "Closed"
+        , disabled d
+        , onInput <| (\str -> OnModifyDistributionDataAccess datasetIdx distributionIdx (
+          case str of
+            "Shared" -> Shared
+            "Closed" -> Closed
+            _ -> Open
+        ))
+        ]
+        -- There's an elm bug or something where the initial value attribute is not being updated
+        -- correctly. So we are setting the redundant `selected` attribute as well.
+        [ option [ value "Open", selected <| distribution.dataAccess == Open ] [ text "Open" ]
+        , option [ value "Shared", selected <| distribution.dataAccess == Shared ] [ text "Shared" ]
+        , option [ value "Closed", selected <| distribution.dataAccess == Closed ] [ text "Closed" ]
+        ]
       ]
-      []
-    ]
-  , div []
-    [ label [ for "distribution-access-url" ] [ text "Access url" ]
-    , input
-      [ id "distribution-access-url"
-      , value <| withDefault "" distribution.accessUrl
-      , disabled d
-      , onInput <| (\str -> OnModifyDistributionAccessUrl datasetIdx distributionIdx (
-        case str of
-          "" -> Nothing
-          s -> Just s
-      ))
+    , div [ class "form-field" ]
+      [ label [ for "distribution-access-url" ] [ text "Access url" ]
+      , input
+        [ id "distribution-access-url"
+        , value <| withDefault "" distribution.accessUrl
+        , disabled d
+        , onInput <| (\str -> OnModifyDistributionAccessUrl datasetIdx distributionIdx (
+          case str of
+            "" -> Nothing
+            s -> Just s
+        ))
+        ]
+        []
       ]
-      []
     ]
-  , hostEditorView distribution.host datasetIdx distributionIdx d
+  , case distribution.host of
+    Just host -> hostEditorView host datasetIdx distributionIdx d
+    Nothing -> text ""
+  , button
+    [ onClick <| OnToggleHost datasetIdx distributionIdx
+    , disabled d
+    , class <| if distribution.host == Nothing then "btn" else "btn btn-danger"
+    ]
+    [ text <| if distribution.host == Nothing then "+ Add Host" else "- Remove Host" ]
+  , hr [] []
   , button
     [ onClick <| OnRemoveDistribution datasetIdx distributionIdx
     , disabled d
-    , class "btn"
+    , class "btn btn-danger"
     ]
     [ text "- Remove distribution" ]
   ]
 
 datasetEditorView : Dataset -> Int -> Bool -> Html Msg
-datasetEditorView dataset datasetIdx d = div []
-  [ div []
+datasetEditorView dataset datasetIdx d = div [ class "dmp-editor-dataset" ]
+  [ h3 [] [ text <| "Dataset " ++ String.fromInt datasetIdx ]
+  , div [ class "form-field" ]
     [ label [ for "dataset-editor-title" ] [ text "Title" ]
     , input
       [ id "dataset-editor-title"
@@ -288,47 +316,65 @@ datasetEditorView dataset datasetIdx d = div []
       ]
       []
     ]
-  , div []
+  , div [ class "form-field" ]
     [ label [ for "dataset-editor-personal-data" ] [ text "Personal Data" ]
-    , input -- TODO should be <select>
-      [ id "dataset-editor-personal-data"
-      , value dataset.title
+    , select
+      [ id "distribution-editor-personal-data"
+      , value <| case dataset.personalData of
+        Yes -> "Yes"
+        No -> "No"
+        Unknown -> "Unknown"
       , disabled d
-      , onInput <| (\str -> OnModifyDatasetPersonalData datasetIdx Yes)
+      , onInput <| (\str -> OnModifyDatasetPersonalData datasetIdx (
+        case str of
+          "Yes" -> Yes
+          "No" -> No
+          _ -> Unknown
+      ))
       ]
-      []
+      [ option [ value "Yes", selected <| dataset.personalData == Yes ] [ text "Yes" ]
+      , option [ value "No", selected <| dataset.personalData == No ] [ text "No" ]
+      , option [ value "Unknown", selected <| dataset.personalData == Unknown ] [ text "Unknown" ]
+      ]
     ]
   , div []
-    [ div [] <| Array.toList <| Array.indexedMap (\distributionIdx dist -> distributionEditorView dist datasetIdx distributionIdx d) dataset.distributions
+    [ div [ class "dmp-editor-distribution-list" ]
+      <| Array.toList
+      <| Array.indexedMap (\distributionIdx dist -> distributionEditorView dist datasetIdx distributionIdx d) dataset.distributions
     , button
       [ onClick <| OnAddDistribution datasetIdx
       , disabled d
       , class "btn"
       ]
       [ text "+ Add distribution" ]
+    , hr [] []
     ]
   , button
     [ onClick <| OnRemoveDataset datasetIdx
     , disabled d
-    , class "btn"
+    , class "btn btn-danger"
     ]
     [ text "- Remove dataset" ]
   ]
 
 dmpEditorView : DataManagementPlan -> Bool -> Html Msg
-dmpEditorView dmp d = div []
-  [ div [] <| Array.toList <| Array.indexedMap (\idx ds -> datasetEditorView ds idx d) dmp.datasets
+dmpEditorView dmp d = div [ class "dmp-editor" ]
+  [ h2 [] [ text "Edit DMP" ]
+  , div [ class "dmp-editor-dataset-list" ]
+    <| Array.toList
+    <| Array.indexedMap (\idx ds -> datasetEditorView ds idx d) dmp.datasets
   , button
     [ onClick OnAddDataset
     , disabled d
     , class "btn"
     ]
     [ text "+ Add dataset" ]
+  , hr [] []
   ]
 
 editorFormView : Model -> Html Msg
 editorFormView model = 
-  div []
+  div [ class "dmp-editor-wrapper" ]
   [ div []
       [ dmpEditorView model.dmp (model.status == Submitting)
       , button

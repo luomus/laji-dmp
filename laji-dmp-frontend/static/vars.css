@@ -12,10 +12,25 @@
   --primary-1: hsl(175deg, 80%, 98%);
   --primary-3: hsl(175deg, 80%, 80%);
   --primary-3: hsl(175deg, 80%, 70%);
-  --primary-5: hsl(175deg, 80%, 40%);
-  --primary-6: hsl(175deg, 80%, 30%);
   /* At this point I realized that you still need sass */
+  --primary-5-unwrapped: 175deg, 80%, 40%;
+  --primary-5: hsl(var(--primary-5-unwrapped));
+  --primary-6-unwrapped: 175deg, 80%, 30%;
+  --primary-6: hsl(var(--primary-6-unwrapped));
   --primary-7-unwrapped: 175deg, 80%, 24%;
   --primary-7: hsl(var(--primary-7-unwrapped));
   --primary-8: hsl(175deg, 90%, 18%);
+
+  --danger-1-unwrapped: 0deg, 60%, 99%;
+  --danger-1: hsl(var(--danger-1-unwrapped));
+  --danger-2-unwrapped: 0deg, 60%, 96%;
+  --danger-2: hsl(var(--danger-2-unwrapped));
+  --danger-5-unwrapped: 0deg, 80%, 50%;
+  --danger-5: hsl(var(--danger-5-unwrapped));
+  --danger-6-unwrapped: 0deg, 80%, 35%;
+  --danger-6: hsl(var(--danger-6-unwrapped));
+  --danger-7-unwrapped: 0deg, 80%, 20%;
+  --danger-7: hsl(var(--danger-7-unwrapped));
+  --danger-8-unwrapped: 0deg, 80%, 10%;
+  --danger-8: hsl(var(--danger-8-unwrapped));
 }

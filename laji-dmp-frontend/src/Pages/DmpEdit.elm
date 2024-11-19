@@ -12,6 +12,7 @@ import Http exposing (Error)
 import Views.Dialog exposing (dialog)
 import DmpApi exposing (DataManagementPlan)
 import DmpApi exposing (getDmp)
+import Html.Attributes exposing (class)
 
 type Model
   = EditorModel Views.DmpEditor.Model
@@ -75,7 +76,7 @@ view model =
   , body = Html.div [] <| case model of
     EditorModel subModel ->
       [ Html.map EditorMsg <| Views.DmpEditor.view subModel
-      , button [ onClick OnDelete ] [text "Delete DMP"]
+      , button [ onClick OnDelete, class "btn btn-danger" ] [text "Delete DMP"]
       , dialog deleteDialogId []
         [ text "Do you really want to delete the DMP?"
         , button [ onClick OnConfirmDelete ] [text "Delete DMP"]

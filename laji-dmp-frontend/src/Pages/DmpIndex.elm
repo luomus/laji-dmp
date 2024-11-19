@@ -22,6 +22,7 @@ import Html exposing (table)
 import Html exposing (tr)
 import Html exposing (th)
 import Html exposing (td)
+import Html exposing (h5)
 
 type Model = Loading | Error | DmpList DmpList
 
@@ -40,19 +41,17 @@ update msg model =
           let _ = Debug.log "Error loading DMP list" e
           in (Error, Cmd.none)
 
-dmpTableRowView : DataManagementPlan -> Html msg
-dmpTableRowView elem =
+dmpElementView : DataManagementPlan -> Html msg
+dmpElementView elem =
   case elem.id of
-    Just id -> tr []
-      [ td [] [ a [href <| "dmp/" ++ String.fromInt id] [text <| String.fromInt id] ]
-      , td [] [ text "some other field" ]
+    Just id -> a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
+      [ h5 [] [ text <| "DMP " ++ String.fromInt id ]
+      , div [] [ text <| String.fromInt (Array.length elem.datasets) ++ " datasets" ]
       ]
     Nothing -> li [] [text "Error: expected DMP to have an id"]
 
 dmpTableView : DmpList -> Html Msg
-dmpTableView dmpList = table [] <|
-  [ tr [] [th [] [text "Id"], th [] [text "Test field"]]
-  ] ++ (Array.toList <| Array.map dmpTableRowView dmpList)
+dmpTableView dmpList = div [] (Array.toList <| Array.map dmpElementView dmpList)
 
 view : Model -> { title : String, body : Html Msg }
 view model =
