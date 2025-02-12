@@ -29,6 +29,8 @@ loginView loginSession deleteMsg =
         [ text <| person.fullName ++ " (" ++ person.id ++ ")"
         , Html.button [ Html.Events.onClick <| deleteMsg token] [Html.text "Log out"]
         ]
+      -- TODO login, system id: KE.1661
+      -- https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next=
       NotLoggedIn -> Html.text "Not logged in"
       LoadingPerson token -> Html.text "Logging in..."
       DeletingToken token -> Html.text "Logging out..."

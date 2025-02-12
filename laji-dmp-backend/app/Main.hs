@@ -3,59 +3,101 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
-import Servant ( Get
-               , Proxy(..)
-               , type (:>)
-               , type (:<|>)
-               , (:<|>)(..), Put, Capture, JSON, Post, ReqBody, Raw, NoContent (..), Delete
-               )
-import Servant.Server (Handler, Server, Application, serve)
+import Network.Wai (responseLBS)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors
-import Network.Wai (Application, responseLBS, Request (pathInfo))
 import Network.HTTP.Types (status404)
 import Control.Monad.IO.Class (liftIO)
 import Database.SQLite.Simple
-import Servant (Tagged(Tagged), NoContent, err404)
 import Servant
+import qualified Data.HashMap.Strict as HM
 
 import Data.Swagger
 import Servant.Swagger
 import Servant.Swagger.UI
 
 import Database
+import LajiApi
 import System.Environment (lookupEnv)
 import qualified Data.Maybe
 import Data.Functor ((<&>))
+import Data.Aeson (decode, FromJSON)
+import GHC.Generics (Generic)
+import Data.Text (Text, unpack)
+import Control.Concurrent.STM
+import Network.HTTP.Req (HttpConfig)
 
-handlerDmpIndex :: Connection -> Handler [DataManagementPlan]
-handlerDmpIndex conn = do
+data AppState = AppState
+  { appDbConnection :: Connection
+  , appPersonCache :: TVar (HM.HashMap Text (CacheElement Person))
+  , appHttpConfig :: HttpConfig
+  }
+
+checkUserRights :: Text -> Text -> TVar (HM.HashMap Text (CacheElement Person)) -> HttpConfig -> IO Bool
+checkUserRights personToken orgId personCache httpConfig =
+  let
+    checkOrg :: Person -> Bool
+    checkOrg person =
+      (case organisation person of
+        Just orgs -> unpack orgId `elem` orgs
+        Nothing -> False
+      )
+      ||
+      (case organisationAdmin person of
+        Just orgs -> unpack orgId `elem` orgs
+        Nothing -> False
+      )
+  in
+    do
+      maybePerson <- getPerson personToken personCache httpConfig
+      return $ case maybePerson of
+        Just person -> checkOrg person || "MA.admin" `elem` role person
+        Nothing -> False
+
+handlerDmpIndex :: AppState -> Handler [DataManagementPlan]
+handlerDmpIndex (AppState { appDbConnection = conn }) = do
   liftIO $ getDataManagementPlans conn
 
-handlerDmpPost :: Connection -> DataManagementPlan -> Handler NoContent
-handlerDmpPost conn plan = do
-  liftIO $ createDataManagementPlan conn plan
-  return NoContent
+handlerDmpPost :: AppState -> Text -> DataManagementPlan -> Handler NoContent
+handlerDmpPost (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan = do
+  userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
+  if userHasRights
+    then do
+      liftIO $ createDataManagementPlan conn plan
+      return NoContent
+    else do
+      throwError err403 { errBody = "User doesn't have rights for this organization." }
 
-handlerDmpGet :: Connection -> Int -> Handler DataManagementPlan
-handlerDmpGet conn id = do
+handlerDmpGet :: AppState -> Int -> Handler DataManagementPlan
+handlerDmpGet (AppState { appDbConnection = conn }) id = do
   maybeDmp <- liftIO $ Data.Maybe.listToMaybe <$> getDataManagementPlan conn id
   case maybeDmp of
     Just dmp -> return dmp
     Nothing -> throwError err404 { errBody = "No such DMP was found." }
 
-handlerDmpPut :: Connection -> Int -> DataManagementPlan -> Handler NoContent
-handlerDmpPut conn plan_id plan = do
-  liftIO $ updateDataManagementPlan conn plan_id plan
-  return NoContent
+handlerDmpPut :: AppState -> Text -> Int -> DataManagementPlan -> Handler NoContent
+handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan_id plan = do
+  userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
+  if userHasRights
+    then do
+      liftIO $ updateDataManagementPlan conn plan_id plan
+      return NoContent
+    else do
+      throwError err403 { errBody = "User doesn't have rights for this organization." }
 
-handlerDmpDelete :: Connection -> Int -> Handler NoContent
-handlerDmpDelete conn plan_id = do
-  liftIO $ deleteDataManagementPlan conn plan_id
-  return NoContent
+handlerDmpDelete :: AppState -> Text -> Int -> Handler NoContent
+handlerDmpDelete (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan_id = do
+  userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
+  if userHasRights
+    then do
+      liftIO $ deleteDataManagementPlan conn plan_id
+      return NoContent
+    else do
+      throwError err403 { errBody = "User doesn't have rights for this organization." }
 
 handlerNotFound :: Application
 handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "text/plain")] "404 - Route Not Found"
@@ -63,10 +105,10 @@ handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "t
 type API =
   "dmp" :>
     (     Get '[JSON] [DataManagementPlan]
-    :<|>  ReqBody '[JSON] DataManagementPlan :> Post '[JSON] NoContent
+    :<|>  QueryParam' '[Required] "personToken" Text :> ReqBody '[JSON] DataManagementPlan :> Post '[JSON] NoContent
     :<|>  Capture "id" Int :> Get '[JSON] DataManagementPlan
-    :<|>  Capture "id" Int :> ReqBody '[JSON] DataManagementPlan :> Put '[JSON] NoContent
-    :<|>  Capture "id" Int :> Delete '[JSON] NoContent
+    :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> ReqBody '[JSON] DataManagementPlan :> Put '[JSON] NoContent
+    :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> Delete '[JSON] NoContent
     )
   :<|> Raw
 
@@ -75,18 +117,18 @@ type APIWithSwagger = SwaggerSchemaUI "swagger-ui" "swagger.json" :<|> API
 apiSwagger :: Swagger
 apiSwagger = toSwagger (Proxy :: Proxy API)
 
-apiServer :: Connection -> Server API
-apiServer conn =
-  (     handlerDmpIndex conn
-  :<|>  handlerDmpPost   conn
-  :<|>  handlerDmpGet   conn
-  :<|>  handlerDmpPut  conn
-  :<|>  handlerDmpDelete  conn
+apiServer :: AppState -> Server API
+apiServer appState =
+  (     handlerDmpIndex appState
+  :<|>  handlerDmpPost appState
+  :<|>  handlerDmpGet appState
+  :<|>  handlerDmpPut appState
+  :<|>  handlerDmpDelete appState
   )
   :<|>  Tagged handlerNotFound
 
-server :: Connection -> Server APIWithSwagger
-server conn = swaggerSchemaUIServer apiSwagger :<|> apiServer conn
+server :: AppState -> Server APIWithSwagger
+server appState = swaggerSchemaUIServer apiSwagger :<|> apiServer appState
 
 customCorsPolicy :: CorsResourcePolicy
 customCorsPolicy = simpleCorsResourcePolicy
@@ -97,8 +139,8 @@ customCorsPolicy = simpleCorsResourcePolicy
   , corsIgnoreFailures = False
   }
 
-app :: Connection -> Application
-app conn = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIWithSwagger) (server conn)
+app :: AppState -> Application
+app appState = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIWithSwagger) (server appState)
 
 main :: IO ()
 main = do
@@ -107,5 +149,8 @@ main = do
   enableForeignKeys conn
   createDataManagementPlanTable conn
   print ("Hosting on port 4000" :: String)
-  run 4000 (app conn)
+  personCache <- newTVarIO HM.empty
+  httpConfig <- createHttpConfig
+  let appState = AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }
+  run 4000 (app appState)
 

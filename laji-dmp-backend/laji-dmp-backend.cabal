@@ -32,7 +32,7 @@ version:            0.1.0.0
 license:            MIT
 
 -- The file containing the license text.
-license-file:       LICENSE
+-- license-file:       LICENSE
 
 -- The package author(s).
 author:             Pyry M„kinen
@@ -45,7 +45,7 @@ maintainer:         pyry.makinen@helsinki.fi
 build-type:         Simple
 
 -- Extra doc files to be distributed with the package, such as a CHANGELOG or a README.
-extra-doc-files:    CHANGELOG.md
+-- extra-doc-files:    CHANGELOG.md
 
 -- Extra source files to be distributed with the package, such as examples, or a tutorial module.
 -- extra-source-files:
@@ -61,7 +61,7 @@ executable laji-dmp-backend
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules:    Database
+    other-modules:    Database, LajiApi
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -80,7 +80,19 @@ executable laji-dmp-backend
                       warp,
                       aeson,
                       sqlite-simple,
-                      http-types
+                      http-types,
+                      unordered-containers,
+                      http-client,
+                      http-client-tls,
+                      tls,
+                      req,
+                      crypton-connection,
+                      data-default-class,
+                      bytestring,
+                      text,
+                      crypton-x509-store,
+                      stm,
+                      time,
 
     -- Directories containing source files.
     hs-source-dirs:   app
