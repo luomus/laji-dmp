@@ -14,6 +14,7 @@ type alias PersonResponse =
   { id: String
   , fullName: String
   , role: Array PersonRole
+  , organisation: Array String
   }
 
 type LoginSession
@@ -54,6 +55,7 @@ personDecoder =
     |> required "id" string
     |> required "fullName" string
     |> required "role" (array roleDecoder)
+    |> required "organisation" (array string)
 
 getPerson : String -> (Result Http.Error PersonResponse -> msg) -> Cmd msg
 getPerson token msg =

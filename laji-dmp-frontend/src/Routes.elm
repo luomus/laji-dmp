@@ -36,7 +36,7 @@ routeParser =
   oneOf
     [ map FrontRoute top
     , s "dmp" </> (map DmpRoute dmpRouteParser)
-    , map LoginRoute (s "login" <?> Query.string "access_token" <?> Query.string "next")
+    , map LoginRoute (s "login" <?> Query.string "token" <?> Query.string "next")
     ]
 
 fromUrl : Url -> Maybe Route

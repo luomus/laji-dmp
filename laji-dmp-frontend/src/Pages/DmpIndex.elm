@@ -23,23 +23,29 @@ import Html exposing (tr)
 import Html exposing (th)
 import Html exposing (td)
 import Html exposing (h5)
+import User exposing (LoginSession)
 
-type Model = Loading | Error | DmpList DmpList
+type DmpListState = Loading | Error | DmpList DmpList
+
+type alias Model =
+  { dmpList: DmpListState
+  , session: LoginSession
+  }
 
 type Msg = GotDmpListResponse (Result Http.Error DmpList)
 
-init : ( Model, Cmd Msg )
-init = (Loading, getDmpList GotDmpListResponse)
+init : LoginSession -> ( Model, Cmd Msg )
+init session = ({ dmpList = Loading, session = session }, getDmpList GotDmpListResponse)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     GotDmpListResponse res ->
       case res of
-        Ok dmpList -> (DmpList dmpList, Cmd.none)
+        Ok dmpList -> ({ model | dmpList = DmpList dmpList }, Cmd.none)
         Err e ->
           let _ = Debug.log "Error loading DMP list" e
-          in (Error, Cmd.none)
+          in ({ model | dmpList = Error }, Cmd.none)
 
 dmpElementView : DataManagementPlan -> Html msg
 dmpElementView elem =
@@ -57,12 +63,16 @@ view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp Index View"
   , body = div [class "dmp-index"]
-    <| case model of
+    [ div [] <| case model.dmpList of
       Error -> [ text "Failed to load the list of DMPs." ]
       Loading -> [ text "Loading the list of DMPs..." ]
       DmpList dmpList -> 
         [
           dmpTableView dmpList
-          , a [href "/dmp/new", class "btn btn-primary"] [text "+ New DMP"]
         ]
+    , div [] <| case model.session of
+      User.LoggedIn personToken personResponse ->
+        [ a [href "/dmp/new", class "btn btn-primary"] [text "+ New DMP"] ]
+      _ -> []
+    ]
   }

@@ -86,10 +86,10 @@ changeRouteTo maybeRoute model =
       Nothing -> ( model, Cmd.none )
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
       Just (DmpRoute dmpRoute) -> case dmpRoute of
-        DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg Pages.DmpIndex.init
+        DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg <| Pages.DmpIndex.init model.loginSession
         DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
         DmpElementRoute dmpElementRoute -> case dmpElementRoute of
-          (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id
+          (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id model.loginSession
           (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of
@@ -97,12 +97,19 @@ changeRouteTo maybeRoute model =
             ( { model | loginSession = LoadingPerson token }
             , Cmd.batch 
               [ Nav.pushUrl model.key <| case next of
-                Just n -> n
+                Just n -> if String.length n > 0 then n else "/"
                 Nothing -> "/"
               , User.getPerson token <| GotPerson token
               ]
             )
           (_, _) -> ( model, Nav.pushUrl model.key "/" )
+
+updateSession : LoginSession -> RouteModel -> RouteModel
+updateSession newSession routeModel =
+  case routeModel of
+    DmpIndexModel model -> DmpIndexModel { model | session = newSession }
+    DmpInfoModel model -> DmpInfoModel { model | session = newSession }
+    a -> a
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -124,7 +131,7 @@ update msg model =
       (GotDmpIndexMsg subMsg, DmpIndexModel mod) ->
         mapPageUpdate DmpIndexModel GotDmpIndexMsg (Pages.DmpIndex.update subMsg mod)
       (GotDmpInfoMsg subMsg, DmpInfoModel mod) ->
-        mapPageUpdate DmpInfoModel GotDmpInfoMsg (Pages.DmpInfo.update subMsg mod)
+        mapPageUpdate DmpInfoModel GotDmpInfoMsg (Pages.DmpInfo.update model.loginSession subMsg mod)
       (GotDmpEditMsg subMsg, DmpEditModel mod) ->
         case subMsg of
           Pages.DmpEdit.OnDelete -> (model, toggleDialog Pages.DmpEdit.deleteDialogId)
@@ -136,7 +143,7 @@ update msg model =
         case res of
           Ok person ->
             let session = LoggedIn token person
-            in ( { model | loginSession = session }, updateLocalStorage <| User.encodeLogin session )
+            in ( { model | loginSession = session, routeModel = updateSession session model.routeModel }, updateLocalStorage <| User.encodeLogin session )
           Err e ->
             let _ = Debug.log "Unable to get person" e
             in ( { model | loginSession = NotLoggedIn }, updateLocalStorage <| User.encodeLogin NotLoggedIn)
@@ -146,7 +153,7 @@ update msg model =
         case res of
           Ok str ->
             let session = NotLoggedIn
-            in ( { model | loginSession = session }, updateLocalStorage <| User.encodeLogin session)
+            in ( { model | loginSession = session, routeModel = updateSession session model.routeModel }, updateLocalStorage <| User.encodeLogin session)
           Err e ->
             let _ = Debug.log "Unable to delete person token" e
             in (model, Cmd.none)

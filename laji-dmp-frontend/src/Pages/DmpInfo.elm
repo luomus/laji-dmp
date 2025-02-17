@@ -21,28 +21,34 @@ import Html exposing (h2)
 import Html exposing (h3)
 import Html exposing (h4)
 import Html exposing (h5)
+import User
 
-type Model = Error | Loading | Dmp DataManagementPlan
+type DmpState = Error | Loading | Dmp DataManagementPlan
+
+type alias Model =
+  { dmp: DmpState
+  , session: User.LoginSession
+  }
 
 type Msg = GotDmpResponse (Result Http.Error DataManagementPlan)
 
-init : String -> ( Model, Cmd Msg )
-init str =
-  let maybeId = String.toInt str
+init : String -> User.LoginSession -> ( Model, Cmd Msg )
+init idStr session =
+  let maybeId = String.toInt idStr
   in case maybeId of
     Just id ->
-      (Loading, getDmp id GotDmpResponse)
-    Nothing -> (Error, Cmd.none)
+      ({ dmp = Loading, session = session }, getDmp id GotDmpResponse)
+    Nothing -> ({ dmp = Error, session = session }, Cmd.none)
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
+update : User.LoginSession -> Msg -> Model -> (Model, Cmd Msg)
+update session msg model =
   case msg of
     GotDmpResponse res ->
       case res of
-        Ok dmp -> (Dmp dmp, Cmd.none)
+        Ok dmp -> ({ model | dmp = Dmp dmp, session = session }, Cmd.none)
         Err e ->
           let _ = Debug.log "Error loading DMP" e
-          in (Error, Cmd.none)
+          in ({ model | dmp = Error, session = session }, Cmd.none)
 
 hostView : Maybe Host -> Html Msg
 hostView maybeHost = case maybeHost of
@@ -73,12 +79,17 @@ view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "Dmp Info View"
   , body =
-    div [] <| case model of
+    div [] <| case model.dmp of
       Dmp dmp ->
         case dmp.id of
           Just id ->
             [ h2 [] [ text <| "DMP " ++ (String.fromInt id) ++ " info" ]
-            , div [] [ a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit", class "btn"] [text "Edit"] ]
+            , div [] <| case model.session of
+              User.LoggedIn _ person ->
+                if Array.length (Array.filter (\r -> r == User.Admin) person.role) > 0
+                  then [ a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit", class "btn"] [text "Edit"] ]
+                  else []
+              _ -> []
             , div [] <| Array.toList <| Array.indexedMap datasetView dmp.datasets
             ]
           Nothing -> [text "Error: expected DMP to have an id"]
