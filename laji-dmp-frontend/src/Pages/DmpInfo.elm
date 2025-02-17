@@ -22,6 +22,7 @@ import Html exposing (h3)
 import Html exposing (h4)
 import Html exposing (h5)
 import User
+import Html exposing (p)
 
 type DmpState = Error | Loading | Dmp DataManagementPlan
 
@@ -84,6 +85,7 @@ view model =
         case dmp.id of
           Just id ->
             [ h2 [] [ text <| "DMP " ++ (String.fromInt id) ++ " info" ]
+            , p [] [ text <| "Organization: " ++ dmp.orgId ]
             , div [] <| case model.session of
               User.LoggedIn _ person ->
                 if Array.length (Array.filter (\r -> r == User.Admin) person.role) > 0

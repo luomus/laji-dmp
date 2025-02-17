@@ -7,6 +7,6 @@ type alias Config =
 
 config : Config
 config =
-  { dmpApiUrl = "http://localhost:4000/"
+  { dmpApiUrl = "http://localhost:4000"
   , lajiApiUrl = ""
   }

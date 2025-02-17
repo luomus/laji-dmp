@@ -8,6 +8,8 @@
 
 module Database
   ( DataManagementPlan
+  , org_id
+  , plan_id
   , createDataManagementPlanTable
   , enableForeignKeys
   , getDataManagementPlan
@@ -76,6 +78,7 @@ data Dataset = Dataset
 
 data DataManagementPlan = DataManagementPlan
   { plan_id :: Maybe Int
+  , org_id :: String
   , datasets :: [Dataset]
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
@@ -88,7 +91,8 @@ createDataManagementPlanTable conn =
   let
     createDMPTable = execute_ conn "\
       \CREATE TABLE IF NOT EXISTS data_management_plans (\
-      \id INTEGER PRIMARY KEY \
+      \id INTEGER PRIMARY KEY, \
+      \org_id TEXT \
       \);"
     createHostsTable = execute_ conn
       "CREATE TABLE IF NOT EXISTS hosts (\
@@ -129,6 +133,7 @@ enableForeignKeys conn = execute_ conn "PRAGMA foreign_keys = ON;"
 
 data DMPQueryResult = DMPQueryResult
   { dmp_plan_id :: Int
+  , dmp_org_id :: String
   , dataset_id :: Maybe Int
   , datasets_title :: Maybe String
   , datasets_personal_data :: Maybe PersonalData
@@ -141,7 +146,7 @@ data DMPQueryResult = DMPQueryResult
   }
 
 instance FromRow DMPQueryResult where
-  fromRow = DMPQueryResult <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = DMPQueryResult <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 groupQueryResultBy :: Ord b => [t] -> (t -> b) -> [[t]]
 groupQueryResultBy dmps by = groupBy (\a b -> by a == by b) (sortOn by dmps)
@@ -200,6 +205,7 @@ parseDMPs grouped_dmps =
       let dmp = head dmps
       in DataManagementPlan
         { plan_id = Just $ dmp_plan_id dmp
+        , org_id = dmp_org_id dmp
         , datasets = parseDatasets $ groupByDatasetId dmps
         }
   in fmap f grouped_dmps
@@ -210,6 +216,7 @@ dmpQueryResultToNested arr = parseDMPs $ groupByPlanId arr
 getDataManagementPlans :: Connection -> IO [DataManagementPlan]
 getDataManagementPlans conn = dmpQueryResultToNested <$> query_ conn "\
   \SELECT data_management_plans.id AS plan_id, \
+  \       data_management_plans.org_id AS org_id, \
   \       datasets.id AS dataset_id, \
   \       datasets.title AS title, \
   \       datasets.personal_data AS personal_data, \
@@ -246,8 +253,8 @@ insertDataset conn dmpId (Dataset title personalData _) = do
   fromIntegral <$> lastInsertRowId conn
 
 insertDataManagementPlan :: Connection -> DataManagementPlan -> IO Int
-insertDataManagementPlan conn (DataManagementPlan _ _) = do
-  execute_ conn "INSERT INTO data_management_plans DEFAULT VALUES;"
+insertDataManagementPlan conn (DataManagementPlan _ org _) = do
+  execute conn "INSERT INTO data_management_plans (org_id) VALUES (?);" (Only org)
   fromIntegral <$> lastInsertRowId conn
 
 createDatasets :: Connection -> DataManagementPlan -> Int -> IO ()
@@ -270,6 +277,7 @@ createDataManagementPlan conn plan = do
 getDataManagementPlan :: Connection -> Int -> IO [DataManagementPlan]
 getDataManagementPlan conn planId = dmpQueryResultToNested <$> query conn "\
   \SELECT data_management_plans.id AS plan_id, \
+  \       data_management_plans.org_id AS org_id, \
   \       datasets.id AS dataset_id, \
   \       datasets.title AS title, \
   \       datasets.personal_data AS personal_data, \

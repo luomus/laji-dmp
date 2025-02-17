@@ -52,6 +52,7 @@ dmpElementView elem =
   case elem.id of
     Just id -> a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
       [ h5 [] [ text <| "DMP " ++ String.fromInt id ]
+      , div [] [ text <| "Organization: " ++ elem.orgId ]
       , div [] [ text <| String.fromInt (Array.length elem.datasets) ++ " datasets" ]
       ]
     Nothing -> li [] [text "Error: expected DMP to have an id"]

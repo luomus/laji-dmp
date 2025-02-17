@@ -87,10 +87,10 @@ changeRouteTo maybeRoute model =
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
       Just (DmpRoute dmpRoute) -> case dmpRoute of
         DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg <| Pages.DmpIndex.init model.loginSession
-        DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key
+        DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key model.loginSession
         DmpElementRoute dmpElementRoute -> case dmpElementRoute of
           (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id model.loginSession
-          (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id
+          (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id model.loginSession
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of
           (Just token, next) ->
@@ -109,6 +109,8 @@ updateSession newSession routeModel =
   case routeModel of
     DmpIndexModel model -> DmpIndexModel { model | session = newSession }
     DmpInfoModel model -> DmpInfoModel { model | session = newSession }
+    DmpNewModel model -> DmpNewModel { model | session = newSession }
+    DmpEditModel model -> DmpEditModel { model | session = newSession }
     a -> a
 
 update : Msg -> Model -> (Model, Cmd Msg)

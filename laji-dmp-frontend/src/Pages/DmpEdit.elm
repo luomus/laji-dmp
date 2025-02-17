@@ -13,11 +13,17 @@ import Views.Dialog exposing (dialog)
 import DmpApi exposing (DataManagementPlan)
 import DmpApi exposing (getDmp)
 import Html.Attributes exposing (class)
+import User
 
-type Model
+type EditorState
   = EditorModel Views.DmpEditor.Model
   | Loading Nav.Key String
   | Error
+
+type alias Model =
+  { state: EditorState
+  , session: User.LoginSession
+  }
 
 type Msg
   = EditorMsg Views.DmpEditor.Msg
@@ -30,50 +36,55 @@ type Msg
 deleteDialogId : String
 deleteDialogId = "delete-dialog"
 
-init : Nav.Key -> String -> ( Model, Cmd Msg )
-init key strId =
+init : Nav.Key -> String -> User.LoginSession -> ( Model, Cmd Msg )
+init key strId session =
   let maybeId = String.toInt strId
   in case maybeId of
     Just id ->
-      (Loading key strId, getDmp id GotDmpGetResponse)
-    Nothing -> (Error, Cmd.none)
+      ({ state = Loading key strId, session = session }, getDmp id GotDmpGetResponse)
+    Nothing -> ({ state = Error, session = session }, Cmd.none)
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg model = case (msg, model) of
-  (EditorMsg subMsg, EditorModel subModel) -> Tuple.mapBoth (\m -> EditorModel m) (Cmd.map EditorMsg) <| Views.DmpEditor.update subMsg subModel
+update msg model = case (msg, model.state) of
+  (EditorMsg subMsg, EditorModel subModel) -> Tuple.mapBoth (\m -> { model | state = EditorModel m }) (Cmd.map EditorMsg) <| Views.DmpEditor.update subMsg subModel
   (OnDelete, EditorModel _) -> (model, Cmd.none)
   (OnCancelDelete, EditorModel _) -> (model, Cmd.none)
   (OnConfirmDelete, EditorModel subModel) ->
-    ( EditorModel { subModel | status = Submitting }
+    ( { model | state = EditorModel { subModel | status = Submitting } }
     , case subModel.mode of
-      Edit id -> deleteDmp id GotDmpDeleteResponse
+      Edit id -> case model.session of
+        User.LoggedIn personToken person -> deleteDmp id personToken GotDmpDeleteResponse
+        _ -> Debug.log "Error: tried to delete DMP while not logged in" Cmd.none
       _ -> Debug.log "Error: tried to delete DMP while not in edit mode" Cmd.none
     )
   (GotDmpDeleteResponse res, EditorModel subModel) -> case res of
     Ok str -> 
       (model, Nav.pushUrl subModel.key "/dmp")
     Err e ->
-      (EditorModel { subModel | status = SubmitError e }, Cmd.none)
+      ({ model | state = EditorModel { subModel | status = SubmitError e }}, Cmd.none)
   (GotDmpGetResponse res, Loading key strId) ->
     case res of
       Ok dmp ->
-        ( EditorModel
-          { dmp = dmp
-          , status = Editing
-          , key = key
-          , mode = Edit strId
+        (
+          { model | state = EditorModel
+            { dmp = dmp
+            , session = model.session
+            , status = Editing
+            , key = key
+            , mode = Edit strId
+            }
           }
         , Cmd.none
         )
       Err e ->
         let _ = Debug.log "Error loading DMP" e
-        in (Error, Cmd.none)
-  (_, _) -> (Error, Cmd.none)
+        in ({ model | state = Error }, Cmd.none)
+  (_, _) -> ({ model | state = Error }, Cmd.none)
 
 view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "DMP Edit View"
-  , body = Html.div [] <| case model of
+  , body = Html.div [] <| case model.state of
     EditorModel subModel ->
       [ Html.map EditorMsg <| Views.DmpEditor.view subModel
       , button [ onClick OnDelete, class "btn btn-danger" ] [text "Delete DMP"]

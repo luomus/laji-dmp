@@ -3,7 +3,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
@@ -25,9 +24,7 @@ import LajiApi
 import System.Environment (lookupEnv)
 import qualified Data.Maybe
 import Data.Functor ((<&>))
-import Data.Aeson (decode, FromJSON)
-import GHC.Generics (Generic)
-import Data.Text (Text, unpack)
+import Data.Text (Text, unpack, pack)
 import Control.Concurrent.STM
 import Network.HTTP.Req (HttpConfig)
 
@@ -64,7 +61,7 @@ handlerDmpIndex (AppState { appDbConnection = conn }) = do
 
 handlerDmpPost :: AppState -> Text -> DataManagementPlan -> Handler NoContent
 handlerDmpPost (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan = do
-  userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
+  userHasRights <- liftIO $ checkUserRights personToken (pack $ org_id plan) personCache httpConfig
   if userHasRights
     then do
       liftIO $ createDataManagementPlan conn plan
@@ -80,21 +77,35 @@ handlerDmpGet (AppState { appDbConnection = conn }) id = do
     Nothing -> throwError err404 { errBody = "No such DMP was found." }
 
 handlerDmpPut :: AppState -> Text -> Int -> DataManagementPlan -> Handler NoContent
-handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan_id plan = do
-  userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
-  if userHasRights
-    then do
-      liftIO $ updateDataManagementPlan conn plan_id plan
-      return NoContent
-    else do
-      throwError err403 { errBody = "User doesn't have rights for this organization." }
+handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken planId plan =
+  let 
+    idMatch = case plan_id plan of
+      Just i -> i == planId
+      Nothing -> False
+  in do
+    orgMatch <- do
+      oldPlan <- liftIO $ getDataManagementPlan conn planId
+      return $ org_id (head oldPlan) == org_id plan
+    userHasRights <- liftIO $ checkUserRights personToken (pack $ org_id plan) personCache httpConfig
+    if idMatch
+      then if orgMatch
+        then if userHasRights
+          then do
+            liftIO $ updateDataManagementPlan conn planId plan
+            return NoContent
+          else do
+            throwError err401 { errBody = "User doesn't have rights for this organization." }
+        else do
+          throwError err403 { errBody = "DMPs can't be transferred between organizations." }
+      else do
+        throwError err403 { errBody = "Id mismatch." }
 
 handlerDmpDelete :: AppState -> Text -> Int -> Handler NoContent
-handlerDmpDelete (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan_id = do
+handlerDmpDelete (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken planId = do
   userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
   if userHasRights
     then do
-      liftIO $ deleteDataManagementPlan conn plan_id
+      liftIO $ deleteDataManagementPlan conn planId
       return NoContent
     else do
       throwError err403 { errBody = "User doesn't have rights for this organization." }

@@ -41,8 +41,9 @@ import Html exposing (select)
 import Html exposing (option)
 import Html exposing (hr)
 import Html.Attributes exposing (selected)
+import User
 
-type ModelStatus = Editing | Submitting | SubmitError Error
+type ModelStatus = Editing | Submitting | SubmitError Error | NotLoggedInError
 
 type EditorMode = New | Edit String
 
@@ -51,11 +52,13 @@ type alias Model =
   , status: ModelStatus
   , key: Nav.Key
   , mode: EditorMode
+  , session: User.LoginSession
   }
 
 type Msg
   = OnSubmit
   | GotDmpApiResponse (Result Error String)
+  | OnModifyDmpOrg String
   | OnAddDataset
   | OnRemoveDataset Int
   | OnModifyDatasetTitle Int String
@@ -68,15 +71,23 @@ type Msg
   | OnModifyHostBackupFrequency Int Int (Maybe String)
   | OnModifyHostGeoLocation Int Int (Maybe String)
 
-init : Nav.Key -> EditorMode -> ( Model, Cmd Msg )
-init key mode =
-  ( { dmp = { id = Nothing, datasets = Array.fromList [] }
-    , status = Editing
-    , key = key
-    , mode = mode
-    }
-  , Cmd.none
-  )
+init : Nav.Key -> EditorMode -> User.LoginSession -> ( Model, Cmd Msg )
+init key mode session =
+  let
+    org = case session of
+      User.LoggedIn _ person -> case Array.get 0 person.organisation of
+        Just o -> o
+        Nothing -> ""
+      _ -> ""
+  in
+    ( { dmp = { id = Nothing, orgId = org, datasets = Array.fromList [] }
+      , status = Editing
+      , key = key
+      , mode = mode
+      , session = session
+      }
+    , Cmd.none
+    )
 
 removeAt : Int -> Array.Array a -> Array.Array a
 removeAt idx array =
@@ -90,6 +101,10 @@ removeAt idx array =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    OnModifyDmpOrg org ->
+      let
+        updateDmp dmp = { dmp | orgId = org}
+      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
     OnAddDataset ->
       let
         updateDmp dmp =
@@ -199,9 +214,12 @@ update msg model =
       in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
     OnSubmit -> case model.status of
       Submitting -> (model, Cmd.none)
-      _-> case model.mode of
-        New -> ({ model | status = Submitting }, newDmp model.dmp GotDmpApiResponse)
-        Edit id -> ({ model | status = Submitting }, editDmp id model.dmp GotDmpApiResponse)
+      _-> case model.session of
+        User.LoggedIn personToken person ->
+          case model.mode of
+            New -> ({ model | status = Submitting }, newDmp model.dmp personToken GotDmpApiResponse)
+            Edit id -> ({ model | status = Submitting }, editDmp id model.dmp personToken GotDmpApiResponse)
+        _ -> ({ model | status = NotLoggedInError }, Cmd.none)
     GotDmpApiResponse res -> case res of
       Ok str -> 
         (model, Nav.pushUrl model.key "/dmp")
@@ -357,26 +375,46 @@ datasetEditorView dataset datasetIdx d = div [ class "dmp-editor-dataset" ]
     [ text "- Remove dataset" ]
   ]
 
-dmpEditorView : DataManagementPlan -> Bool -> Html Msg
-dmpEditorView dmp d = div [ class "dmp-editor" ]
-  [ h2 [] [ text "Edit DMP" ]
-  , div [ class "dmp-editor-dataset-list" ]
-    <| Array.toList
-    <| Array.indexedMap (\idx ds -> datasetEditorView ds idx d) dmp.datasets
-  , button
-    [ onClick OnAddDataset
-    , disabled d
-    , class "btn"
+dmpEditorView : DataManagementPlan -> Bool -> EditorMode -> User.LoginSession -> Html Msg
+dmpEditorView dmp d mode session =
+  let
+    orgToOption org = option [ value org, selected <| dmp.orgId == org ] [ text org ]
+  in div [ class "dmp-editor" ]
+    [ h2 [] [ text "Edit DMP" ]
+    , div [ class "form-field" ] <| case mode of
+      Edit _ -> [ label [] [ text <| "Organization: " ++ dmp.orgId ] ]
+      New ->
+        case session of
+          User.LoggedIn personToken person ->
+            [ label [ for "dmp-editor-org" ] [ text "Organization" ]
+            , select
+              [ id "dmp-editor-org"
+              , value <| case Array.get 0 person.organisation of
+                Just org -> org
+                Nothing -> ""
+              , disabled d
+              , onInput (\str -> OnModifyDmpOrg str)
+              ]
+              (Array.toList <| Array.map orgToOption person.organisation)
+            ]
+          _ -> [ text "You have to be logged in to use the DMP editor." ]
+    , div [ class "dmp-editor-dataset-list" ]
+      <| Array.toList
+      <| Array.indexedMap (\idx ds -> datasetEditorView ds idx d) dmp.datasets
+    , button
+      [ onClick OnAddDataset
+      , disabled d
+      , class "btn"
+      ]
+      [ text "+ Add dataset" ]
+    , hr [] []
     ]
-    [ text "+ Add dataset" ]
-  , hr [] []
-  ]
 
 editorFormView : Model -> Html Msg
 editorFormView model = 
   div [ class "dmp-editor-wrapper" ]
   [ div []
-      [ dmpEditorView model.dmp (model.status == Submitting)
+      [ dmpEditorView model.dmp (model.status == Submitting) model.mode model.session
       , button
         [ onClick OnSubmit
         , disabled (model.status == Submitting)
@@ -386,6 +424,7 @@ editorFormView model =
       ]
   , div [] <| case model.status of
     SubmitError e -> [ text <| "Error submitting DMP: " ++ Debug.toString e ]
+    NotLoggedInError -> [ text <| "Error submitting DMP: Not logged in!" ]
     _ -> []
   ]
 
