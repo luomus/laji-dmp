@@ -67,7 +67,7 @@ executable laji-dmp-backend
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.17.2.1,
+    build-depends:    base,
                       servant,
                       servant-server,
                       servant-client,
@@ -79,7 +79,7 @@ executable laji-dmp-backend
                       wai,
                       warp,
                       aeson,
-                      sqlite-simple,
+                      postgresql-simple,
                       http-types,
                       unordered-containers,
                       http-client,
@@ -93,6 +93,7 @@ executable laji-dmp-backend
                       crypton-x509-store,
                       stm,
                       time,
+                      raw-strings-qq >= 1.1,
 
     -- Directories containing source files.
     hs-source-dirs:   app

@@ -11,7 +11,7 @@ import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors
 import Network.HTTP.Types (status404)
 import Control.Monad.IO.Class (liftIO)
-import Database.SQLite.Simple
+import Database.PostgreSQL.Simple
 import Servant
 import qualified Data.HashMap.Strict as HM
 
@@ -155,9 +155,14 @@ app appState = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIW
 
 main :: IO ()
 main = do
-  dbPath <- lookupEnv "LAJI_DMP_DATABASE" <&> Data.Maybe.fromMaybe "laji-dmp.db"
-  conn <- open dbPath
-  enableForeignKeys conn
+  -- dbPath <- lookupEnv "LAJI_DMP_DATABASE" <&> Data.Maybe.fromMaybe "laji-dmp.db"
+  conn <- connect defaultConnectInfo {
+      connectHost = "localhost",
+      connectPort = 5432,
+      connectUser = "dev",
+      connectPassword = "1234",
+      connectDatabase = "dmp"
+  }
   createDataManagementPlanTable conn
   print ("Hosting on port 4000" :: String)
   personCache <- newTVarIO HM.empty
