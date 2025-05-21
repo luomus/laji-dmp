@@ -19,7 +19,8 @@ import Data.Swagger
 import Servant.Swagger
 import Servant.Swagger.UI
 
-import Database
+import qualified Database.Models as Models
+import qualified Database.Queries as Queries
 import LajiApi
 import System.Environment (lookupEnv)
 import qualified Data.Maybe
@@ -27,6 +28,13 @@ import Data.Functor ((<&>))
 import Data.Text (Text, unpack, pack)
 import Control.Concurrent.STM
 import Network.HTTP.Req (HttpConfig)
+import Data.Time (UTCTime(UTCTime))
+import Database.PostgreSQL.Simple.FromField (Oid (Oid))
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as LBS
+import Data.ByteString (ByteString)
+import Data.Text.Lazy.Encoding (encodeUtf8)
+import qualified Data.Text.Lazy as Text.Lazy
 
 data AppState = AppState
   { appDbConnection :: Connection
@@ -55,43 +63,52 @@ checkUserRights personToken orgId personCache httpConfig =
         Just person -> checkOrg person || "MA.admin" `elem` role person
         Nothing -> False
 
-handlerDmpIndex :: AppState -> Handler [DataManagementPlan]
+handlerDmpIndex :: AppState -> Handler [Models.Dmp]
 handlerDmpIndex (AppState { appDbConnection = conn }) = do
-  liftIO $ getDataManagementPlans conn
+  res <- liftIO $ Queries.getDataManagementPlans conn
+  case res of
+    Right plans -> return plans
+    Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
 
-handlerDmpPost :: AppState -> Text -> DataManagementPlan -> Handler NoContent
-handlerDmpPost (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken plan = do
-  userHasRights <- liftIO $ checkUserRights personToken (pack $ org_id plan) personCache httpConfig
+handlerDmpPost :: AppState -> Text -> Models.Dmp -> Handler NoContent
+handlerDmpPost (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken dmp = do
+  userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) personCache httpConfig
   if userHasRights
     then do
-      liftIO $ createDataManagementPlan conn plan
+      liftIO $ Queries.insertDataManagementPlan conn dmp
       return NoContent
     else do
       throwError err403 { errBody = "User doesn't have rights for this organization." }
 
-handlerDmpGet :: AppState -> Int -> Handler DataManagementPlan
-handlerDmpGet (AppState { appDbConnection = conn }) id = do
-  maybeDmp <- liftIO $ Data.Maybe.listToMaybe <$> getDataManagementPlan conn id
-  case maybeDmp of
-    Just dmp -> return dmp
-    Nothing -> throwError err404 { errBody = "No such DMP was found." }
+handlerDmpGet :: AppState -> Int -> Handler Models.Dmp
+handlerDmpGet (AppState { appDbConnection = conn }) i = do
+  res <- liftIO $ Queries.getDataManagementPlan conn i
+  case res of
+    Right plans ->
+      case Data.Maybe.listToMaybe plans of
+        Just dmp -> return dmp
+        Nothing -> throwError err404 { errBody = "No such DMP was found." }
+    Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
 
-handlerDmpPut :: AppState -> Text -> Int -> DataManagementPlan -> Handler NoContent
-handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken planId plan =
+handlerDmpPut :: AppState -> Text -> Int -> Models.Dmp -> Handler NoContent
+handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken dmpId dmp =
   let 
-    idMatch = case plan_id plan of
-      Just i -> i == planId
-      Nothing -> False
+    idMatch = case Models.dmpId dmp of
+      Just i -> i == dmpId
+      Nothing -> True
   in do
     orgMatch <- do
-      oldPlan <- liftIO $ getDataManagementPlan conn planId
-      return $ org_id (head oldPlan) == org_id plan
-    userHasRights <- liftIO $ checkUserRights personToken (pack $ org_id plan) personCache httpConfig
+      oldPlanRes <- liftIO $ Queries.getDataManagementPlan conn dmpId
+      case oldPlanRes of
+        Right oldPlan ->
+          return $ Models.dmpOrgId (head oldPlan) == Models.dmpOrgId dmp
+        Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
+    userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) personCache httpConfig
     if idMatch
       then if orgMatch
         then if userHasRights
           then do
-            liftIO $ updateDataManagementPlan conn planId plan
+            liftIO $ Queries.updateDataManagementPlan conn dmpId dmp
             return NoContent
           else do
             throwError err401 { errBody = "User doesn't have rights for this organization." }
@@ -101,11 +118,11 @@ handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, 
         throwError err403 { errBody = "Id mismatch." }
 
 handlerDmpDelete :: AppState -> Text -> Int -> Handler NoContent
-handlerDmpDelete (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken planId = do
+handlerDmpDelete (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken dmpId = do
   userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
   if userHasRights
     then do
-      liftIO $ deleteDataManagementPlan conn planId
+      liftIO $ Queries.deleteDataManagementPlan conn dmpId
       return NoContent
     else do
       throwError err403 { errBody = "User doesn't have rights for this organization." }
@@ -115,10 +132,10 @@ handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "t
 
 type API =
   "dmp" :>
-    (     Get '[JSON] [DataManagementPlan]
-    :<|>  QueryParam' '[Required] "personToken" Text :> ReqBody '[JSON] DataManagementPlan :> Post '[JSON] NoContent
-    :<|>  Capture "id" Int :> Get '[JSON] DataManagementPlan
-    :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> ReqBody '[JSON] DataManagementPlan :> Put '[JSON] NoContent
+    (     Get '[JSON] [Models.Dmp]
+    :<|>  QueryParam' '[Required] "personToken" Text :> ReqBody '[JSON] Models.Dmp :> Post '[JSON] NoContent
+    :<|>  Capture "id" Int :> Get '[JSON] Models.Dmp
+    :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> ReqBody '[JSON] Models.Dmp :> Put '[JSON] NoContent
     :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> Delete '[JSON] NoContent
     )
   :<|> Raw
@@ -163,7 +180,8 @@ main = do
       connectPassword = "1234",
       connectDatabase = "dmp"
   }
-  createDataManagementPlanTable conn
+
+  Queries.initializeDatabase conn
   print ("Hosting on port 4000" :: String)
   personCache <- newTVarIO HM.empty
   httpConfig <- createHttpConfig
