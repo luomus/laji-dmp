@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module LajiApi (getPerson, role, Person, organisation, organisationAdmin, CacheElement, createHttpConfig) where
+module LajiApi (getPerson, role, Person, organisation, organisationAdmin, CacheElement, createHttpConfig, LajiApiConfig, lookupLajiApiConfig) where
 
 import Control.Monad.IO.Class
 import Data.Aeson
@@ -20,6 +20,10 @@ import Data.X509.CertificateStore (CertificateStore)
 import qualified Data.HashMap.Strict as HM
 import Control.Concurrent.STM
 import Data.Time (UTCTime, getCurrentTime, addUTCTime)
+import System.Environment (lookupEnv)
+import Data.Functor ((<&>))
+import Data.Text as T
+import qualified Data.Maybe
 
 data CacheElement t = CacheElement
   { cacheElementLastUpdate :: UTCTime
@@ -34,6 +38,17 @@ data Person = Person
   , organisationAdmin :: Maybe [String]
   } deriving (Show, Generic)
 instance FromJSON Person
+
+data LajiApiConfig = LajiApiConfig
+  { lajiApiHostName :: String
+  , lajiApiAccessToken :: String
+  }
+
+lookupLajiApiConfig :: IO LajiApiConfig
+lookupLajiApiConfig = do
+  hostName <- lookupEnv "LAJI_API_HOSTNAME" <&> Data.Maybe.fromMaybe "dev.laji.fi"
+  accessToken <- lookupEnv "LAJI_API_ACCESS_TOKEN" <&> Data.Maybe.fromMaybe "2fa73578d9328ff47705a34bb3073a000953c8b1569205c798e540b80e9aea10"
+  return LajiApiConfig { lajiApiHostName = hostName, lajiApiAccessToken = accessToken}
 
 defaultClientParams :: (HostName, BS.ByteString) -> CertificateStore -> ClientParams
 defaultClientParams (hostName, serviceBlob) caStore = (defaultParamsClient hostName serviceBlob)
@@ -51,25 +66,25 @@ defaultClientParams (hostName, serviceBlob) caStore = (defaultParamsClient hostN
     , clientDebug                     = def
     }
 
-createHttpConfig :: IO HttpConfig
-createHttpConfig = do
+createHttpConfig :: LajiApiConfig -> IO HttpConfig
+createHttpConfig cfg = do
   maybeCaStore <- X509.readCertificateStore "letsencrypt-ca.pem"
   let caStore = maybe (error "Failed to load CA certificates") Prelude.id maybeCaStore
-  let tlsSettings = TLSSettings $ defaultClientParams ("dev.laji.fi", "") caStore
+  let tlsSettings = TLSSettings $ defaultClientParams (lajiApiHostName cfg, "") caStore
   let managerSettings = mkManagerSettings tlsSettings Nothing
   manager <- newManager managerSettings
   let customHttpConfig = defaultHttpConfig { httpConfigAltManager = Just manager }
   return customHttpConfig
 
-getPerson :: Text -> TVar (HM.HashMap Text (CacheElement Person)) -> HttpConfig-> IO (Maybe Person)
-getPerson personToken personCache httpConfig =
+getPerson :: Text -> TVar (HM.HashMap Text (CacheElement Person)) -> LajiApiConfig -> HttpConfig-> IO (Maybe Person)
+getPerson personToken personCache lajiApiConfig httpConfig =
   let
     makeRequest = runReq httpConfig $ req
       GET
-      (https "dev.laji.fi" /: "api" /: "person" /: personToken)
+      (https (T.pack $ lajiApiHostName lajiApiConfig) /: "api" /: "person" /: personToken)
       NoReqBody
       jsonResponse
-      ("access_token" =: ("2fa73578d9328ff47705a34bb3073a000953c8b1569205c798e540b80e9aea10" :: String))
+      ("access_token" =: T.pack (lajiApiAccessToken lajiApiConfig))
     updateCache :: UTCTime -> IO (Maybe Person)
     updateCache currentTime = do
       result <- try makeRequest :: IO (Either SomeException (JsonResponse (Maybe Person)))
@@ -81,7 +96,7 @@ getPerson personToken personCache httpConfig =
           case maybePerson of
             Just person ->
               atomically $ modifyTVar' personCache (
-                HM.insert personToken CacheElement 
+                HM.insert personToken CacheElement
                   { cacheElementLastUpdate = currentTime
                   , cacheElementValue = person
                   }

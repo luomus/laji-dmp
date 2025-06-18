@@ -35,15 +35,18 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.ByteString (ByteString)
 import Data.Text.Lazy.Encoding (encodeUtf8)
 import qualified Data.Text.Lazy as Text.Lazy
+import qualified Database.Models
+import qualified Data.ByteString.Lazy.Char8
 
 data AppState = AppState
   { appDbConnection :: Connection
   , appPersonCache :: TVar (HM.HashMap Text (CacheElement Person))
   , appHttpConfig :: HttpConfig
+  , appLajiApiConfig :: LajiApiConfig
   }
 
-checkUserRights :: Text -> Text -> TVar (HM.HashMap Text (CacheElement Person)) -> HttpConfig -> IO Bool
-checkUserRights personToken orgId personCache httpConfig =
+checkUserRights :: Text -> Text -> AppState -> IO Bool
+checkUserRights personToken orgId state =
   let
     checkOrg :: Person -> Bool
     checkOrg person =
@@ -58,7 +61,7 @@ checkUserRights personToken orgId personCache httpConfig =
       )
   in
     do
-      maybePerson <- getPerson personToken personCache httpConfig
+      maybePerson <- getPerson personToken (appPersonCache state) (appLajiApiConfig state) (appHttpConfig state)
       return $ case maybePerson of
         Just person -> checkOrg person || "MA.admin" `elem` role person
         Nothing -> False
@@ -71,11 +74,11 @@ handlerDmpIndex (AppState { appDbConnection = conn }) = do
     Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
 
 handlerDmpPost :: AppState -> Text -> Models.Dmp -> Handler NoContent
-handlerDmpPost (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken dmp = do
-  userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) personCache httpConfig
+handlerDmpPost state personToken dmp = do
+  userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) state
   if userHasRights
     then do
-      liftIO $ Queries.insertDataManagementPlan conn dmp
+      liftIO $ Queries.insertDataManagementPlan (appDbConnection state) dmp
       return NoContent
     else do
       throwError err403 { errBody = "User doesn't have rights for this organization." }
@@ -91,24 +94,24 @@ handlerDmpGet (AppState { appDbConnection = conn }) i = do
     Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
 
 handlerDmpPut :: AppState -> Text -> Int -> Models.Dmp -> Handler NoContent
-handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken dmpId dmp =
-  let 
+handlerDmpPut state personToken dmpId dmp =
+  let
     idMatch = case Models.dmpId dmp of
       Just i -> i == dmpId
       Nothing -> True
   in do
     orgMatch <- do
-      oldPlanRes <- liftIO $ Queries.getDataManagementPlan conn dmpId
+      oldPlanRes <- liftIO $ Queries.getDataManagementPlan (appDbConnection state) dmpId
       case oldPlanRes of
         Right oldPlan ->
           return $ Models.dmpOrgId (head oldPlan) == Models.dmpOrgId dmp
         Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
-    userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) personCache httpConfig
+    userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) state
     if idMatch
       then if orgMatch
         then if userHasRights
           then do
-            liftIO $ Queries.updateDataManagementPlan conn dmpId dmp
+            liftIO $ Queries.updateDataManagementPlan (appDbConnection state) dmpId dmp
             return NoContent
           else do
             throwError err401 { errBody = "User doesn't have rights for this organization." }
@@ -118,14 +121,18 @@ handlerDmpPut (AppState { appDbConnection = conn, appPersonCache = personCache, 
         throwError err403 { errBody = "Id mismatch." }
 
 handlerDmpDelete :: AppState -> Text -> Int -> Handler NoContent
-handlerDmpDelete (AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }) personToken dmpId = do
-  userHasRights <- liftIO $ checkUserRights personToken "" personCache httpConfig
-  if userHasRights
-    then do
-      liftIO $ Queries.deleteDataManagementPlan conn dmpId
-      return NoContent
-    else do
-      throwError err403 { errBody = "User doesn't have rights for this organization." }
+handlerDmpDelete state personToken dmpId = do
+  dmpsResult <- liftIO $ Queries.getDataManagementPlan (appDbConnection state) dmpId
+  case dmpsResult of
+    Left err -> throwError err404 { errBody = Data.ByteString.Lazy.Char8.pack $ "Could not find DMP: " ++ err }
+    Right dmps -> do
+      userHasRights <- liftIO $ checkUserRights personToken (Database.Models.dmpOrgId $ head dmps) state
+      if userHasRights
+        then do
+          liftIO $ Queries.deleteDataManagementPlan (appDbConnection state) dmpId
+          return NoContent
+        else do
+          throwError err403 { errBody = "User doesn't have rights for this organization." }
 
 handlerNotFound :: Application
 handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "text/plain")] "404 - Route Not Found"
@@ -170,21 +177,25 @@ customCorsPolicy = simpleCorsResourcePolicy
 app :: AppState -> Application
 app appState = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIWithSwagger) (server appState)
 
+lookupDbConnectInfo :: IO ConnectInfo
+lookupDbConnectInfo = do
+  host <- lookupEnv "LAJI_DMP_DATABASE_HOST" <&> Data.Maybe.fromMaybe "localhost"
+  port <- lookupEnv "LAJI_DMP_DATABASE_PORT" <&> Data.Maybe.fromMaybe 5432 . (>>= read)
+  user <- lookupEnv "LAJI_DMP_DATABASE_USER" <&> Data.Maybe.fromMaybe "dev"
+  pwd <- lookupEnv "LAJI_DMP_DATABASE_PWD" <&> Data.Maybe.fromMaybe "1234"
+  db <- lookupEnv "LAJI_DMP_DATABASE_DB" <&> Data.Maybe.fromMaybe "dmp"
+  return defaultConnectInfo { connectHost = host, connectPort = port, connectUser = user, connectPassword = pwd, connectDatabase = db }
+
 main :: IO ()
 main = do
-  -- dbPath <- lookupEnv "LAJI_DMP_DATABASE" <&> Data.Maybe.fromMaybe "laji-dmp.db"
-  conn <- connect defaultConnectInfo {
-      connectHost = "localhost",
-      connectPort = 5432,
-      connectUser = "dev",
-      connectPassword = "1234",
-      connectDatabase = "dmp"
-  }
-
+  connectInfo <- lookupDbConnectInfo
+  conn <- connect connectInfo
+  hostPort <- lookupEnv "LAJI_DMP_PORT" <&> Data.Maybe.fromMaybe 4000 . (>>= read)
   Queries.initializeDatabase conn
-  print ("Hosting on port 4000" :: String)
+  print ("Hosting on port " ++ show hostPort :: String)
   personCache <- newTVarIO HM.empty
-  httpConfig <- createHttpConfig
-  let appState = AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig }
-  run 4000 (app appState)
+  lajiApiConfig <- lookupLajiApiConfig
+  httpConfig <- createHttpConfig lajiApiConfig
+  let appState = AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig, appLajiApiConfig = lajiApiConfig }
+  run hostPort (app appState)
 
