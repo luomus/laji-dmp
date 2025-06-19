@@ -180,7 +180,7 @@ app appState = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIW
 
 lookupEnvInt :: String -> Int -> IO Int
 lookupEnvInt name def = do
-  maybeStr <- lookupEnv "LAJI_DMP_DATABASE_PORT"
+  maybeStr <- lookupEnv name
   case maybeStr of
     Just str -> case readMaybe str of
       Just int -> return int
