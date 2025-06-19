@@ -37,6 +37,7 @@ import Data.Text.Lazy.Encoding (encodeUtf8)
 import qualified Data.Text.Lazy as Text.Lazy
 import qualified Database.Models
 import qualified Data.ByteString.Lazy.Char8
+import Text.Read (readMaybe)
 
 data AppState = AppState
   { appDbConnection :: Connection
@@ -177,20 +178,31 @@ customCorsPolicy = simpleCorsResourcePolicy
 app :: AppState -> Application
 app appState = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIWithSwagger) (server appState)
 
+lookupEnvInt :: String -> Int -> IO Int
+lookupEnvInt name def = do
+  maybeStr <- lookupEnv "LAJI_DMP_DATABASE_PORT"
+  case maybeStr of
+    Just str -> case readMaybe str of
+      Just int -> return int
+      Nothing -> do
+        print ("Environment variable " ++ name ++ " is not a valid Int.")
+        return def
+    Nothing -> return def
+
 lookupDbConnectInfo :: IO ConnectInfo
 lookupDbConnectInfo = do
   host <- lookupEnv "LAJI_DMP_DATABASE_HOST" <&> Data.Maybe.fromMaybe "localhost"
-  port <- lookupEnv "LAJI_DMP_DATABASE_PORT" <&> Data.Maybe.fromMaybe 5432 . (>>= read)
+  port <- lookupEnvInt "LAJI_DMP_DATABASE_PORT" 5432
   user <- lookupEnv "LAJI_DMP_DATABASE_USER" <&> Data.Maybe.fromMaybe "dev"
   pwd <- lookupEnv "LAJI_DMP_DATABASE_PWD" <&> Data.Maybe.fromMaybe "1234"
   db <- lookupEnv "LAJI_DMP_DATABASE_DB" <&> Data.Maybe.fromMaybe "dmp"
-  return defaultConnectInfo { connectHost = host, connectPort = port, connectUser = user, connectPassword = pwd, connectDatabase = db }
+  return defaultConnectInfo { connectHost = host, connectPort = fromIntegral port, connectUser = user, connectPassword = pwd, connectDatabase = db }
 
 main :: IO ()
 main = do
   connectInfo <- lookupDbConnectInfo
   conn <- connect connectInfo
-  hostPort <- lookupEnv "LAJI_DMP_PORT" <&> Data.Maybe.fromMaybe 4000 . (>>= read)
+  hostPort <- lookupEnvInt "LAJI_DMP_PORT" 4000
   Queries.initializeDatabase conn
   print ("Hosting on port " ++ show hostPort :: String)
   personCache <- newTVarIO HM.empty
