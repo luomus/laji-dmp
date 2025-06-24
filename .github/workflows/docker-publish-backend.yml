@@ -7,6 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-backend
+  BACKEND_DIR: ./laji-dmp-backend
 
 jobs:
   build-and-push-image:
@@ -32,9 +33,9 @@ jobs:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.meta.outputs.tags }}
           oci: true
-          context: laji-dmp-backend
+          context: ${{env.BACKEND_DIR}}
           containerfiles: |
-            ./Dockerfile
+            ${{env.BACKEND_DIR}}/Dockerfile
 
       - name: Push To GHCR
         uses: redhat-actions/push-to-registry@v2
