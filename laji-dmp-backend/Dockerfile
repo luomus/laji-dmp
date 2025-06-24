@@ -14,7 +14,9 @@ RUN sh -c "echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql
 RUN apt-get update
 RUN apt-get install -y postgresql-14
 
+ENV CABAL_DIR=/cabal
+
 RUN cabal update
-RUN cabal build --minimize-conflict-set
+RUN cabal build
 
 CMD ["cabal", "run"]
