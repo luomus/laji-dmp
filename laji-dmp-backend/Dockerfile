@@ -1,6 +1,6 @@
 FROM haskell:9.10.1-slim-bullseye
 
-WORKDIR /app
+WORKDIR /app/dmp
 
 COPY . .
 
@@ -18,5 +18,7 @@ ENV CABAL_DIR=/cabal
 
 RUN cabal update
 RUN cabal build
+
+RUN chgrp -R 0 /app/dmp && chmod -R g+rwX /app/dmp
 
 CMD ["cabal", "run"]
