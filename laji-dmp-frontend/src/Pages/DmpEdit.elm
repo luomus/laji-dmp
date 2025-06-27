@@ -10,8 +10,7 @@ import Views.DmpEditor exposing (ModelStatus(..))
 import DmpApi exposing (deleteDmp)
 import Http exposing (Error)
 import Views.Dialog exposing (dialog)
-import DmpApi exposing (DataManagementPlan)
-import DmpApi exposing (getDmp)
+import DmpApi exposing (Dmp, getDmp)
 import Html.Attributes exposing (class)
 import User
 
@@ -31,7 +30,7 @@ type Msg
   | OnConfirmDelete
   | OnCancelDelete
   | GotDmpDeleteResponse (Result Error String)
-  | GotDmpGetResponse (Result Http.Error DataManagementPlan)
+  | GotDmpGetResponse (Result Http.Error Dmp)
 
 deleteDialogId : String
 deleteDialogId = "delete-dialog"

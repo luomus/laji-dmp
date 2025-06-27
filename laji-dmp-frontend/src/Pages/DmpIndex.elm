@@ -14,9 +14,6 @@ import Config exposing (config)
 import Array
 import Platform.Cmd as Cmd
 import Platform.Cmd as Cmd
-import DmpApi exposing (DmpList)
-import DmpApi exposing (getDmpList)
-import DmpApi exposing (DataManagementPlan)
 import Html.Attributes exposing (class)
 import Html exposing (table)
 import Html exposing (tr)
@@ -24,15 +21,16 @@ import Html exposing (th)
 import Html exposing (td)
 import Html exposing (h5)
 import User exposing (LoginSession)
+import DmpApi exposing (Dmp, getDmpList)
 
-type DmpListState = Loading | Error | DmpList DmpList
+type DmpListState = Loading | Error | DmpList (Array.Array Dmp)
 
 type alias Model =
   { dmpList: DmpListState
   , session: LoginSession
   }
 
-type Msg = GotDmpListResponse (Result Http.Error DmpList)
+type Msg = GotDmpListResponse (Result Http.Error (Array.Array Dmp))
 
 init : LoginSession -> ( Model, Cmd Msg )
 init session = ({ dmpList = Loading, session = session }, getDmpList GotDmpListResponse)
@@ -47,17 +45,17 @@ update msg model =
           let _ = Debug.log "Error loading DMP list" e
           in ({ model | dmpList = Error }, Cmd.none)
 
-dmpElementView : DataManagementPlan -> Html msg
+dmpElementView : Dmp -> Html msg
 dmpElementView elem =
-  case elem.id of
+  case elem.dmpId of
     Just id -> a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
-      [ h5 [] [ text <| "DMP " ++ String.fromInt id ]
-      , div [] [ text <| "Organization: " ++ elem.orgId ]
-      , div [] [ text <| String.fromInt (Array.length elem.datasets) ++ " datasets" ]
+      [ h5 [] [ text <| elem.dmpTitle ]
+      , div [] [ text <| "Organization: " ++ elem.dmpOrgId ]
+      , div [] [ text <| String.fromInt (Array.length elem.dmpDatasets) ++ " datasets" ]
       ]
     Nothing -> li [] [text "Error: expected DMP to have an id"]
 
-dmpTableView : DmpList -> Html Msg
+dmpTableView : Array.Array Dmp -> Html Msg
 dmpTableView dmpList = div [] (Array.toList <| Array.map dmpElementView dmpList)
 
 view : Model -> { title : String, body : Html Msg }
