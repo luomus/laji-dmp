@@ -73,10 +73,10 @@ type Msg
 defaultDmp : String -> Dmp
 defaultDmp org =
   { dmpId = Nothing
-  , dmpCreated = UTCTime ""
+  , dmpCreated = Nothing
   , dmpDescription = Nothing
   , dmpLanguage = LanguageTypeFi
-  , dmpModified = UTCTime ""
+  , dmpModified = Nothing
   , dmpNextReviewDmp = Nothing
   , dmpOrgId = org
   , dmpTitle = ""

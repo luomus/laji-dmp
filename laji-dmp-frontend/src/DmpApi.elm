@@ -476,10 +476,10 @@ encodeDistribution t = E.object
 
 type alias Dmp =
   { dmpId: Maybe Int
-  , dmpCreated: UTCTime
+  , dmpCreated: Maybe UTCTime
   , dmpDescription: Maybe String
   , dmpLanguage: LanguageType
-  , dmpModified: UTCTime
+  , dmpModified: Maybe UTCTime
   , dmpNextReviewDmp: Maybe Day
   , dmpOrgId: String
   , dmpTitle: String
@@ -496,10 +496,10 @@ type alias Dmp =
 dmpDecoder : Json.Decode.Decoder Dmp
 dmpDecoder = Json.Decode.succeed Dmp
   |> DP.optional "dmpId" (D.nullable D.int) Nothing
-  |> DP.required "dmpCreated" utcTimeDecoder
+  |> DP.optional "dmpCreated" (D.nullable utcTimeDecoder) Nothing
   |> DP.optional "dmpDescription" (D.nullable D.string) Nothing
   |> DP.required "dmpLanguage" languageTypeDecoder
-  |> DP.required "dmpModified" utcTimeDecoder
+  |> DP.optional "dmpModified" (D.nullable utcTimeDecoder) Nothing
   |> DP.optional "dmpNextReviewDmp" (D.nullable dayDecoder) Nothing
   |> DP.required "dmpOrgId" D.string
   |> DP.required "dmpTitle" D.string
@@ -515,16 +515,16 @@ dmpDecoder = Json.Decode.succeed Dmp
 encodeDmp : Dmp -> E.Value
 encodeDmp t = E.object
   [ ( "dmpId", encodeMaybe E.int t.dmpId)
-  , ( "dmpCreated", encodeUtcTime t.dmpCreated)
+  , ( "dmpCreated", encodeMaybe encodeUtcTime t.dmpCreated)
   , ( "dmpDescription", encodeMaybe E.string t.dmpDescription)
   , ( "dmpLanguage", encodeLanguageType t.dmpLanguage)
-  , ( "dmpModified", encodeUtcTime t.dmpModified)
+  , ( "dmpModified", encodeMaybe encodeUtcTime t.dmpModified)
   , ( "dmpNextReviewDmp", encodeMaybe encodeDay t.dmpNextReviewDmp)
   , ( "dmpOrgId", E.string t.dmpOrgId)
   , ( "dmpTitle", E.string t.dmpTitle)
   , ( "dmpTypeDmp", encodeDmpType t.dmpTypeDmp)
   , ( "dmpContact", encodeContact t.dmpContact)
-  , ( "dmpId", encodeDmpId t.dmpDmpId)
+  , ( "dmpDmpId", encodeDmpId t.dmpDmpId)
   , ( "dmpContributors", E.array encodeContributor t.dmpContributors)
   , ( "dmpDataLifeCycles", E.array encodeDataLifeCycle t.dmpDataLifeCycles)
   , ( "dmpDatasets", E.array encodeDataset t.dmpDatasets)
