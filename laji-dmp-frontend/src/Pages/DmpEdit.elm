@@ -10,7 +10,8 @@ import Views.DmpEditor exposing (ModelStatus(..))
 import DmpApi exposing (deleteDmp)
 import Http exposing (Error)
 import Views.Dialog exposing (dialog)
-import DmpApi exposing (Dmp, getDmp)
+import DmpApi exposing (getDmp)
+import Models exposing (Dmp)
 import Html.Attributes exposing (class)
 import User
 

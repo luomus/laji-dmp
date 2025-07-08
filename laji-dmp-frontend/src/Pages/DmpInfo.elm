@@ -14,42 +14,9 @@ import Array
 import Html.Attributes exposing (class)
 import Html exposing (h2, h3, h4, h5, p)
 import User
-import DmpApi exposing (Dmp, getDmp)
-import DmpApi exposing (UTCTime(..))
-import DmpApi exposing (LanguageType)
-import DmpApi exposing (LanguageType(..))
-import DmpApi exposing (DmpType)
-import DmpApi exposing (DmpType(..))
-import DmpApi exposing (Day)
-import DmpApi exposing (Day(..))
-import DmpApi exposing (DmpId)
-import DmpApi exposing (DocumentIdType)
-import DmpApi exposing (DocumentIdType(..))
-import DmpApi exposing (Contributor)
-import DmpApi exposing (RoleType)
-import DmpApi exposing (RoleType(..))
-import DmpApi exposing (ContributorId)
-import DmpApi exposing (PersonIdType)
-import DmpApi exposing (PersonIdType(..))
-import DmpApi exposing (DataLifeCycle)
-import DmpApi exposing (DeletionDataType)
-import DmpApi exposing (DeletionDataType(..))
-import DmpApi exposing (Dataset)
-import DmpApi exposing (PersonalDataType)
-import DmpApi exposing (PersonalDataType(..))
-import DmpApi exposing (SensitiveDataType)
-import DmpApi exposing (SensitiveDataType(..))
-import DmpApi exposing (DatasetId)
-import DmpApi exposing (Distribution)
-import DmpApi exposing (DataAccessType)
-import DmpApi exposing (DataAccessType(..))
-import DmpApi exposing (License)
-import DmpApi exposing (Metadata)
-import DmpApi exposing (MetadataId)
-import DmpApi exposing (MetadataIdType)
-import DmpApi exposing (MetadataIdType(..))
-import DmpApi exposing (RightsRelatedToData)
-import DmpApi exposing (SecurityAndPrivacy)
+import DmpApi exposing (getDmp)
+import Models exposing (..)
+import Utils exposing (..)
 
 type DmpState = Error | Loading | HasDmp Dmp
 
@@ -78,83 +45,12 @@ update session msg model =
           let _ = Debug.log "Error loading DMP" e
           in ({ model | dmp = Error, session = session }, Cmd.none)
 
--- hostView : Maybe Host -> Html Msg
--- hostView maybeHost = case maybeHost of
---   Just host -> div [ class "dmp-editor-host" ]
---     [ h5 [] [ text "Host" ]
---     , div [] [text <| "Backup frequency: " ++ Debug.toString host.backupFrequency]
---     , div [] [text <| "Geo location: " ++ Debug.toString host.geoLocation]
---     ]
---   Nothing -> div [] []
--- 
--- distributionView : Int -> Distribution -> Html Msg
--- distributionView distributionIdx distribution = div [ class "dmp-editor-distribution" ]
---   [ h4 [] [ text <| "Distribution " ++ (String.fromInt distributionIdx) ]
---   , div [] [text <| "Data access: " ++ Debug.toString distribution.dataAccess] -- TODO
---   , div [] [text <| "Access URL: " ++ Debug.toString distribution.accessUrl] -- TODO
---   , hostView distribution.host
---   ]
--- 
--- datasetView : Int -> Dataset -> Html Msg
--- datasetView datasetIdx dataset = div [ class "dmp-editor-dataset" ]
---   [ h3 [] [ text <| "Dataset " ++ (String.fromInt datasetIdx) ]
---   , div [] [text <| "Title: " ++ dataset.title]
---   , div [] [text <| "Personal data: " ++ Debug.toString dataset.personalData]
---   , div [] <| Array.toList <| Array.indexedMap distributionView dataset.distributions
---   ]
-
-showUtcTime : UTCTime -> String
-showUtcTime (UTCTime str) = str
-
-showDay : Day -> String
-showDay (Day str) = str
-
-showLanguage : LanguageType -> String
-showLanguage lang = case lang of
-  LanguageTypeFi -> "finnish"
-  LanguageTypeEn -> "english"
-  LanguageTypeSv -> "swedish"
-
-showDmpType : DmpType -> String
-showDmpType a = case a of
-  DmpTypeStudent -> "student"
-  DmpTypeAcademic -> "academic"
-  DmpTypeNational -> "national"
-  DmpTypeInternational -> "international"
-  DmpTypeOrganizational -> "organizational"
-
-showDocumentIdType : DocumentIdType -> String
-showDocumentIdType a = case a of
-  DocumentIdTypeHandle -> "handle"
-  DocumentIdTypeDoi -> "doi"
-  DocumentIdTypeArk -> "ark"
-  DocumentIdTypeUrl -> "url"
-  DocumentIdTypeOther -> "other"
-  DocumentIdTypeNone -> "none"
-
 dmpIdView : DmpId -> Html Msg
 dmpIdView dmpId = div []
   [ h3 [] [ text "Dmp Id" ]
   , p [] [ text <| "Identifier: " ++ Debug.toString dmpId.dmpIdIdentifier ]
   , p [] [ text <| "Type: " ++ showDocumentIdType dmpId.dmpIdType ]
   ]
-
-showRoleType : RoleType -> String
-showRoleType role = case role of
-  RoleTypeWorkPackageLeader -> "Work package leader"
-  RoleTypeDataController -> "Data controller"
-  RoleTypePrincipleInvestigator -> "Principle investigator"
-  RoleTypeAuthorOfDataSet -> "Author of dataset"
-  RoleTypeOther -> "Other"
-
-showPersonIdType : PersonIdType -> String
-showPersonIdType t = case t of
-  PersonIdTypeOrcid -> "Orcid"
-  PersonIdTypeIsni -> "Isni"
-  PersonIdTypeOpenid -> "OpenId"
-  PersonIdTypeOther -> "Other"
-  PersonIdTypeNone -> "None"
-  
 
 contributorIdView : ContributorId -> Html Msg
 contributorIdView c = div []
@@ -176,12 +72,6 @@ contributorView c = div []
 contributorsView : Array.Array Contributor -> Html Msg
 contributorsView c = div [] <| Array.toList <| Array.map contributorView c
 
-showDeletionDataType : DeletionDataType -> String
-showDeletionDataType d = case d of
-  DeletionDataTypeYes -> "Yes"
-  DeletionDataTypeNo -> "No"
-  DeletionDataTypeUnknown -> "Unknown"
-
 dataLifeCycleView : DataLifeCycle -> Html Msg
 dataLifeCycleView d = div []
   [ h3 [] [ text "Data life cycle" ]
@@ -194,30 +84,12 @@ dataLifeCycleView d = div []
 dataLifeCyclesView : Array.Array DataLifeCycle -> Html Msg
 dataLifeCyclesView c = div [] <| Array.toList <| Array.map dataLifeCycleView c
 
-showPersonalDataType : PersonalDataType -> String
-showPersonalDataType p = case p of
-  PersonalDataTypeYes -> "yes"
-  PersonalDataTypeNo -> "no"
-  PersonalDataTypeUnknown -> "unknown"
-
-showSensitiveDataType : SensitiveDataType -> String
-showSensitiveDataType p = case p of
-  SensitiveDataTypeYes -> "yes"
-  SensitiveDataTypeNo -> "no"
-  SensitiveDataTypeUnknown -> "unknown"
-
 datasetIdView : DatasetId -> Html Msg
 datasetIdView d = div []
   [ h4 [] [ text "Dataset id" ]
   , p [] [ text <| "Identifier: " ++ (Debug.toString d.datasetIdIdentifier) ]
   , p [] [ text <| "Type: " ++ showDocumentIdType d.datasetIdType ]
   ]
-
-showDataAccessType : DataAccessType -> String
-showDataAccessType d = case d of
-  DataAccessTypeOpen -> "open"
-  DataAccessTypeShared -> "shared"
-  DataAccessTypeClosed -> "closed"
 
 licenseView : License -> Html Msg
 licenseView l = div []
@@ -243,12 +115,6 @@ distributionView d = div []
 
 distributionsView : Array.Array Distribution -> Html Msg
 distributionsView c = div [] <| Array.toList <| Array.map distributionView c
-
-showMetadataIdType : MetadataIdType -> String
-showMetadataIdType m = case m of
-  MetadataIdTypeUrl -> "url"
-  MetadataIdTypeOther -> "other"
-  MetadataIdTypeNone -> "none"
 
 metadataIdView : MetadataId -> Html Msg
 metadataIdView m = div []

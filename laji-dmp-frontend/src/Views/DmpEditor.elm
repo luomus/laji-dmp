@@ -5,7 +5,9 @@ import Html exposing (a)
 import Html exposing (text)
 import Views.Navigation exposing (navigation)
 import Html exposing (Html)
-import DmpApi exposing (Dmp, newDmp, editDmp)
+import DmpApi exposing (newDmp, editDmp)
+import Models exposing (..)
+import Utils exposing (..)
 import Platform.Cmd as Cmd
 import Http exposing (Error)
 import Html exposing (div)
@@ -34,13 +36,7 @@ import Html exposing (option)
 import Html exposing (hr)
 import Html.Attributes exposing (selected)
 import User
-import DmpApi exposing (UTCTime)
-import DmpApi exposing (UTCTime)
-import DmpApi exposing (UTCTime(..))
-import DmpApi exposing (LanguageType(..))
-import DmpApi exposing (DmpType(..))
-import DmpApi exposing (PersonIdType(..))
-import DmpApi exposing (DocumentIdType(..))
+import Html.Attributes exposing (type_)
 
 type ModelStatus = Editing | Submitting | SubmitError Error | NotLoggedInError
 
@@ -54,10 +50,62 @@ type alias Model =
   , session: User.LoginSession
   }
 
+type ModifyContactIdMsg
+  = ModifyContactIdIdentifier String
+  | ModifyContactIdType PersonIdType
+
+type ModifyContactMsg
+  = ModifyContactMbox String
+  | ModifyContactName String
+  | ModifyOrganization String
+  | ModifyContactId ModifyContactIdMsg
+
+type ModifyDmpIdMsg
+  = ModifyDmpIdIdentifier String
+  | ModifyDmpIdType DocumentIdType
+
+type ModifyContributorIdMsg
+  = ModifyContributorIdIdentifier String
+  | ModifyContributorIdType PersonIdType
+
+type ModifyContributorMsg
+  = ModifyContributorMbox String
+  | ModifyContributorName String
+  | ModifyContributorOrganization String
+  | ModifyContributorRole RoleType
+  | ModifyContributorId ModifyContributorIdMsg
+
+type ModifyDataLifeCycleMsg
+  = Todo4
+
+type ModifyDatasetMsg
+  = Todo5
+
+type ModifyEthicalIssueMsg
+  = Todo6
+
+type ModifyProjectMsg
+  = Todo7
+
+type ModifyDmpMsg
+  = ModifyDmpOrgId String
+  | ModifyDmpDescription String
+  | ModifyDmpLanguage LanguageType
+  | ModifyDmpNextReviewDmp Day
+  | ModifyDmpTitle String
+  | ModifyDmpTypeDmp DmpType
+  | ModifyDmpContact ModifyContactMsg
+  | ModifyDmpDmpId ModifyDmpIdMsg
+  | ModifyDmpContributor Int ModifyContributorMsg
+  | ModifyDmpDataLifeCycle Int ModifyDataLifeCycleMsg
+  | ModifyDmpDataset Int ModifyDatasetMsg
+  | ModifyDmpEthicalIssue Int ModifyEthicalIssueMsg
+  | ModifyDmpProject Int ModifyProjectMsg
+
 type Msg
   = OnSubmit
   | GotDmpApiResponse (Result Error String)
-  | OnModifyDmpOrg String
+  | OnModifyDmp ModifyDmpMsg
 --  | OnAddDataset
 --  | OnRemoveDataset Int
 --  | OnModifyDatasetTitle Int String
@@ -125,10 +173,13 @@ removeAt idx array =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    OnModifyDmpOrg org ->
-      let
-        updateDmp dmp = { dmp | dmpOrgId = org}
-      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
+    OnModifyDmp msg2 ->
+      case msg2 of
+        ModifyDmpOrgId org ->
+          let
+            updateDmp dmp = { dmp | dmpOrgId = org}
+          in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
+        _ -> ( model, Cmd.none ) -- TODO handle rest of cases
 --    OnAddDataset ->
 --      let
 --        updateDmp dmp =
@@ -399,12 +450,216 @@ update msg model =
 --     [ text "- Remove dataset" ]
 --   ]
 
+langFromStr : String -> LanguageType
+langFromStr s = case s of
+  "LanguageTypeEn" -> LanguageTypeEn
+  "LanguageTypeSv" -> LanguageTypeSv
+  _ -> LanguageTypeFi
+
+languageSelect : LanguageType -> Bool -> (String -> a) -> Html a
+languageSelect l d msg = select
+  [ value (
+    case l of
+      LanguageTypeFi -> "LanguageTypeFi"
+      LanguageTypeSv -> "LanguageTypeSv"
+      LanguageTypeEn -> "LanguageTypeEn"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "LanguageTypeFi" ] [ text <| showLanguage LanguageTypeFi ]
+  , option [ value "LanguageTypeSv" ] [ text <| showLanguage LanguageTypeSv ]
+  , option [ value "LanguageTypeEn" ] [ text <| showLanguage LanguageTypeEn ]
+  ]
+
+dmpTypeFromStr : String -> DmpType
+dmpTypeFromStr s = case s of
+  "DmpTypeStudent" -> DmpTypeStudent
+  "DmpTypeAcademic" -> DmpTypeAcademic
+  "DmpTypeNational" -> DmpTypeNational
+  "DmpTypeInternational" -> DmpTypeInternational
+  _ -> DmpTypeOrganizational
+
+dmpTypeSelect : DmpType -> Bool -> (String -> a) -> Html a
+dmpTypeSelect l d msg = select
+  [ value (
+    case l of
+      DmpTypeStudent -> "DmpTypeStudent"
+      DmpTypeAcademic -> "DmpTypeAcademic"
+      DmpTypeNational -> "DmpTypeNational"
+      DmpTypeInternational -> "DmpTypeInternational"
+      DmpTypeOrganizational -> "DmpTypeOrganizational"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "DmpTypeStudent" ] [ text <| showDmpType DmpTypeStudent ]
+  , option [ value "DmpTypeAcademic" ] [ text <| showDmpType DmpTypeAcademic ]
+  , option [ value "DmpTypeNational" ] [ text <| showDmpType DmpTypeNational ]
+  , option [ value "DmpTypeInternational" ] [ text <| showDmpType DmpTypeInternational ]
+  , option [ value "DmpTypeOrganizational" ] [ text <| showDmpType DmpTypeOrganizational ]
+  ]
+
+documentIdTypeFromStr : String -> DocumentIdType
+documentIdTypeFromStr s = case s of
+  "DocumentIdTypeHandle" -> DocumentIdTypeHandle
+  "DocumentIdTypeDoi" -> DocumentIdTypeDoi
+  "DocumentIdTypeArk" -> DocumentIdTypeArk
+  "DocumentIdTypeUrl" -> DocumentIdTypeUrl
+  "DocumentIdTypeOther" -> DocumentIdTypeOther
+  _                    -> DocumentIdTypeNone
+
+documentIdTypeSelect : DocumentIdType -> Bool -> (String -> a) -> Html a
+documentIdTypeSelect l d msg = select
+  [ value (
+    case l of
+      DocumentIdTypeHandle -> "DocumentIdTypeHandle"
+      DocumentIdTypeDoi    -> "DocumentIdTypeDoi"
+      DocumentIdTypeArk    -> "DocumentIdTypeArk"
+      DocumentIdTypeUrl    -> "DocumentIdTypeUrl"
+      DocumentIdTypeOther  -> "DocumentIdTypeOther"
+      DocumentIdTypeNone   -> "DocumentIdTypeNone"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "DocumentIdTypeHandle" ] [ text <| showDocumentIdType DocumentIdTypeHandle]
+  , option [ value "DocumentIdTypeDoi"    ] [ text <| showDocumentIdType DocumentIdTypeDoi    ]
+  , option [ value "DocumentIdTypeArk"    ] [ text <| showDocumentIdType DocumentIdTypeArk    ]
+  , option [ value "DocumentIdTypeUrl"    ] [ text <| showDocumentIdType DocumentIdTypeUrl    ]
+  , option [ value "DocumentIdTypeOther"  ] [ text <| showDocumentIdType DocumentIdTypeOther  ]
+  , option [ value "DocumentIdTypeNone"   ] [ text <| showDocumentIdType DocumentIdTypeNone   ]
+  ]
+
+personTypeFromStr : String -> PersonIdType
+personTypeFromStr s = case s of
+  "PersonIdTypeOrcid"  -> PersonIdTypeOrcid
+  "PersonIdTypeIsni"   -> PersonIdTypeIsni
+  "PersonIdTypeOpenid" -> PersonIdTypeOpenid
+  "PersonIdTypeOther"  -> PersonIdTypeOther
+  _                    -> PersonIdTypeNone
+
+personIdTypeSelect : PersonIdType -> Bool -> (String -> a) -> Html a
+personIdTypeSelect l d msg = select
+  [ value (
+    case l of
+      PersonIdTypeOrcid  -> "PersonIdTypeOrcid"
+      PersonIdTypeIsni   -> "PersonIdTypeIsni"
+      PersonIdTypeOpenid -> "PersonIdTypeOpenid"
+      PersonIdTypeOther  -> "PersonIdTypeOther"
+      PersonIdTypeNone   -> "PersonIdTypeNone"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "PersonIdTypeOrcid"  ] [ text <| showPersonIdType PersonIdTypeOrcid  ]
+  , option [ value "PersonIdTypeIsni"   ] [ text <| showPersonIdType PersonIdTypeIsni   ]
+  , option [ value "PersonIdTypeOpenid" ] [ text <| showPersonIdType PersonIdTypeOpenid ]
+  , option [ value "PersonIdTypeOther"  ] [ text <| showPersonIdType PersonIdTypeOther  ]
+  , option [ value "PersonIdTypeNone"   ] [ text <| showPersonIdType PersonIdTypeNone   ]
+  ]
+
+dmpIdEditorView : DmpId -> Bool -> Html Msg
+dmpIdEditorView dmpId d = div []
+  [ h3 [] [ text "Dmp id" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Dmp identifier: "
+      , input
+        [ value <| withDefault "" dmpId.dmpIdIdentifier
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Dmp id type: "
+      , documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType << documentIdTypeFromStr
+      ]
+    ]
+  ]
+
+contactIdEditorView : ContactId -> Bool -> Html Msg
+contactIdEditorView c d = div []
+  [ h4 [] [ text "Contact id" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Contact identifier: "
+      , input
+        [ value <| withDefault "" c.contactIdIdentifier
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Contact id type: "
+      , personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactId << ModifyContactIdType << personTypeFromStr
+      ]
+    ]
+  ]
+
+contactEditorView : Contact -> Bool -> Html Msg
+contactEditorView c d = div []
+  [ h3 [] [ text "Contact" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Mbox: "
+      , input
+        [ value c.contactMbox
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Name: "
+      , input
+        [ value c.contactName
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactName
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Organization: "
+      , input
+        [ value <| withDefault "" c.contactOrganization
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyOrganization
+        ] []
+      ]
+    ]
+  , contactIdEditorView c.contactContactId d
+  ]
+
+contributorEditorView : Int -> Contributor -> Bool -> Html Msg
+contributorEditorView idx elem d = div []
+  [ h3 [] [ text "Contributor" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Mbox: "
+      , input
+        [ value <| withDefault "" elem.contributorMbox
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox
+        ] []
+      ]
+    ]
+  ]
+
 dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> Html Msg
 dmpEditorView dmp d mode session =
   let
     orgToOption org = option [ value org, selected <| dmp.dmpOrgId == org ] [ text org ]
   in div [ class "dmp-editor" ]
     [ h2 [] [ text "Edit DMP" ]
+    , div [] [ text <| String.append "Created: " <| Debug.toString <| Maybe.map showUtcTime dmp.dmpCreated ]
+    , div [] [ text <| String.append "Modified: " <| Debug.toString <| Maybe.map showUtcTime dmp.dmpModified ]
     , div [ class "form-field" ] <| case mode of
       Edit _ -> [ label [] [ text <| "Organization: " ++ dmp.dmpOrgId ] ]
       New ->
@@ -417,11 +672,76 @@ dmpEditorView dmp d mode session =
                 Just org -> org
                 Nothing -> ""
               , disabled d
-              , onInput (\str -> OnModifyDmpOrg str)
+              , onInput (\str -> OnModifyDmp (ModifyDmpOrgId str))
               ]
               (Array.toList <| Array.map orgToOption person.organisation)
             ]
           _ -> [ text "You have to be logged in to use the DMP editor." ]
+    , div [ class "form-field" ]
+      [ label []
+        [ text "Title: "
+        , input
+          [ value dmp.dmpTitle
+          , disabled d
+          , onInput <| OnModifyDmp << ModifyDmpTitle
+          ]
+          []
+        ]
+      ]
+    , div [ class "form-field" ]
+      [ label []
+        [ text "Description: "
+        , input
+          [ value <| withDefault "" dmp.dmpDescription
+          , disabled d
+          , onInput <| OnModifyDmp << ModifyDmpDescription
+          ]
+          []
+        ]
+      ]
+    , div [ class "form-field" ]
+      [ label []
+        [ text "Next review: "
+        , input
+          [ type_ "date"
+          , value <| withDefault "" (Maybe.map unwrapDay dmp.dmpNextReviewDmp)
+          , disabled d
+          , onInput <| OnModifyDmp << ModifyDmpNextReviewDmp << Day
+          ]
+          []
+        ]
+      ]
+    , div [ class "form-field" ]
+      [ label []
+        [ text "Language: "
+        , languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage << langFromStr
+        ]
+      ]
+    , div [ class "form-field" ]
+      [ label []
+        [ text "Dmp type: "
+        , dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp << dmpTypeFromStr
+        ]
+      ]
+    , hr [] []
+    , dmpIdEditorView dmp.dmpDmpId d
+    , hr [] []
+    , contactEditorView dmp.dmpContact d
+    , hr [] []
+    , div [ class "dmp-editor-contributors" ]
+      <| Array.toList <| Array.indexedMap (\idx elem -> contributorEditorView idx elem d) dmp.dmpContributors
+
+
+
+--         [ id "distribution-access-url"
+--         , value <| withDefault "" distribution.accessUrl
+--         , disabled d
+--         , onInput <| (\str -> OnModifyDistributionAccessUrl datasetIdx distributionIdx (
+--           case str of
+--             "" -> Nothing
+--             s -> Just s
+--         ))
+--         ]
 --    , div [ class "dmp-editor-dataset-list" ]
 --      <| Array.toList
 --      <| Array.indexedMap (\idx ds -> datasetEditorView ds idx d) dmp.datasets
@@ -431,7 +751,6 @@ dmpEditorView dmp d mode session =
 --      , class "btn"
 --      ]
 --      [ text "+ Add dataset" ]
-    , hr [] []
     ]
 
 editorFormView : Model -> Html Msg

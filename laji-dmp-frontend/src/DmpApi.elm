@@ -9,16 +9,13 @@ import Json.Encode as E
 import Json.Decode as D
 import Json.Decode.Pipeline as DP
 import Url.Builder as UB
-
-type Day = Day String
+import Models exposing (..)
 
 dayDecoder : D.Decoder Day
 dayDecoder = D.map (\str -> Day str) D.string
 
 encodeDay : Day -> E.Value
 encodeDay (Day d) = E.string d
-
-type UTCTime = UTCTime String
 
 utcTimeDecoder : D.Decoder UTCTime
 utcTimeDecoder = D.map (\str -> UTCTime str) D.string
@@ -30,11 +27,6 @@ encodeMaybe : (a -> E.Value) -> Maybe a -> E.Value
 encodeMaybe f m = case m of
   Just val -> f val
   Nothing -> E.null
-
-type DataAccessType 
-  = DataAccessTypeOpen 
-  | DataAccessTypeShared
-  | DataAccessTypeClosed
 
 dataAccessTypeDecoder : Json.Decode.Decoder DataAccessType
 dataAccessTypeDecoder = Json.Decode.map (
@@ -51,11 +43,6 @@ encodeDataAccessType t = E.string
     DataAccessTypeShared -> "DataAccessTypeShared"
     DataAccessTypeClosed -> "DataAccessTypeClosed"
 
-type DeletionDataType
-  = DeletionDataTypeYes
-  | DeletionDataTypeNo
-  | DeletionDataTypeUnknown
-
 deletionDataTypeDecoder : Json.Decode.Decoder DeletionDataType
 deletionDataTypeDecoder = Json.Decode.map
   (\str -> case str of
@@ -69,13 +56,6 @@ encodeDeletionDataType t = E.string <| case t of
   DeletionDataTypeYes -> "DeletionDataTypeYes"
   DeletionDataTypeNo -> "DeletionDataTypeNo"
   DeletionDataTypeUnknown -> "DeletionDataTypeUnknown"
-
-type DmpType
-  = DmpTypeStudent
-  | DmpTypeAcademic
-  | DmpTypeNational
-  | DmpTypeInternational
-  | DmpTypeOrganizational
 
 dmpTypeDecoder : Json.Decode.Decoder DmpType
 dmpTypeDecoder = Json.Decode.map
@@ -94,14 +74,6 @@ encodeDmpType t = E.string <| case t of
   DmpTypeNational -> "DmpTypeNational"
   DmpTypeInternational -> "DmpTypeInternational"
   DmpTypeOrganizational -> "DmpTypeOrganizational"
-
-type DocumentIdType
-  = DocumentIdTypeHandle
-  | DocumentIdTypeDoi
-  | DocumentIdTypeArk
-  | DocumentIdTypeUrl
-  | DocumentIdTypeOther
-  | DocumentIdTypeNone
 
 documentIdTypeDecoder : Json.Decode.Decoder DocumentIdType
 documentIdTypeDecoder = Json.Decode.map
@@ -123,11 +95,6 @@ encodeDocumentIdType t = E.string <| case t of
   DocumentIdTypeOther -> "DocumentIdTypeOther"
   DocumentIdTypeNone -> "DocumentIdTypeNone"
 
-type EthicalIssuesType
-  = EthicalIssuesTypeYes
-  | EthicalIssuesTypeNo
-  | EthicalIssuesTypeUnknown
-
 ethicalIssuesTypeDecoder : Json.Decode.Decoder EthicalIssuesType
 ethicalIssuesTypeDecoder = Json.Decode.map
   (\str -> case str of
@@ -141,11 +108,6 @@ encodeEthicalIssuesType t = E.string <| case t of
   EthicalIssuesTypeYes -> "EthicalIssuesTypeYes"
   EthicalIssuesTypeNo -> "EthicalIssuesTypeNo"
   EthicalIssuesTypeUnknown -> "EthicalIssuesTypeUnknown"
-
-type LanguageType
-  = LanguageTypeFi
-  | LanguageTypeSv
-  | LanguageTypeEn
 
 languageTypeDecoder : Json.Decode.Decoder LanguageType
 languageTypeDecoder = Json.Decode.map
@@ -161,11 +123,6 @@ encodeLanguageType t = E.string <| case t of
   LanguageTypeSv -> "LanguageTypeSv"
   LanguageTypeEn -> "LanguageTypeEn"
 
-type MetadataIdType
-  = MetadataIdTypeUrl
-  | MetadataIdTypeOther
-  | MetadataIdTypeNone
-
 metadataIdTypeDecoder : Json.Decode.Decoder MetadataIdType
 metadataIdTypeDecoder = Json.Decode.map
   (\str -> case str of
@@ -179,13 +136,6 @@ encodeMetadataIdType t = E.string <| case t of
   MetadataIdTypeUrl -> "MetadataIdTypeUrl"
   MetadataIdTypeOther -> "MetadataIdTypeOther"
   MetadataIdTypeNone -> "MetadataIdTypeNone"
-
-type PersonIdType
-  = PersonIdTypeOrcid
-  | PersonIdTypeIsni
-  | PersonIdTypeOpenid
-  | PersonIdTypeOther
-  | PersonIdTypeNone
 
 personIdTypeDecoder : Json.Decode.Decoder PersonIdType
 personIdTypeDecoder = Json.Decode.map
@@ -205,11 +155,6 @@ encodePersonIdType t = E.string <| case t of
   PersonIdTypeOther -> "PersonIdTypeOther"
   PersonIdTypeNone -> "PersonIdTypeNone"
 
-type PersonalDataType
-  = PersonalDataTypeYes
-  | PersonalDataTypeNo
-  | PersonalDataTypeUnknown
-
 personalDataTypeDecoder : Json.Decode.Decoder PersonalDataType
 personalDataTypeDecoder = Json.Decode.map
   (\str -> case str of
@@ -223,13 +168,6 @@ encodePersonalDataType t = E.string <| case t of
   PersonalDataTypeYes -> "PersonalDataTypeYes"
   PersonalDataTypeNo -> "PersonalDataTypeNo"
   PersonalDataTypeUnknown -> "PersonalDataTypeUnknown"
-
-type RoleType
-  = RoleTypeWorkPackageLeader
-  | RoleTypeDataController
-  | RoleTypePrincipleInvestigator
-  | RoleTypeAuthorOfDataSet
-  | RoleTypeOther
 
 roleTypeDecoder : Json.Decode.Decoder RoleType
 roleTypeDecoder = Json.Decode.map
@@ -249,11 +187,6 @@ encodeRoleType t = E.string <| case t of
   RoleTypeAuthorOfDataSet -> "RoleTypeAuthorOfDataSet"
   RoleTypeOther -> "RoleTypeOther"
 
-type SensitiveDataType
-  = SensitiveDataTypeYes
-  | SensitiveDataTypeNo
-  | SensitiveDataTypeUnknown
-
 sensitiveDataTypeDecoder : Json.Decode.Decoder SensitiveDataType
 sensitiveDataTypeDecoder = Json.Decode.map
   (\str -> case str of
@@ -267,13 +200,6 @@ encodeSensitiveDataType t = E.string <| case t of
   SensitiveDataTypeYes -> "SensitiveDataTypeYes"
   SensitiveDataTypeNo -> "SensitiveDataTypeNo"
   SensitiveDataTypeUnknown -> "SensitiveDataTypeUnknown"
-
-type alias Contact =
-  { contactMbox: String
-  , contactName: String
-  , contactOrganization: Maybe String
-  , contactContactId: ContactId
-  }
 
 contactDecoder : Json.Decode.Decoder Contact
 contactDecoder = Json.Decode.succeed Contact
@@ -290,11 +216,6 @@ encodeContact t = E.object
   , ( "contactContactId", encodeContactId t.contactContactId)
   ]
 
-type alias ContactId =
-  { contactIdIdentifier: Maybe String
-  , contactIdType: PersonIdType
-  }
-
 contactIdDecoder : Json.Decode.Decoder ContactId
 contactIdDecoder = Json.Decode.succeed ContactId
   |> DP.optional "contactIdIdentifier" (D.nullable D.string) Nothing
@@ -305,14 +226,6 @@ encodeContactId t = E.object
   [ ( "contactIdIdentifier", encodeMaybe E.string t.contactIdIdentifier)
   , ( "contactIdType", encodePersonIdType t.contactIdType)
   ]
-
-type alias Contributor =
-  { contributorMbox: Maybe String
-  , contributorName: String
-  , contributorOrganization: Maybe String
-  , contributorRole: RoleType
-  , contributorContributorId: ContributorId
-  }
 
 contributorDecoder : Json.Decode.Decoder Contributor
 contributorDecoder = Json.Decode.succeed Contributor
@@ -331,11 +244,6 @@ encodeContributor t = E.object
   , ( "contributorContributorId", encodeContributorId t.contributorContributorId)
   ]
 
-type alias ContributorId =
-  { contributorIdIdentifier: Maybe String
-  , contributorIdType: PersonIdType
-  }
-
 contributorIdDecoder : Json.Decode.Decoder ContributorId
 contributorIdDecoder = Json.Decode.succeed ContributorId
   |> DP.optional "contributorIdIdentifier" (D.nullable D.string) Nothing
@@ -346,13 +254,6 @@ encodeContributorId t = E.object
   [ ( "contactIdIdentifier", encodeMaybe E.string t.contributorIdIdentifier)
   , ( "contactIdType", encodePersonIdType t.contributorIdType)
   ]
-
-type alias DataLifeCycle =
-  { dataLifeCycleArchivingServicesData: Bool
-  , dataLifeCycleBackupData: String
-  , dataLifeCycleDeletionData: DeletionDataType
-  , dataLifeCycleDeletionWhenData: Maybe Day
-  }
 
 dataLifeCycleDecoder : Json.Decode.Decoder DataLifeCycle
 dataLifeCycleDecoder = Json.Decode.succeed DataLifeCycle
@@ -368,25 +269,6 @@ encodeDataLifeCycle t = E.object
   , ( "dataLifeCycleDeletionData", encodeDeletionDataType t.dataLifeCycleDeletionData)
   , ( "dataLifeCycleDeletionWhenData", encodeMaybe encodeDay t.dataLifeCycleDeletionWhenData)
   ]
-
-type alias Dataset =
-  { datasetDataQualityAssurance: Maybe String
-  , datasetDataSharingIssues: Maybe String
-  , datasetDescription: Maybe String
-  , datasetIssued: Maybe Day
-  , datasetKeywords: Maybe (Array.Array String)
-  , datasetLanguage: Maybe LanguageType
-  , datasetPersonalData: PersonalDataType
-  , datasetSensitiveData: SensitiveDataType
-  , datasetReuseDataset: Maybe Bool
-  , datasetTitle: String
-  , datasetType: Maybe String
-  , datasetDatasetId: DatasetId
-  , datasetDistributions: Array.Array Distribution
-  , datasetMetadata: Array.Array Metadata
-  , datasetRightsRelatedToData: Array.Array RightsRelatedToData
-  , datasetSecurityAndPrivacy: Array.Array SecurityAndPrivacy
-  }
 
 datasetDecoder : Json.Decode.Decoder Dataset
 datasetDecoder = Json.Decode.succeed Dataset
@@ -427,11 +309,6 @@ encodeDataset t = E.object
   , ( "datasetSecurityAndPrivacy", E.array encodeSecurity t.datasetSecurityAndPrivacy)
   ]
 
-type alias DatasetId =
-  { datasetIdIdentifier: Maybe String
-  , datasetIdType: DocumentIdType
-  }
-
 datasetIdDecoder : Json.Decode.Decoder DatasetId
 datasetIdDecoder = Json.Decode.succeed DatasetId
   |> DP.optional "datasetIdIdentifier" (D.nullable D.string) Nothing
@@ -442,16 +319,6 @@ encodeDatasetId t = E.object
   [ ( "datasetIdIdentifier", encodeMaybe E.string t.datasetIdIdentifier)
   , ( "datasetIdType", encodeDocumentIdType t.datasetIdType)
   ]
-
-type alias Distribution =
-  { distributionAccessUrl: Maybe String
-  , distributionDataAccess: Maybe DataAccessType
-  , distributionDescription: Maybe String
-  , distributionDownloadUri: Maybe String
-  , distributionFormat: Maybe String
-  , distributionTitle: String
-  , distributionLicenses: Array.Array License
-  }
 
 distributionDecoder : Json.Decode.Decoder Distribution
 distributionDecoder = Json.Decode.succeed Distribution
@@ -473,25 +340,6 @@ encodeDistribution t = E.object
   , ( "distributionTitle", E.string t.distributionTitle)
   , ( "distributionLicenses", E.array encodeLicense t.distributionLicenses)
   ]
-
-type alias Dmp =
-  { dmpId: Maybe Int
-  , dmpCreated: Maybe UTCTime
-  , dmpDescription: Maybe String
-  , dmpLanguage: LanguageType
-  , dmpModified: Maybe UTCTime
-  , dmpNextReviewDmp: Maybe Day
-  , dmpOrgId: String
-  , dmpTitle: String
-  , dmpTypeDmp: DmpType
-  , dmpContact: Contact
-  , dmpDmpId: DmpId
-  , dmpContributors: Array.Array Contributor
-  , dmpDataLifeCycles: Array.Array DataLifeCycle
-  , dmpDatasets: Array.Array Dataset
-  , dmpEthicalIssues: Array.Array EthicalIssue
-  , dmpProjects: Array.Array Project
-  }
 
 dmpDecoder : Json.Decode.Decoder Dmp
 dmpDecoder = Json.Decode.succeed Dmp
@@ -532,11 +380,6 @@ encodeDmp t = E.object
   , ( "dmpProjects", E.array encodeProject t.dmpProjects)
   ]
 
-type alias DmpId =
-  { dmpIdIdentifier: Maybe String
-  , dmpIdType: DocumentIdType
-  }
-
 dmpIdDecoder : Json.Decode.Decoder DmpId
 dmpIdDecoder = Json.Decode.succeed DmpId
   |> DP.optional "dmpIdIdentifier" (D.nullable D.string) Nothing
@@ -547,12 +390,6 @@ encodeDmpId t = E.object
   [ ( "dmpIdIdentifier", encodeMaybe E.string t.dmpIdIdentifier)
   , ( "dmpIdType", encodeDocumentIdType t.dmpIdType)
   ]
-
-type alias EthicalIssue =
-  { ethicalIssueDescription: Maybe String
-  , ethicalIssueExist: EthicalIssuesType
-  , ethicalIssueReport: Maybe String
-  }
 
 ethicalIssueDecoder : Json.Decode.Decoder EthicalIssue
 ethicalIssueDecoder = Json.Decode.succeed EthicalIssue
@@ -567,11 +404,6 @@ encodeEthicalIssue t = E.object
   , ( "ethicalIssueReport", encodeMaybe E.string t.ethicalIssueReport)
   ]
 
-type alias License =
-  { licenseRef: String
-  , licenseStartDate: Day
-  }
-
 licenseDecoder : Json.Decode.Decoder License
 licenseDecoder = Json.Decode.succeed License
   |> DP.required "licenseRef" D.string
@@ -582,18 +414,6 @@ encodeLicense t = E.object
   [ ( "licenseRef", E.string t.licenseRef)
   , ( "licenseStartDate", encodeDay t.licenseStartDate)
   ]
-
-type alias Metadata =
-  { metadataAccessDocumentation: Maybe Bool
-  , metadataDataModel: Maybe String
-  , metadataDescription: Maybe String
-  , metadataLanguage: LanguageType
-  , metadataLocationDocumentation: Maybe String
-  , metadataOpen: Maybe Bool
-  , metadataLocation: Maybe String
-  , metadataSchema: Maybe Bool
-  , metadataMetadataId: MetadataId
-  }
 
 metadataDecoder : Json.Decode.Decoder Metadata
 metadataDecoder = Json.Decode.succeed Metadata
@@ -620,11 +440,6 @@ encodeMetadata t = E.object
   , ( "metadataMetadataId", encodeMetadataId t.metadataMetadataId)
   ]
 
-type alias MetadataId =
-  { metadataIdIdentifier: Maybe String
-  , metadataIdType: MetadataIdType
-  }
-
 metadataIdDecoder : Json.Decode.Decoder MetadataId
 metadataIdDecoder = Json.Decode.succeed MetadataId
   |> DP.optional "metadataIdIdentifier" (D.nullable D.string) Nothing
@@ -635,13 +450,6 @@ encodeMetadataId t = E.object
   [ ( "metadataIdIdentifier", encodeMaybe E.string t.metadataIdIdentifier)
   , ( "metadataIdType", encodeMetadataIdType t.metadataIdType)
   ]
-
-type alias Project =
-  { projectDescription: String
-  , projectEndDate: Maybe Day
-  , projectStartDate: Day
-  , projectTitle: String
-  }
 
 projectDecoder : Json.Decode.Decoder Project
 projectDecoder = Json.Decode.succeed Project
@@ -658,10 +466,6 @@ encodeProject t = E.object
   , ( "projectTitle", E.string t.projectTitle)
   ]
 
-type alias RightsRelatedToData =
-  { rightsOwnershipDataRight: Maybe String
-  }
-
 rightsDecoder : Json.Decode.Decoder RightsRelatedToData
 rightsDecoder = Json.Decode.succeed RightsRelatedToData
   |> DP.optional "rightsOwnershipDataRight" (D.nullable D.string) Nothing
@@ -670,11 +474,6 @@ encodeRights : RightsRelatedToData -> E.Value
 encodeRights t = E.object
   [ ( "rightsOwnershipDataRight", encodeMaybe E.string t.rightsOwnershipDataRight)
   ]
-
-type alias SecurityAndPrivacy =
-  { securityDescription: String
-  , securityTitle: String
-  }
 
 securityDecoder : Json.Decode.Decoder SecurityAndPrivacy
 securityDecoder = Json.Decode.succeed SecurityAndPrivacy

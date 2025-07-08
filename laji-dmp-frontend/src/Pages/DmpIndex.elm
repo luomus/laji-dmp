@@ -21,7 +21,8 @@ import Html exposing (th)
 import Html exposing (td)
 import Html exposing (h5)
 import User exposing (LoginSession)
-import DmpApi exposing (Dmp, getDmpList)
+import DmpApi exposing (getDmpList)
+import Models exposing (Dmp)
 
 type DmpListState = Loading | Error | DmpList (Array.Array Dmp)
 
