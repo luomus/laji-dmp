@@ -8,11 +8,25 @@ showUtcTime (UTCTime str) = str
 showDay : Day -> String
 showDay (Day str) = str
 
+langFromStr : String -> LanguageType
+langFromStr s = case s of
+  "LanguageTypeEn" -> LanguageTypeEn
+  "LanguageTypeSv" -> LanguageTypeSv
+  _ -> LanguageTypeFi
+
 showLanguage : LanguageType -> String
 showLanguage lang = case lang of
   LanguageTypeFi -> "finnish"
   LanguageTypeEn -> "english"
   LanguageTypeSv -> "swedish"
+
+dmpTypeFromStr : String -> DmpType
+dmpTypeFromStr s = case s of
+  "DmpTypeStudent" -> DmpTypeStudent
+  "DmpTypeAcademic" -> DmpTypeAcademic
+  "DmpTypeNational" -> DmpTypeNational
+  "DmpTypeInternational" -> DmpTypeInternational
+  _ -> DmpTypeOrganizational
 
 showDmpType : DmpType -> String
 showDmpType a = case a of
@@ -21,6 +35,15 @@ showDmpType a = case a of
   DmpTypeNational -> "national"
   DmpTypeInternational -> "international"
   DmpTypeOrganizational -> "organizational"
+
+documentIdTypeFromStr : String -> DocumentIdType
+documentIdTypeFromStr s = case s of
+  "DocumentIdTypeHandle" -> DocumentIdTypeHandle
+  "DocumentIdTypeDoi" -> DocumentIdTypeDoi
+  "DocumentIdTypeArk" -> DocumentIdTypeArk
+  "DocumentIdTypeUrl" -> DocumentIdTypeUrl
+  "DocumentIdTypeOther" -> DocumentIdTypeOther
+  _                    -> DocumentIdTypeNone
 
 showDocumentIdType : DocumentIdType -> String
 showDocumentIdType a = case a of
@@ -31,6 +54,14 @@ showDocumentIdType a = case a of
   DocumentIdTypeOther -> "other"
   DocumentIdTypeNone -> "none"
 
+roleTypeFromStr : String -> RoleType
+roleTypeFromStr s = case s of
+  "RoleTypeWorkPackageLeader"     -> RoleTypeWorkPackageLeader
+  "RoleTypeDataController"        -> RoleTypeDataController
+  "RoleTypePrincipleInvestigator" -> RoleTypePrincipleInvestigator
+  "RoleTypeAuthorOfDataSet"       -> RoleTypeAuthorOfDataSet
+  _                               -> RoleTypeOther
+
 showRoleType : RoleType -> String
 showRoleType role = case role of
   RoleTypeWorkPackageLeader -> "Work package leader"
@@ -38,6 +69,14 @@ showRoleType role = case role of
   RoleTypePrincipleInvestigator -> "Principle investigator"
   RoleTypeAuthorOfDataSet -> "Author of dataset"
   RoleTypeOther -> "Other"
+
+personIdTypeFromStr : String -> PersonIdType
+personIdTypeFromStr s = case s of
+  "PersonIdTypeOrcid"  -> PersonIdTypeOrcid
+  "PersonIdTypeIsni"   -> PersonIdTypeIsni
+  "PersonIdTypeOpenid" -> PersonIdTypeOpenid
+  "PersonIdTypeOther"  -> PersonIdTypeOther
+  _                    -> PersonIdTypeNone
 
 showPersonIdType : PersonIdType -> String
 showPersonIdType t = case t of
@@ -47,6 +86,42 @@ showPersonIdType t = case t of
   PersonIdTypeOther -> "Other"
   PersonIdTypeNone -> "None"
   
+deletionDataTypeFromStr : String -> DeletionDataType
+deletionDataTypeFromStr s = case s of
+  "DeletionDataTypeYes"     -> DeletionDataTypeYes
+  "DeletionDataTypeNo"      -> DeletionDataTypeNo
+  _                         -> DeletionDataTypeUnknown
+
+personalDataTypeFromStr : String -> PersonalDataType
+personalDataTypeFromStr s = case s of
+  "PersonalDataTypeYes"     -> PersonalDataTypeYes
+  "PersonalDataTypeNo"      -> PersonalDataTypeNo
+  _                         -> PersonalDataTypeUnknown
+
+sensitiveDataTypeFromStr : String -> SensitiveDataType
+sensitiveDataTypeFromStr s = case s of
+  "SensitiveDataTypeYes"     -> SensitiveDataTypeYes
+  "SensitiveDataTypeNo"      -> SensitiveDataTypeNo
+  _                          -> SensitiveDataTypeUnknown
+
+ethicalIssuesTypeFromStr : String -> EthicalIssuesType
+ethicalIssuesTypeFromStr s = case s of
+  "EthicalIssuesTypeYes" -> EthicalIssuesTypeYes
+  "EthicalIssuesTypeNo"  -> EthicalIssuesTypeNo
+  _                      -> EthicalIssuesTypeUnknown
+
+dataAccessTypeFromStr : String -> DataAccessType
+dataAccessTypeFromStr s = case s of
+  "DataAccessTypeShared"     -> DataAccessTypeShared
+  "DataAccessTypeClosed"     -> DataAccessTypeClosed
+  _                          -> DataAccessTypeOpen
+
+metadataIdTypeFromStr : String -> MetadataIdType
+metadataIdTypeFromStr s = case s of
+  "MetadataIdTypeUrl"       -> MetadataIdTypeUrl
+  "MetadataIdTypeOther"     -> MetadataIdTypeOther
+  _                         -> MetadataIdTypeNone
+
 showDeletionDataType : DeletionDataType -> String
 showDeletionDataType d = case d of
   DeletionDataTypeYes -> "Yes"
@@ -65,6 +140,12 @@ showSensitiveDataType p = case p of
   SensitiveDataTypeNo -> "no"
   SensitiveDataTypeUnknown -> "unknown"
 
+showEthicalIssuesType : EthicalIssuesType -> String
+showEthicalIssuesType p = case p of
+  EthicalIssuesTypeYes -> "yes"
+  EthicalIssuesTypeNo -> "no"
+  EthicalIssuesTypeUnknown -> "unknown"
+
 showDataAccessType : DataAccessType -> String
 showDataAccessType d = case d of
   DataAccessTypeOpen -> "open"
@@ -76,4 +157,9 @@ showMetadataIdType m = case m of
   MetadataIdTypeUrl -> "url"
   MetadataIdTypeOther -> "other"
   MetadataIdTypeNone -> "none"
+
+parseMaybe : String -> Maybe String
+parseMaybe s = case s of
+  "" -> Nothing
+  ss -> Just ss
 

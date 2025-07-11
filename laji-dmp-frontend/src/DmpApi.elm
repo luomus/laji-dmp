@@ -251,8 +251,8 @@ contributorIdDecoder = Json.Decode.succeed ContributorId
 
 encodeContributorId : ContributorId -> E.Value
 encodeContributorId t = E.object
-  [ ( "contactIdIdentifier", encodeMaybe E.string t.contributorIdIdentifier)
-  , ( "contactIdType", encodePersonIdType t.contributorIdType)
+  [ ( "contributorIdIdentifier", encodeMaybe E.string t.contributorIdIdentifier)
+  , ( "contributorIdType", encodePersonIdType t.contributorIdType)
   ]
 
 dataLifeCycleDecoder : Json.Decode.Decoder DataLifeCycle

@@ -15,13 +15,14 @@ import Text.RawString.QQ (r)
 import Database.PostgreSQL.Simple (Connection, query_, Only (Only), query, execute, execute_)
 import Data.List (groupBy, sortOn)
 import Control.Monad (void, forM_)
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Database.PostgreSQL.Simple.FromField ()
 import Data.Time.Clock (UTCTime)
 import Database.PostgreSQL.Simple (FromRow(..), query)
 import Database.PostgreSQL.Simple.FromField ()
 import qualified Data.Text as T
 import Database.PostgreSQL.Simple.Types (PGArray(PGArray, fromPGArray))
+import qualified Data.Maybe
 
 initializeDatabase :: Connection -> IO ()
 initializeDatabase conn = void $ execute_ conn [r|
@@ -457,12 +458,12 @@ parseDmp rows =
         datasets <- parseDatasets rows
         ethicalIssues <- parseEthicalIssues rows
         projects <- parseProjects rows
-        return $ Models.Dmp 
-          (Just a) 
-          (RowTypes.unTextTimestamp created) 
+        return $ Models.Dmp
+          (Just a)
+          (Just $ RowTypes.unTextTimestamp created)
           desc
           lang
-          (RowTypes.unTextTimestamp modified)
+          (Just $ RowTypes.unTextTimestamp modified)
           nextReview
           orgId
           title
@@ -944,15 +945,16 @@ INSERT INTO security_and_privacy (dataset_id, description, title) VALUES (?, ?, 
 
 insertDataManagementPlan :: Connection -> Models.Dmp -> IO Int
 insertDataManagementPlan conn self = do
+  now <- getCurrentTime
   [Only i] <- query conn [r|
 INSERT INTO dmps
 (created, description, language, modified, nextreview_dmp, org_id, title, type_dmp)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
   |]
-    ( Models.dmpCreated self
+    ( Data.Maybe.fromMaybe now (Models.dmpCreated self)
     , Models.dmpDescription self
     , Models.dmpLanguage self
-    , Models.dmpModified self
+    , now
     , Models.dmpNextReviewDmp self
     , Models.dmpOrgId self
     , Models.dmpTitle self

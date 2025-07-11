@@ -323,10 +323,10 @@ data Distribution = Distribution
 
 data Dmp = Dmp
   { dmpId :: Maybe Int
-  , dmpCreated :: UTCTime
+  , dmpCreated :: Maybe UTCTime
   , dmpDescription :: Maybe Text
   , dmpLanguage :: LanguageType
-  , dmpModified :: UTCTime
+  , dmpModified :: Maybe UTCTime
   , dmpNextReviewDmp :: Maybe Day
   , dmpOrgId :: Text
   , dmpTitle :: Text

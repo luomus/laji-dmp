@@ -18,7 +18,7 @@ newtype TextTimestamp = TextTimestamp { unTextTimestamp :: UTCTime } deriving (S
 instance FromField TextTimestamp where
   fromField f mbs = do
     txt :: Text <- fromField f mbs
-    case parseTimeM True defaultTimeLocale "%F %T" (T.unpack txt) of
+    case parseTimeM True defaultTimeLocale "%F %T%Q" (T.unpack txt) of
       Just t  -> pure (TextTimestamp t)
       Nothing -> returnError ConversionFailed f "Could not parse text timestamp"
 

@@ -52,6 +52,22 @@ dmpIdView dmpId = div []
   , p [] [ text <| "Type: " ++ showDocumentIdType dmpId.dmpIdType ]
   ]
 
+contactIdView : ContactId -> Html Msg
+contactIdView contactId = div []
+  [ h3 [] [ text "Contact Id" ]
+  , p [] [ text <| "Identifier: " ++ Debug.toString contactId.contactIdIdentifier ]
+  , p [] [ text <| "Type: " ++ showPersonIdType contactId.contactIdType ]
+  ]
+
+contactView : Contact -> Html Msg
+contactView contact = div []
+  [ h3 [] [ text "Contact" ]
+  , p [] [ text <| "Mbox: " ++ contact.contactMbox ]
+  , p [] [ text <| "Name: " ++ contact.contactName ]
+  , p [] [ text <| "Organization: " ++ Debug.toString contact.contactOrganization ]
+  , contactIdView contact.contactContactId
+  ]
+
 contributorIdView : ContributorId -> Html Msg
 contributorIdView c = div []
   [ h4 [] [ text "Contributor id" ]
@@ -182,6 +198,29 @@ datasetView d = div []
 datasetsView : Array.Array Dataset -> Html Msg
 datasetsView c = div [] <| Array.toList <| Array.map datasetView c
 
+ethicalIssueView : EthicalIssue -> Html Msg
+ethicalIssueView s = div []
+  [ h3 [] [ text "Ethical issue" ]
+  , p [] [ text <| "Description: " ++ Debug.toString s.ethicalIssueDescription ]
+  , p [] [ text <| "Exist: " ++ showEthicalIssuesType s.ethicalIssueExist ]
+  , p [] [ text <| "Report: " ++ Debug.toString s.ethicalIssueReport ]
+  ]
+
+ethicalIssuesView : Array.Array EthicalIssue -> Html Msg
+ethicalIssuesView c = div [] <| Array.toList <| Array.map ethicalIssueView c
+
+projectView : Project -> Html Msg
+projectView s = div []
+  [ h3 [] [ text "Project" ]
+  , p [] [ text <| "Description: " ++ s.projectDescription ]
+  , p [] [ text <| "End date: " ++ Debug.toString (Maybe.map unwrapDay s.projectEndDate) ]
+  , p [] [ text <| "Start date: " ++ unwrapDay s.projectStartDate ]
+  , p [] [ text <| "Title: " ++ s.projectTitle ]
+  ]
+
+projectsView : Array.Array Project -> Html Msg
+projectsView c = div [] <| Array.toList <| Array.map projectView c
+
 dmpView : Dmp -> Html Msg
 dmpView dmp = div []
   [ p [] [ text <| "Title: " ++ dmp.dmpTitle ]
@@ -193,9 +232,12 @@ dmpView dmp = div []
   , p [] [ text <| "Type: " ++ showDmpType dmp.dmpTypeDmp ]
   , p [] [ text <| "Description: " ++ Debug.toString dmp.dmpDescription ]
   , dmpIdView dmp.dmpDmpId
+  , contactView dmp.dmpContact
   , contributorsView dmp.dmpContributors
   , dataLifeCyclesView dmp.dmpDataLifeCycles
   , datasetsView dmp.dmpDatasets
+  , ethicalIssuesView dmp.dmpEthicalIssues
+  , projectsView dmp.dmpProjects
   ]
 
 view : Model -> { title : String, body : Html Msg }

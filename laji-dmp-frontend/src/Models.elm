@@ -210,4 +210,3 @@ type alias SecurityAndPrivacy =
   , securityTitle: String
   }
 
-

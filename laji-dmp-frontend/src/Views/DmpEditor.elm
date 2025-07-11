@@ -37,6 +37,8 @@ import Html exposing (hr)
 import Html.Attributes exposing (selected)
 import User
 import Html.Attributes exposing (type_)
+import Html.Attributes exposing (checked)
+import Html.Events exposing (onCheck)
 
 type ModelStatus = Editing | Submitting | SubmitError Error | NotLoggedInError
 
@@ -51,72 +53,241 @@ type alias Model =
   }
 
 type ModifyContactIdMsg
-  = ModifyContactIdIdentifier String
+  = ModifyContactIdIdentifier (Maybe String)
   | ModifyContactIdType PersonIdType
 
 type ModifyContactMsg
   = ModifyContactMbox String
   | ModifyContactName String
-  | ModifyOrganization String
-  | ModifyContactId ModifyContactIdMsg
+  | ModifyContactOrganization (Maybe String)
+  | ModifyContactContactId ModifyContactIdMsg
 
 type ModifyDmpIdMsg
-  = ModifyDmpIdIdentifier String
+  = ModifyDmpIdIdentifier (Maybe String)
   | ModifyDmpIdType DocumentIdType
 
 type ModifyContributorIdMsg
-  = ModifyContributorIdIdentifier String
+  = ModifyContributorIdIdentifier (Maybe String)
   | ModifyContributorIdType PersonIdType
 
 type ModifyContributorMsg
-  = ModifyContributorMbox String
+  = ModifyContributorMbox (Maybe String)
   | ModifyContributorName String
-  | ModifyContributorOrganization String
+  | ModifyContributorOrganization (Maybe String)
   | ModifyContributorRole RoleType
   | ModifyContributorId ModifyContributorIdMsg
 
 type ModifyDataLifeCycleMsg
-  = Todo4
+  = ModifyDataLifeCycleArchivingServicesData Bool
+  | ModifyDataLifeCycleBackupData String
+  | ModifyDataLifeCycleDeletionData DeletionDataType
+  | ModifyDataLifeCycleDeletionWhenData (Maybe Day)
+
+type ModifyDatasetIdMsg
+  = ModifyDatasetIdIdentifier (Maybe String)
+  | ModifyDatasetIdType DocumentIdType
+
+type ModifyLicenseMsg
+  = ModifyLicenseRef String
+  | ModifyLicenseStartDate Day
+
+type ModifyDistributionMsg
+  = ModifyDistributionAccessUrl (Maybe String)
+  | ModifyDistributionDataAccess (Maybe DataAccessType)
+  | ModifyDistributionDescription (Maybe String)
+  | ModifyDistributionDownloadUri (Maybe String)
+  | ModifyDistributionFormat (Maybe String)
+  | ModifyDistributionTitle String
+  | ModifyDistributionLicense Int ModifyLicenseMsg
+  | AddDistributionLicense
+  | RemoveDistributionLicense Int
+
+type ModifyMetadataMsg
+    = ModifyMetadataAccessDocumentation (Maybe Bool)
+    | ModifyMetadataDataModel (Maybe String)
+    | ModifyMetadataDescription (Maybe String)
+    | ModifyMetadataLanguage LanguageType
+    | ModifyMetadataLocationDocumentation (Maybe String)
+    | ModifyMetadataOpen (Maybe Bool)
+    | ModifyMetadataLocation (Maybe String)
+    | ModifyMetadataSchema (Maybe Bool)
+    | ModifyMetadataMetadataId ModifyMetadataIdMsg
+
+type ModifyMetadataIdMsg
+    = ModifyMetadataIdIdentifier (Maybe String)
+    | ModifyMetadataIdType MetadataIdType
+
+type ModifyRightsMsg
+    = ModifyRightsOwnershipDataRight (Maybe String)
+
+type ModifySecurityMsg
+    = ModifySecurityDescription String
+    | ModifySecurityTitle String
 
 type ModifyDatasetMsg
-  = Todo5
+  = ModifyDatasetDataQualityAssurance (Maybe String)
+  | ModifyDatasetDataSharingIssues (Maybe String)
+  | ModifyDatasetDescription (Maybe String)
+  | ModifyDatasetIssued (Maybe Day)
+  | ModifyDatasetKeywords Int String
+  | AddDatasetKeyword
+  | RemoveDatasetKeyword Int
+  | ModifyDatasetLanguage (Maybe LanguageType)
+  | ModifyDatasetPersonalData PersonalDataType
+  | ModifyDatasetSensitiveData SensitiveDataType
+  | ModifyDatasetReuseDataset (Maybe Bool)
+  | ModifyDatasetTitle String
+  | ModifyDatasetType (Maybe String)
+  | ModifyDatasetDatasetId ModifyDatasetIdMsg
+  | ModifyDatasetDistribution Int ModifyDistributionMsg
+  | AddDatasetDistribution
+  | RemoveDatasetDistribution Int
+  | ModifyDatasetMetadata Int ModifyMetadataMsg
+  | AddDatasetMetadata
+  | RemoveDatasetMetadata Int
+  | ModifyDatasetRights Int ModifyRightsMsg
+  | AddDatasetRights
+  | RemoveDatasetRights Int
+  | ModifyDatasetSecurity Int ModifySecurityMsg
+  | AddDatasetSecurity
+  | RemoveDatasetSecurity Int
 
 type ModifyEthicalIssueMsg
-  = Todo6
+    = ModifyEthicalIssueDescription (Maybe String)
+    | ModifyEthicalIssueExist EthicalIssuesType
+    | ModifyEthicalIssueReport (Maybe String)
 
 type ModifyProjectMsg
-  = Todo7
+    = ModifyProjectDescription String
+    | ModifyProjectEndDate (Maybe Day)
+    | ModifyProjectStartDate Day
+    | ModifyProjectTitle String
 
 type ModifyDmpMsg
   = ModifyDmpOrgId String
-  | ModifyDmpDescription String
+  | ModifyDmpDescription (Maybe String)
   | ModifyDmpLanguage LanguageType
-  | ModifyDmpNextReviewDmp Day
+  | ModifyDmpNextReviewDmp (Maybe Day)
   | ModifyDmpTitle String
   | ModifyDmpTypeDmp DmpType
   | ModifyDmpContact ModifyContactMsg
   | ModifyDmpDmpId ModifyDmpIdMsg
   | ModifyDmpContributor Int ModifyContributorMsg
+  | AddDmpContributor
+  | RemoveDmpContributor Int
   | ModifyDmpDataLifeCycle Int ModifyDataLifeCycleMsg
+  | AddDmpDataLifeCycle
+  | RemoveDmpDataLifeCycle Int
   | ModifyDmpDataset Int ModifyDatasetMsg
+  | AddDmpDataset
+  | RemoveDmpDataset Int
   | ModifyDmpEthicalIssue Int ModifyEthicalIssueMsg
+  | AddDmpEthicalIssue
+  | RemoveDmpEthicalIssue Int
   | ModifyDmpProject Int ModifyProjectMsg
+  | AddDmpProject
+  | RemoveDmpProject Int
 
 type Msg
   = OnSubmit
   | GotDmpApiResponse (Result Error String)
   | OnModifyDmp ModifyDmpMsg
---  | OnAddDataset
---  | OnRemoveDataset Int
---  | OnModifyDatasetTitle Int String
---  | OnModifyDatasetPersonalData Int PersonalData
---  | OnAddDistribution Int
---  | OnRemoveDistribution Int Int
---  | OnModifyDistributionDataAccess Int Int DataAccess
---  | OnModifyDistributionAccessUrl Int Int (Maybe String)
---  | OnToggleHost Int Int
---  | OnModifyHostBackupFrequency Int Int (Maybe String)
---  | OnModifyHostGeoLocation Int Int (Maybe String)
+
+defaultContributor : Contributor
+defaultContributor =
+  { contributorMbox = Nothing
+  , contributorName = ""
+  , contributorOrganization = Nothing
+  , contributorRole = RoleTypeDataController
+  , contributorContributorId =
+    { contributorIdIdentifier = Nothing
+    , contributorIdType = PersonIdTypeNone
+    }
+  }
+
+defaultLicense : License
+defaultLicense =
+  { licenseRef = ""
+  , licenseStartDate = Day ""
+  }
+
+defaultDistribution : Distribution
+defaultDistribution =
+  { distributionAccessUrl = Nothing
+  , distributionDataAccess = Nothing
+  , distributionDescription = Nothing
+  , distributionDownloadUri = Nothing
+  , distributionFormat = Nothing
+  , distributionTitle = ""
+  , distributionLicenses = Array.empty
+  }
+
+defaultMetadata : Metadata
+defaultMetadata =
+  { metadataAccessDocumentation = Nothing
+  , metadataDataModel = Nothing
+  , metadataDescription = Nothing
+  , metadataLanguage = LanguageTypeFi
+  , metadataLocationDocumentation = Nothing
+  , metadataOpen = Nothing
+  , metadataLocation = Nothing
+  , metadataSchema = Nothing
+  , metadataMetadataId = { metadataIdIdentifier = Nothing, metadataIdType = MetadataIdTypeNone }
+  }
+
+defaultRights : RightsRelatedToData
+defaultRights =
+  { rightsOwnershipDataRight = Nothing
+  }
+
+defaultSecurity : SecurityAndPrivacy
+defaultSecurity =
+  { securityDescription = ""
+  , securityTitle = ""
+  }
+
+defaultDataset : Dataset
+defaultDataset =
+  { datasetDataQualityAssurance = Nothing
+  , datasetDataSharingIssues = Nothing
+  , datasetDescription = Nothing
+  , datasetIssued = Nothing
+  , datasetKeywords = Nothing
+  , datasetLanguage = Nothing
+  , datasetPersonalData = PersonalDataTypeUnknown
+  , datasetSensitiveData = SensitiveDataTypeUnknown
+  , datasetReuseDataset = Nothing
+  , datasetTitle = ""
+  , datasetType = Nothing
+  , datasetDatasetId = { datasetIdIdentifier = Nothing, datasetIdType = DocumentIdTypeNone }
+  , datasetDistributions = Array.empty
+  , datasetMetadata = Array.empty
+  , datasetRightsRelatedToData = Array.empty
+  , datasetSecurityAndPrivacy = Array.empty
+  }
+
+defaultDataLifeCycle : DataLifeCycle
+defaultDataLifeCycle =
+  { dataLifeCycleArchivingServicesData = True
+  , dataLifeCycleBackupData = ""
+  , dataLifeCycleDeletionData = DeletionDataTypeUnknown
+  , dataLifeCycleDeletionWhenData = Nothing
+  }
+
+defaultEthicalIssue : EthicalIssue
+defaultEthicalIssue =
+  { ethicalIssueDescription = Nothing
+  , ethicalIssueExist = EthicalIssuesTypeUnknown
+  , ethicalIssueReport = Nothing
+  }
+
+defaultProject : Project
+defaultProject =
+  { projectDescription = ""
+  , projectEndDate = Nothing
+  , projectStartDate = Day ""
+  , projectTitle = ""
+  }
 
 defaultDmp : String -> Dmp
 defaultDmp org =
@@ -170,123 +341,183 @@ removeAt idx array =
     |> List.map Tuple.second
     |> Array.fromList
 
+updateAt : Int -> (a -> a) -> Array.Array a -> Array.Array a
+updateAt index fn arr =
+  case Array.get index arr of
+    Just value ->
+      Array.set index (fn value) arr
+    Nothing ->
+      arr
+
+updateContactId : ModifyContactIdMsg -> ContactId -> ContactId
+updateContactId msg val = case msg of
+  ModifyContactIdIdentifier v -> { val | contactIdIdentifier = v }
+  ModifyContactIdType v -> { val | contactIdType = v }
+
+updateContact : ModifyContactMsg -> Contact -> Contact
+updateContact msg val = case msg of
+  ModifyContactMbox str -> { val | contactMbox = str }
+  ModifyContactName str -> { val | contactName = str }
+  ModifyContactOrganization maybeStr -> { val | contactOrganization = maybeStr }
+  ModifyContactContactId m -> { val | contactContactId = updateContactId m val.contactContactId }
+
+updateDmpId : ModifyDmpIdMsg -> DmpId -> DmpId
+updateDmpId msg val = case msg of
+  ModifyDmpIdIdentifier v -> { val | dmpIdIdentifier = v }
+  ModifyDmpIdType v -> { val | dmpIdType = v }
+
+updateContributorId : ModifyContributorIdMsg -> ContributorId -> ContributorId
+updateContributorId msg val = case msg of
+  ModifyContributorIdIdentifier v -> { val | contributorIdIdentifier = v }
+  ModifyContributorIdType v -> { val | contributorIdType = v }
+
+updateContributor : ModifyContributorMsg -> Contributor -> Contributor
+updateContributor msg val = case msg of
+  ModifyContributorMbox v -> { val | contributorMbox = v }
+  ModifyContributorName v -> { val | contributorName = v }
+  ModifyContributorOrganization v -> { val | contributorOrganization = v }
+  ModifyContributorRole v -> { val | contributorRole = v }
+  ModifyContributorId v -> { val | contributorContributorId = updateContributorId v val.contributorContributorId }
+
+updateDataLifeCycle : ModifyDataLifeCycleMsg -> DataLifeCycle -> DataLifeCycle
+updateDataLifeCycle msg val = case msg of
+  ModifyDataLifeCycleArchivingServicesData v -> { val | dataLifeCycleArchivingServicesData = v }
+  ModifyDataLifeCycleBackupData v -> { val | dataLifeCycleBackupData = v }
+  ModifyDataLifeCycleDeletionData v -> { val | dataLifeCycleDeletionData = v }
+  ModifyDataLifeCycleDeletionWhenData v -> { val | dataLifeCycleDeletionWhenData = v }
+
+updateDatasetId : ModifyDatasetIdMsg -> DatasetId -> DatasetId
+updateDatasetId msg val = case msg of
+  ModifyDatasetIdIdentifier v -> { val | datasetIdIdentifier = v }
+  ModifyDatasetIdType v -> { val | datasetIdType = v }
+
+updateLicense : ModifyLicenseMsg -> License -> License
+updateLicense msg val = case msg of
+  ModifyLicenseRef v -> { val | licenseRef = v }
+  ModifyLicenseStartDate v -> { val | licenseStartDate = v }
+
+updateDistribution : ModifyDistributionMsg -> Distribution -> Distribution
+updateDistribution msg val = case msg of
+  ModifyDistributionAccessUrl v -> { val | distributionAccessUrl = v }
+  ModifyDistributionDataAccess v -> { val | distributionDataAccess = v }
+  ModifyDistributionDescription v -> { val | distributionDescription = v }
+  ModifyDistributionDownloadUri v -> { val | distributionDownloadUri = v }
+  ModifyDistributionFormat v -> { val | distributionFormat = v }
+  ModifyDistributionTitle v -> { val | distributionTitle = v }
+
+  ModifyDistributionLicense idx v -> { val | distributionLicenses = updateAt idx (updateLicense v) val.distributionLicenses }
+  AddDistributionLicense -> { val | distributionLicenses = Array.push defaultLicense val.distributionLicenses }
+  RemoveDistributionLicense idx -> { val | distributionLicenses = removeAt idx val.distributionLicenses }
+
+updateMetadataId : ModifyMetadataIdMsg -> MetadataId -> MetadataId
+updateMetadataId msg val = case msg of
+  ModifyMetadataIdIdentifier v -> { val | metadataIdIdentifier = v }
+  ModifyMetadataIdType v -> { val | metadataIdType = v }
+
+updateMetadata : ModifyMetadataMsg -> Metadata -> Metadata
+updateMetadata msg val = case msg of
+  ModifyMetadataAccessDocumentation v -> { val | metadataAccessDocumentation = v }
+  ModifyMetadataDataModel v -> { val | metadataDataModel = v }
+  ModifyMetadataDescription v -> { val | metadataDescription = v }
+  ModifyMetadataLanguage v -> { val | metadataLanguage = v }
+  ModifyMetadataLocationDocumentation v -> { val | metadataLocationDocumentation = v }
+  ModifyMetadataOpen v -> { val | metadataOpen = v }
+  ModifyMetadataLocation v -> { val | metadataLocation = v }
+  ModifyMetadataSchema v -> { val | metadataSchema = v }
+  ModifyMetadataMetadataId v -> { val | metadataMetadataId = updateMetadataId v val.metadataMetadataId }
+
+updateRights : ModifyRightsMsg -> RightsRelatedToData -> RightsRelatedToData
+updateRights msg val = case msg of
+  ModifyRightsOwnershipDataRight v -> { val | rightsOwnershipDataRight = v }
+
+updateSecurity : ModifySecurityMsg -> SecurityAndPrivacy -> SecurityAndPrivacy
+updateSecurity msg val = case msg of
+  ModifySecurityDescription v -> { val | securityDescription = v }
+  ModifySecurityTitle v -> { val | securityTitle = v }
+
+updateDataset : ModifyDatasetMsg -> Dataset -> Dataset
+updateDataset msg val = case msg of
+  ModifyDatasetDataQualityAssurance v -> { val | datasetDataQualityAssurance = v }
+  ModifyDatasetDataSharingIssues v -> { val | datasetDataSharingIssues = v }
+  ModifyDatasetDescription v -> { val | datasetDescription = v }
+  ModifyDatasetIssued v -> { val | datasetIssued = v }
+  ModifyDatasetLanguage v -> { val | datasetLanguage = v }
+  ModifyDatasetPersonalData v -> { val | datasetPersonalData = v }
+  ModifyDatasetSensitiveData v -> { val | datasetSensitiveData = v }
+  ModifyDatasetReuseDataset v -> { val | datasetReuseDataset = v }
+  ModifyDatasetTitle v -> { val | datasetTitle = v }
+  ModifyDatasetType v -> { val | datasetType = v }
+  ModifyDatasetDatasetId v -> { val | datasetDatasetId = updateDatasetId v val.datasetDatasetId }
+
+  ModifyDatasetKeywords idx v -> { val | datasetKeywords = Maybe.map (updateAt idx (\_ -> v)) val.datasetKeywords }
+  AddDatasetKeyword -> { val | datasetKeywords = Maybe.map (Array.push "") val.datasetKeywords }
+  RemoveDatasetKeyword idx -> { val | datasetKeywords = Maybe.map (removeAt idx) val.datasetKeywords }
+
+  ModifyDatasetDistribution idx v -> { val | datasetDistributions = updateAt idx (updateDistribution v) val.datasetDistributions }
+  AddDatasetDistribution -> { val | datasetDistributions = Array.push defaultDistribution val.datasetDistributions }
+  RemoveDatasetDistribution idx -> { val | datasetDistributions = removeAt idx val.datasetDistributions }
+
+  ModifyDatasetMetadata idx v -> { val | datasetMetadata = updateAt idx (updateMetadata v) val.datasetMetadata }
+  AddDatasetMetadata -> { val | datasetMetadata = Array.push defaultMetadata val.datasetMetadata }
+  RemoveDatasetMetadata idx -> { val | datasetMetadata = removeAt idx val.datasetMetadata }
+
+  ModifyDatasetRights idx v -> { val | datasetRightsRelatedToData = updateAt idx (updateRights v) val.datasetRightsRelatedToData }
+  AddDatasetRights -> { val | datasetRightsRelatedToData = Array.push defaultRights val.datasetRightsRelatedToData }
+  RemoveDatasetRights idx -> { val | datasetRightsRelatedToData = removeAt idx val.datasetRightsRelatedToData }
+
+  ModifyDatasetSecurity idx v -> { val | datasetSecurityAndPrivacy = updateAt idx (updateSecurity v) val.datasetSecurityAndPrivacy }
+  AddDatasetSecurity -> { val | datasetSecurityAndPrivacy = Array.push defaultSecurity val.datasetSecurityAndPrivacy }
+  RemoveDatasetSecurity idx -> { val | datasetSecurityAndPrivacy = removeAt idx val.datasetSecurityAndPrivacy }
+
+updateEthicalIssue : ModifyEthicalIssueMsg -> EthicalIssue -> EthicalIssue
+updateEthicalIssue msg val = case msg of
+  ModifyEthicalIssueDescription v -> { val | ethicalIssueDescription = v }
+  ModifyEthicalIssueExist v -> { val | ethicalIssueExist = v }
+  ModifyEthicalIssueReport v -> { val | ethicalIssueReport = v }
+
+updateProject : ModifyProjectMsg -> Project -> Project
+updateProject msg val = case msg of
+  ModifyProjectDescription v -> { val | projectDescription = v }
+  ModifyProjectEndDate v -> { val | projectEndDate = v }
+  ModifyProjectStartDate v -> { val | projectStartDate = v }
+  ModifyProjectTitle v -> { val | projectTitle = v }
+
+updateDmp : ModifyDmpMsg -> Dmp -> Dmp
+updateDmp msg dmp = case msg of
+  ModifyDmpDescription v -> { dmp | dmpDescription = v }
+  ModifyDmpLanguage v -> { dmp | dmpLanguage = v }
+  ModifyDmpNextReviewDmp v -> { dmp | dmpNextReviewDmp = v }
+  ModifyDmpOrgId v -> { dmp | dmpOrgId = v }
+  ModifyDmpTitle v -> { dmp | dmpTitle = v }
+  ModifyDmpTypeDmp v -> { dmp | dmpTypeDmp = v }
+  ModifyDmpContact v -> { dmp | dmpContact = updateContact v dmp.dmpContact }
+  ModifyDmpDmpId v -> { dmp | dmpDmpId = updateDmpId v dmp.dmpDmpId }
+
+  ModifyDmpContributor idx v -> { dmp | dmpContributors = updateAt idx (updateContributor v) dmp.dmpContributors }
+  AddDmpContributor -> { dmp | dmpContributors = Array.push defaultContributor dmp.dmpContributors }
+  RemoveDmpContributor idx -> { dmp | dmpContributors = removeAt idx dmp.dmpContributors }
+
+  ModifyDmpDataLifeCycle idx v -> { dmp | dmpDataLifeCycles = updateAt idx (updateDataLifeCycle v) dmp.dmpDataLifeCycles }
+  AddDmpDataLifeCycle -> { dmp | dmpDataLifeCycles = Array.push defaultDataLifeCycle dmp.dmpDataLifeCycles }
+  RemoveDmpDataLifeCycle idx -> { dmp | dmpDataLifeCycles = removeAt idx dmp.dmpDataLifeCycles }
+
+  ModifyDmpDataset idx v -> { dmp | dmpDatasets = updateAt idx (updateDataset v) dmp.dmpDatasets }
+  AddDmpDataset -> { dmp | dmpDatasets = Array.push defaultDataset dmp.dmpDatasets }
+  RemoveDmpDataset idx -> { dmp | dmpDatasets = removeAt idx dmp.dmpDatasets }
+
+  ModifyDmpEthicalIssue idx v -> { dmp | dmpEthicalIssues = updateAt idx (updateEthicalIssue v) dmp.dmpEthicalIssues }
+  AddDmpEthicalIssue -> { dmp | dmpEthicalIssues = Array.push defaultEthicalIssue dmp.dmpEthicalIssues }
+  RemoveDmpEthicalIssue idx -> { dmp | dmpEthicalIssues = removeAt idx dmp.dmpEthicalIssues }
+
+  ModifyDmpProject idx v -> { dmp | dmpProjects = updateAt idx (updateProject v) dmp.dmpProjects }
+  AddDmpProject -> { dmp | dmpProjects = Array.push defaultProject dmp.dmpProjects }
+  RemoveDmpProject idx -> { dmp | dmpProjects = removeAt idx dmp.dmpProjects }
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    OnModifyDmp msg2 ->
-      case msg2 of
-        ModifyDmpOrgId org ->
-          let
-            updateDmp dmp = { dmp | dmpOrgId = org}
-          in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
-        _ -> ( model, Cmd.none ) -- TODO handle rest of cases
---    OnAddDataset ->
---      let
---        updateDmp dmp =
---          { dmp | datasets =
---            Array.push { title = "", personalData = Unknown, distributions = Array.empty } dmp.datasets
---          }
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnRemoveDataset datasetIdx ->
---      let
---        updateDmp dmp = { dmp | datasets = removeAt datasetIdx dmp.datasets}
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnModifyDatasetTitle idx title ->
---      let
---        updateDmp dmp =
---          case Array.get idx dmp.datasets of
---            Just dataset -> { dmp | datasets = Array.set idx ({ dataset | title = title }) dmp.datasets }
---            Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnModifyDatasetPersonalData idx personalData ->
---      let
---        updateDmp dmp =
---          case Array.get idx dmp.datasets of
---            Just dataset -> { dmp | datasets = Array.set idx ({ dataset | personalData = personalData }) dmp.datasets }
---            Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnAddDistribution idx ->
---      let
---        updateDmp dmp = case Array.get idx dmp.datasets of
---          Just dataset ->
---            { dmp | datasets =
---              Array.set idx { dataset | distributions =
---                Array.push { dataAccess = Open, accessUrl = Nothing, host = Nothing } dataset.distributions
---              } dmp.datasets }
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnRemoveDistribution datasetIdx distributionIdx ->
---      let
---        updateDmp dmp = case Array.get datasetIdx dmp.datasets of
---          Just dataset ->
---            { dmp | datasets = Array.set datasetIdx { dataset | distributions = removeAt distributionIdx dataset.distributions } dmp.datasets}
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnModifyDistributionDataAccess datasetIdx distributionIdx dataAccess ->
---      let
---        updateDmp dmp = case Array.get datasetIdx dmp.datasets of
---          Just dataset -> case Array.get distributionIdx dataset.distributions of
---            Just distribution -> { dmp | datasets =
---              Array.set datasetIdx { dataset | distributions =
---                Array.set distributionIdx { distribution | dataAccess = dataAccess } dataset.distributions
---              } dmp.datasets }
---            Nothing -> dmp
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnModifyDistributionAccessUrl datasetIdx distributionIdx accessUrl ->
---      let
---        updateDmp dmp = case Array.get datasetIdx dmp.datasets of
---          Just dataset -> case Array.get distributionIdx dataset.distributions of
---            Just distribution -> { dmp | datasets =
---              Array.set datasetIdx { dataset | distributions =
---                Array.set distributionIdx { distribution | accessUrl = accessUrl } dataset.distributions
---              } dmp.datasets }
---            Nothing -> dmp
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnToggleHost datasetIdx distributionIdx ->
---      let
---        updateDmp dmp = case Array.get datasetIdx dmp.datasets of
---          Just dataset -> case Array.get distributionIdx dataset.distributions of
---            Just distribution -> { dmp | datasets =
---              Array.set datasetIdx { dataset | distributions =
---                Array.set distributionIdx { distribution | host =
---                  case distribution.host of
---                    Just _ -> Nothing
---                    Nothing -> Just { backupFrequency = Nothing, geoLocation = Nothing }
---                  } dataset.distributions
---              } dmp.datasets }
---            Nothing -> dmp
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnModifyHostBackupFrequency datasetIdx distributionIdx backupFrequency ->
---      let
---        updateDmp dmp = case Array.get datasetIdx dmp.datasets of
---          Just dataset -> case Array.get distributionIdx dataset.distributions of
---            Just distribution -> case distribution.host of
---              Just host -> { dmp | datasets =
---                Array.set datasetIdx { dataset | distributions =
---                  Array.set distributionIdx { distribution | host =
---                    Just { host | backupFrequency = backupFrequency }} dataset.distributions
---                } dmp.datasets }
---              Nothing -> dmp
---            Nothing -> dmp
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
---    OnModifyHostGeoLocation datasetIdx distributionIdx geoLocation ->
---      let
---        updateDmp dmp = case Array.get datasetIdx dmp.datasets of
---          Just dataset -> case Array.get distributionIdx dataset.distributions of
---            Just distribution -> case distribution.host of
---              Just host -> { dmp | datasets =
---                Array.set datasetIdx { dataset | distributions =
---                  Array.set distributionIdx { distribution | host =
---                    Just { host | geoLocation = geoLocation }} dataset.distributions
---                } dmp.datasets }
---              Nothing -> dmp
---            Nothing -> dmp
---          Nothing -> dmp
---      in ( { model | dmp = updateDmp model.dmp }, Cmd.none )
+    OnModifyDmp subMsg ->
+      ( { model | dmp = updateDmp subMsg model.dmp }, Cmd.none )
     OnSubmit -> case model.status of
       Submitting -> (model, Cmd.none)
       _-> case model.session of
@@ -300,161 +531,6 @@ update msg model =
         (model, Nav.pushUrl model.key "/dmp")
       Err e ->
         ({ model | status = SubmitError e }, Cmd.none)
-
--- hostEditorView : Host -> Int -> Int -> Bool -> Html Msg
--- hostEditorView host datasetIdx distributionIdx d = div [ class "dmp-editor-host" ]
---   [ div []
---     [ h5 [] [ text <| "Host"]
---     , div [ class "form-field" ]
---       [ label [ for "host-backup-frequency" ] [ text "Backup frequency" ]
---       , input
---         [ id "host-backup-frequency"
---         , value <| withDefault "" host.backupFrequency
---         , disabled d
---         , onInput <| (\str -> OnModifyHostBackupFrequency datasetIdx distributionIdx (
---           case str of
---             "" -> Nothing
---             s -> Just s
---         ))
---         ]
---         []
---       ]
---     , div [ class "form-field" ]
---       [ label [ for "host-geo-location" ] [ text "Geo location" ]
---       , input
---         [ id "host-geo-location"
---         , value <| withDefault "" host.geoLocation
---         , disabled d
---         , onInput <| (\str -> OnModifyHostGeoLocation datasetIdx distributionIdx (
---           case str of
---             "" -> Nothing
---             s -> Just s
---         ))
---         ]
---         []
---       ]
---     ]
---   ]
--- 
--- distributionEditorView : Distribution -> Int -> Int -> Bool -> Html Msg
--- distributionEditorView distribution datasetIdx distributionIdx d = div [ class "dmp-editor-distribution" ]
---   [ h4 [] [ text <| "Distribution " ++ String.fromInt distributionIdx ]
---   , div [ class "dmp-editor-distribution-fields" ]
---     [ div [ class "form-field" ]
---       [ label [ for "distribution-data-access" ] [ text "Data access" ]
---       , select
---         [ id "distribution-data-access"
---         , value <| case distribution.dataAccess of
---           Open -> "Open"
---           Shared -> "Shared"
---           Closed -> "Closed"
---         , disabled d
---         , onInput <| (\str -> OnModifyDistributionDataAccess datasetIdx distributionIdx (
---           case str of
---             "Shared" -> Shared
---             "Closed" -> Closed
---             _ -> Open
---         ))
---         ]
---         -- There's an elm bug or something where the initial value attribute is not being updated
---         -- correctly. So we are setting the redundant `selected` attribute as well.
---         [ option [ value "Open", selected <| distribution.dataAccess == Open ] [ text "Open" ]
---         , option [ value "Shared", selected <| distribution.dataAccess == Shared ] [ text "Shared" ]
---         , option [ value "Closed", selected <| distribution.dataAccess == Closed ] [ text "Closed" ]
---         ]
---       ]
---     , div [ class "form-field" ]
---       [ label [ for "distribution-access-url" ] [ text "Access url" ]
---       , input
---         [ id "distribution-access-url"
---         , value <| withDefault "" distribution.accessUrl
---         , disabled d
---         , onInput <| (\str -> OnModifyDistributionAccessUrl datasetIdx distributionIdx (
---           case str of
---             "" -> Nothing
---             s -> Just s
---         ))
---         ]
---         []
---       ]
---     ]
---   , case distribution.host of
---     Just host -> hostEditorView host datasetIdx distributionIdx d
---     Nothing -> text ""
---   , button
---     [ onClick <| OnToggleHost datasetIdx distributionIdx
---     , disabled d
---     , class <| if distribution.host == Nothing then "btn" else "btn btn-danger"
---     ]
---     [ text <| if distribution.host == Nothing then "+ Add Host" else "- Remove Host" ]
---   , hr [] []
---   , button
---     [ onClick <| OnRemoveDistribution datasetIdx distributionIdx
---     , disabled d
---     , class "btn btn-danger"
---     ]
---     [ text "- Remove distribution" ]
---   ]
--- 
--- datasetEditorView : Dataset -> Int -> Bool -> Html Msg
--- datasetEditorView dataset datasetIdx d = div [ class "dmp-editor-dataset" ]
---   [ h3 [] [ text <| "Dataset " ++ String.fromInt datasetIdx ]
---   , div [ class "form-field" ]
---     [ label [ for "dataset-editor-title" ] [ text "Title" ]
---     , input
---       [ id "dataset-editor-title"
---       , value dataset.title
---       , disabled d
---       , onInput <| OnModifyDatasetTitle datasetIdx
---       ]
---       []
---     ]
---   , div [ class "form-field" ]
---     [ label [ for "dataset-editor-personal-data" ] [ text "Personal Data" ]
---     , select
---       [ id "distribution-editor-personal-data"
---       , value <| case dataset.personalData of
---         Yes -> "Yes"
---         No -> "No"
---         Unknown -> "Unknown"
---       , disabled d
---       , onInput <| (\str -> OnModifyDatasetPersonalData datasetIdx (
---         case str of
---           "Yes" -> Yes
---           "No" -> No
---           _ -> Unknown
---       ))
---       ]
---       [ option [ value "Yes", selected <| dataset.personalData == Yes ] [ text "Yes" ]
---       , option [ value "No", selected <| dataset.personalData == No ] [ text "No" ]
---       , option [ value "Unknown", selected <| dataset.personalData == Unknown ] [ text "Unknown" ]
---       ]
---     ]
---   , div []
---     [ div [ class "dmp-editor-distribution-list" ]
---       <| Array.toList
---       <| Array.indexedMap (\distributionIdx dist -> distributionEditorView dist datasetIdx distributionIdx d) dataset.distributions
---     , button
---       [ onClick <| OnAddDistribution datasetIdx
---       , disabled d
---       , class "btn"
---       ]
---       [ text "+ Add distribution" ]
---     , hr [] []
---     ]
---   , button
---     [ onClick <| OnRemoveDataset datasetIdx
---     , disabled d
---     , class "btn btn-danger"
---     ]
---     [ text "- Remove dataset" ]
---   ]
-
-langFromStr : String -> LanguageType
-langFromStr s = case s of
-  "LanguageTypeEn" -> LanguageTypeEn
-  "LanguageTypeSv" -> LanguageTypeSv
-  _ -> LanguageTypeFi
 
 languageSelect : LanguageType -> Bool -> (String -> a) -> Html a
 languageSelect l d msg = select
@@ -472,13 +548,28 @@ languageSelect l d msg = select
   , option [ value "LanguageTypeEn" ] [ text <| showLanguage LanguageTypeEn ]
   ]
 
-dmpTypeFromStr : String -> DmpType
-dmpTypeFromStr s = case s of
-  "DmpTypeStudent" -> DmpTypeStudent
-  "DmpTypeAcademic" -> DmpTypeAcademic
-  "DmpTypeNational" -> DmpTypeNational
-  "DmpTypeInternational" -> DmpTypeInternational
-  _ -> DmpTypeOrganizational
+maybeLangFromStr : String -> Maybe LanguageType
+maybeLangFromStr s = case s of
+  "None" -> Nothing
+  _ -> Just <| langFromStr s
+
+maybeLanguageSelect : Maybe LanguageType -> Bool -> (String -> a) -> Html a
+maybeLanguageSelect l d msg = select
+  [ value (
+    case l of
+      Just LanguageTypeFi -> "LanguageTypeFi"
+      Just LanguageTypeSv -> "LanguageTypeSv"
+      Just LanguageTypeEn -> "LanguageTypeEn"
+      Nothing -> "None"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "None" ] [ text "None" ]
+  , option [ value "LanguageTypeFi" ] [ text <| showLanguage LanguageTypeFi ]
+  , option [ value "LanguageTypeSv" ] [ text <| showLanguage LanguageTypeSv ]
+  , option [ value "LanguageTypeEn" ] [ text <| showLanguage LanguageTypeEn ]
+  ]
 
 dmpTypeSelect : DmpType -> Bool -> (String -> a) -> Html a
 dmpTypeSelect l d msg = select
@@ -499,15 +590,6 @@ dmpTypeSelect l d msg = select
   , option [ value "DmpTypeInternational" ] [ text <| showDmpType DmpTypeInternational ]
   , option [ value "DmpTypeOrganizational" ] [ text <| showDmpType DmpTypeOrganizational ]
   ]
-
-documentIdTypeFromStr : String -> DocumentIdType
-documentIdTypeFromStr s = case s of
-  "DocumentIdTypeHandle" -> DocumentIdTypeHandle
-  "DocumentIdTypeDoi" -> DocumentIdTypeDoi
-  "DocumentIdTypeArk" -> DocumentIdTypeArk
-  "DocumentIdTypeUrl" -> DocumentIdTypeUrl
-  "DocumentIdTypeOther" -> DocumentIdTypeOther
-  _                    -> DocumentIdTypeNone
 
 documentIdTypeSelect : DocumentIdType -> Bool -> (String -> a) -> Html a
 documentIdTypeSelect l d msg = select
@@ -531,14 +613,6 @@ documentIdTypeSelect l d msg = select
   , option [ value "DocumentIdTypeNone"   ] [ text <| showDocumentIdType DocumentIdTypeNone   ]
   ]
 
-personTypeFromStr : String -> PersonIdType
-personTypeFromStr s = case s of
-  "PersonIdTypeOrcid"  -> PersonIdTypeOrcid
-  "PersonIdTypeIsni"   -> PersonIdTypeIsni
-  "PersonIdTypeOpenid" -> PersonIdTypeOpenid
-  "PersonIdTypeOther"  -> PersonIdTypeOther
-  _                    -> PersonIdTypeNone
-
 personIdTypeSelect : PersonIdType -> Bool -> (String -> a) -> Html a
 personIdTypeSelect l d msg = select
   [ value (
@@ -559,6 +633,148 @@ personIdTypeSelect l d msg = select
   , option [ value "PersonIdTypeNone"   ] [ text <| showPersonIdType PersonIdTypeNone   ]
   ]
 
+roleTypeSelect : RoleType -> Bool -> (String -> a) -> Html a
+roleTypeSelect l d msg = select
+  [ value (
+    case l of
+      RoleTypeWorkPackageLeader     -> "RoleTypeWorkPackageLeader"
+      RoleTypeDataController        -> "RoleTypeDataController"
+      RoleTypePrincipleInvestigator -> "RoleTypePrincipleInvestigator"
+      RoleTypeAuthorOfDataSet       -> "RoleTypeAuthorOfDataSet"
+      RoleTypeOther                 -> "RoleTypeOther"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "RoleTypeWorkPackageLeader"     ] [ text <| showRoleType RoleTypeWorkPackageLeader     ]
+  , option [ value "RoleTypeDataController"        ] [ text <| showRoleType RoleTypeDataController        ]
+  , option [ value "RoleTypePrincipleInvestigator" ] [ text <| showRoleType RoleTypePrincipleInvestigator ]
+  , option [ value "RoleTypeAuthorOfDataSet"       ] [ text <| showRoleType RoleTypeAuthorOfDataSet       ]
+  , option [ value "RoleTypeOther"                 ] [ text <| showRoleType RoleTypeOther                 ]
+  ]
+
+deletionDataTypeSelect : DeletionDataType -> Bool -> (String -> a) -> Html a
+deletionDataTypeSelect l d msg = select
+  [ value (
+    case l of
+      DeletionDataTypeYes     -> "DeletionDataTypeYes"
+      DeletionDataTypeNo      -> "DeletionDataTypeNo"
+      DeletionDataTypeUnknown -> "DeletionDataTypeUnknown"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "DeletionDataTypeYes"     ] [ text <| showDeletionDataType DeletionDataTypeYes     ]
+  , option [ value "DeletionDataTypeNo"      ] [ text <| showDeletionDataType DeletionDataTypeNo      ]
+  , option [ value "DeletionDataTypeUnknown" ] [ text <| showDeletionDataType DeletionDataTypeUnknown ]
+  ]
+
+personalDataTypeSelect : PersonalDataType -> Bool -> (String -> a) -> Html a
+personalDataTypeSelect l d msg = select
+  [ value (
+    case l of
+      PersonalDataTypeYes     -> "PersonalDataTypeYes"
+      PersonalDataTypeNo      -> "PersonalDataTypeNo"
+      PersonalDataTypeUnknown -> "PersonalDataTypeUnknown"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "PersonalDataTypeYes"     ] [ text <| showPersonalDataType PersonalDataTypeYes     ]
+  , option [ value "PersonalDataTypeNo"      ] [ text <| showPersonalDataType PersonalDataTypeNo      ]
+  , option [ value "PersonalDataTypeUnknown" ] [ text <| showPersonalDataType PersonalDataTypeUnknown ]
+  ]
+
+sensitiveDataTypeSelect : SensitiveDataType -> Bool -> (String -> a) -> Html a
+sensitiveDataTypeSelect l d msg = select
+  [ value (
+    case l of
+      SensitiveDataTypeYes     -> "SensitiveDataTypeYes"
+      SensitiveDataTypeNo      -> "SensitiveDataTypeNo"
+      SensitiveDataTypeUnknown -> "SensitiveDataTypeUnknown"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "SensitiveDataTypeYes"     ] [ text <| showSensitiveDataType SensitiveDataTypeYes     ]
+  , option [ value "SensitiveDataTypeNo"      ] [ text <| showSensitiveDataType SensitiveDataTypeNo      ]
+  , option [ value "SensitiveDataTypeUnknown" ] [ text <| showSensitiveDataType SensitiveDataTypeUnknown ]
+  ]
+
+ethicalIssuesTypeSelect : EthicalIssuesType -> Bool -> (String -> a) -> Html a
+ethicalIssuesTypeSelect l d msg = select
+  [ value (
+    case l of
+      EthicalIssuesTypeYes     -> "EthicalIssuesTypeYes"
+      EthicalIssuesTypeNo      -> "EthicalIssuesTypeNo"
+      EthicalIssuesTypeUnknown -> "EthicalIssuesTypeUnknown"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "EthicalIssuesTypeYes"     ] [ text <| showEthicalIssuesType EthicalIssuesTypeYes     ]
+  , option [ value "EthicalIssuesTypeNo"      ] [ text <| showEthicalIssuesType EthicalIssuesTypeNo      ]
+  , option [ value "EthicalIssuesTypeUnknown" ] [ text <| showEthicalIssuesType EthicalIssuesTypeUnknown ]
+  ]
+
+metadataIdTypeSelect : MetadataIdType -> Bool -> (String -> a) -> Html a
+metadataIdTypeSelect l d msg = select
+  [ value (
+    case l of
+      MetadataIdTypeUrl   -> "MetadataIdTypeUrl"
+      MetadataIdTypeOther -> "MetadataIdTypeOther"
+      MetadataIdTypeNone  -> "MetadataIdTypeNone"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "MetadataIdTypeUrl"   ] [ text <| showMetadataIdType MetadataIdTypeUrl   ]
+  , option [ value "MetadataIdTypeOther" ] [ text <| showMetadataIdType MetadataIdTypeOther ]
+  , option [ value "MetadataIdTypeNone"  ] [ text <| showMetadataIdType MetadataIdTypeNone  ]
+  ]
+
+maybeDataAccessTypeSelect : Maybe DataAccessType -> Bool -> (String -> a) -> Html a
+maybeDataAccessTypeSelect l d msg = select
+  [ value (
+    case l of
+      Just DataAccessTypeOpen   -> "DataAccessTypeOpen"
+      Just DataAccessTypeClosed -> "DataAccessTypeClosed"
+      Just DataAccessTypeShared -> "DataAccessTypeShared"
+      Nothing -> "undefined"
+    )
+  , disabled d
+  , onInput msg
+  ]
+  [ option [ value "undefined"            ] [ text "undefined" ]
+  , option [ value "DataAccessTypeOpen"   ] [ text <| showDataAccessType DataAccessTypeOpen   ]
+  , option [ value "DataAccessTypeClosed" ] [ text <| showDataAccessType DataAccessTypeClosed ]
+  , option [ value "DataAccessTypeShared" ] [ text <| showDataAccessType DataAccessTypeShared ]
+  ]
+
+maybeDataAccessTypeFromStr : String -> Maybe DataAccessType
+maybeDataAccessTypeFromStr s = case s of
+  "undefined" -> Nothing
+  _ -> Just <| dataAccessTypeFromStr s
+
+maybeBoolSelect : Maybe Bool -> Bool -> (Maybe Bool -> a) -> Html a
+maybeBoolSelect v d msg = select
+  [ value <| case v of
+    Just True -> "true"
+    Just False -> "false"
+    Nothing -> "undefined"
+  , disabled d
+  , onInput (\str ->
+    case str of
+      "true" -> msg <| Just True
+      "false" -> msg <| Just False
+      _ -> msg <| Nothing
+    )
+  ]
+  [ option [ value "undefined" ] [ text "undefined" ]
+  , option [ value "true" ] [ text "true" ]
+  , option [ value "false" ] [ text "false" ]
+  ]
+
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
   [ h3 [] [ text "Dmp id" ]
@@ -568,7 +784,7 @@ dmpIdEditorView dmpId d = div []
       , input
         [ value <| withDefault "" dmpId.dmpIdIdentifier
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier
+        , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
         ] []
       ]
     ]
@@ -580,6 +796,362 @@ dmpIdEditorView dmpId d = div []
     ]
   ]
 
+datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
+datasetIdEditorView idx id d = div []
+  [ h4 [] [ text "Dataset id" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Dataset identifier: "
+      , input
+        [ value <| withDefault "" id.datasetIdIdentifier
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdIdentifier << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Dataset id type: "
+      , documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType << documentIdTypeFromStr
+      ]
+    ]
+  ]
+
+licenseEditorView : Int -> Int -> Int -> License -> Bool -> Html Msg
+licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
+  [ h5 [] [ text "License" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Ref: "
+      , input
+        [ value license.licenseRef
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetDistribution distributionIdx
+          << ModifyDistributionLicense licenseIdx
+          << ModifyLicenseRef
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Start date: "
+      , input
+        [ type_ "date"
+        , value <| unwrapDay license.licenseStartDate
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetDistribution distributionIdx
+          << ModifyDistributionLicense licenseIdx
+          << ModifyLicenseStartDate
+          << Day
+        ]
+        []
+      ]
+    ]
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset datasetIdx
+      <| ModifyDatasetDistribution distributionIdx
+      <| RemoveDistributionLicense licenseIdx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove license" ]
+  ]
+
+distributionEditorView : Int -> Int -> Distribution -> Bool -> Html Msg
+distributionEditorView datasetIdx distributionIdx distribution d = div []
+  [ h4 [] [ text "Distribution" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Access url: "
+      , input
+        [ value <| withDefault "" distribution.distributionAccessUrl
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionAccessUrl << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Data access type: "
+      , maybeDataAccessTypeSelect distribution.distributionDataAccess d <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDataAccess << maybeDataAccessTypeFromStr
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Description: "
+      , input
+        [ value <| withDefault "" distribution.distributionDescription
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDescription << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Download uri: "
+      , input
+        [ value <| withDefault "" distribution.distributionDownloadUri
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDownloadUri << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Format: "
+      , input
+        [ value <| withDefault "" distribution.distributionFormat
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionFormat << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Title: "
+      , input
+        [ value distribution.distributionTitle
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionTitle
+        ] []
+      ]
+    ]
+  , div []
+    <| Array.toList <| Array.indexedMap (\licenseIdx license -> licenseEditorView datasetIdx distributionIdx licenseIdx license d) distribution.distributionLicenses
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset datasetIdx
+      <| ModifyDatasetDistribution distributionIdx
+      <| AddDistributionLicense
+    , disabled d
+    , class "btn"
+    ]
+    [ text "+ Add license" ]
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset datasetIdx
+      <| RemoveDatasetDistribution distributionIdx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove distribution" ]
+  ]
+
+metadataIdEditorView : Int -> Int -> MetadataId -> Bool -> Html Msg
+metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
+  [ h5 [] [ text "Metadata id" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Metadata identifier: "
+      , input
+        [ value <| withDefault "" metadataId.metadataIdIdentifier
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetMetadata metadataIdx
+          << ModifyMetadataMetadataId
+          << ModifyMetadataIdIdentifier
+          << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Metadata id type: "
+      , metadataIdTypeSelect metadataId.metadataIdType d <| OnModifyDmp
+        << ModifyDmpDataset datasetIdx
+        << ModifyDatasetMetadata metadataIdx
+        << ModifyMetadataMetadataId
+        << ModifyMetadataIdType
+        << metadataIdTypeFromStr
+      ]
+    ]
+  ]
+
+metadataEditorView : Int -> Int -> Metadata -> Bool -> Html Msg
+metadataEditorView datasetIdx metadataIdx metadata d = div []
+  [ h4 [] [ text "Metadata" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Reuse dataset: "
+      , maybeBoolSelect metadata.metadataAccessDocumentation d <| OnModifyDmp
+        << ModifyDmpDataset datasetIdx
+        << ModifyDatasetMetadata metadataIdx
+        << ModifyMetadataAccessDocumentation
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Data model: "
+      , input
+        [ value <| withDefault "" metadata.metadataDataModel
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetMetadata metadataIdx
+          << ModifyMetadataDataModel
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Description: "
+      , input
+        [ value <| withDefault "" metadata.metadataDescription
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetMetadata metadataIdx
+          << ModifyMetadataDescription
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Language: "
+      , languageSelect metadata.metadataLanguage d <| OnModifyDmp
+        << ModifyDmpDataset datasetIdx
+        << ModifyDatasetMetadata metadataIdx
+        << ModifyMetadataLanguage << langFromStr
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Location documentation: "
+      , input
+        [ value <| withDefault "" metadata.metadataLocationDocumentation
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetMetadata metadataIdx
+          << ModifyMetadataLocationDocumentation
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Open: "
+      , maybeBoolSelect metadata.metadataOpen d <| OnModifyDmp
+        << ModifyDmpDataset datasetIdx
+        << ModifyDatasetMetadata metadataIdx
+        << ModifyMetadataOpen
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Location: "
+      , input
+        [ value <| withDefault "" metadata.metadataLocation
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetMetadata metadataIdx
+          << ModifyMetadataLocation
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Schema: "
+      , maybeBoolSelect metadata.metadataSchema d <| OnModifyDmp
+        << ModifyDmpDataset datasetIdx
+        << ModifyDatasetMetadata metadataIdx
+        << ModifyMetadataSchema
+      ]
+    ]
+  , metadataIdEditorView datasetIdx metadataIdx metadata.metadataMetadataId d
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset datasetIdx
+      <| RemoveDatasetMetadata metadataIdx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove metadata" ]
+  ]
+
+rightsEditorView : Int -> Int -> RightsRelatedToData -> Bool -> Html Msg
+rightsEditorView datasetIdx rightsIdx rights d = div []
+  [ h4 [] [ text "Rights related to data" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Ownership data right: "
+      , input
+        [ value <| withDefault "" rights.rightsOwnershipDataRight
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetRights rightsIdx
+          << ModifyRightsOwnershipDataRight
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset datasetIdx
+      <| RemoveDatasetRights rightsIdx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove rights" ]
+  ]
+
+securityEditorView : Int -> Int -> SecurityAndPrivacy -> Bool -> Html Msg
+securityEditorView datasetIdx securityIdx security d = div []
+  [ h4 [] [ text "Security and privacy" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Description: "
+      , input
+        [ value <| security.securityDescription
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetSecurity securityIdx
+          << ModifySecurityDescription
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Title: "
+      , input
+        [ value <| security.securityTitle
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpDataset datasetIdx
+          << ModifyDatasetSecurity securityIdx
+          << ModifySecurityTitle
+        ]
+        []
+      ]
+    ]
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset datasetIdx
+      <| RemoveDatasetSecurity securityIdx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove security and privacy" ]
+  ]
+
 contactIdEditorView : ContactId -> Bool -> Html Msg
 contactIdEditorView c d = div []
   [ h4 [] [ text "Contact id" ]
@@ -589,14 +1161,14 @@ contactIdEditorView c d = div []
       , input
         [ value <| withDefault "" c.contactIdIdentifier
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier
+        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
         ] []
       ]
     ]
   , div [ class "form-field" ]
     [ label []
       [ text "Contact id type: "
-      , personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactId << ModifyContactIdType << personTypeFromStr
+      , personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType << personIdTypeFromStr
       ]
     ]
   ]
@@ -630,11 +1202,32 @@ contactEditorView c d = div []
       , input
         [ value <| withDefault "" c.contactOrganization
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyOrganization
+        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactOrganization << parseMaybe
         ] []
       ]
     ]
   , contactIdEditorView c.contactContactId d
+  ]
+
+contributorIdEditorView : Int -> ContributorId -> Bool -> Html Msg
+contributorIdEditorView idx c d = div []
+  [ h4 [] [ text "Contributor id" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Contributor identifier: "
+      , input
+        [ value <| withDefault "" c.contributorIdIdentifier
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdIdentifier << parseMaybe
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Contributor id type: "
+      , personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType << personIdTypeFromStr
+      ]
+    ]
   ]
 
 contributorEditorView : Int -> Contributor -> Bool -> Html Msg
@@ -646,10 +1239,370 @@ contributorEditorView idx elem d = div []
       , input
         [ value <| withDefault "" elem.contributorMbox
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox
+        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
         ] []
       ]
     ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Name: "
+      , input
+        [ value elem.contributorName
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorName
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Organization: "
+      , input
+        [ value <| withDefault "" elem.contributorOrganization
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorOrganization << parseMaybe
+        ] []
+      ]
+    ]
+    , div [ class "form-field" ]
+      [ label []
+        [ text "Role type: "
+        , roleTypeSelect elem.contributorRole d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorRole << roleTypeFromStr
+        ]
+      ]
+  , contributorIdEditorView idx elem.contributorContributorId d
+  , button
+    [ onClick <| OnModifyDmp <| RemoveDmpContributor idx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove contributor" ]
+  , hr [] []
+  ]
+
+dataLifeCycleEditorView : Int -> DataLifeCycle -> Bool -> Html Msg
+dataLifeCycleEditorView idx elem d = div []
+  [ h3 [] [ text "Data life cycle" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Archiving services data: "
+      , input
+        [ checked elem.dataLifeCycleArchivingServicesData
+        , type_ "checkbox"
+        , disabled d
+        , onCheck <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleArchivingServicesData
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Backup data: "
+      , input
+        [ value elem.dataLifeCycleBackupData
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleBackupData
+        ] []
+      ]
+    ]
+  , deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionData << deletionDataTypeFromStr
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Deletion when data: "
+      , input
+        [ type_ "date"
+        , value <| withDefault "" (Maybe.map unwrapDay elem.dataLifeCycleDeletionWhenData)
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionWhenData << Maybe.map Day << parseMaybe
+        ]
+        []
+      ]
+    ]
+  ]
+
+keywordEditorView : Int -> Int -> String -> Bool -> Html Msg
+keywordEditorView datasetIdx keywordIdx keyword d = div []
+  [ div [ class "form-field" ]
+    [ label []
+      [ text "Keyword: "
+      , input
+        [ value keyword
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetKeywords keywordIdx
+        ]
+        []
+      ]
+    ]
+  , button
+    [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetKeyword keywordIdx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove keyword" ]
+  ]
+
+datasetEditorView : Int -> Dataset -> Bool -> Html Msg
+datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Data quality assurance: "
+      , input
+        [ value <| withDefault "" elem.datasetDataQualityAssurance
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataQualityAssurance << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Data sharing issues: "
+      , input
+        [ value <| withDefault "" elem.datasetDataSharingIssues
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataSharingIssues << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Description: "
+      , input
+        [ value <| withDefault "" elem.datasetDescription
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDescription << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Issued: "
+      , input
+        [ value <| withDefault "" <| Maybe.map unwrapDay elem.datasetIssued
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetIssued << Maybe.map Day << parseMaybe
+        ]
+        []
+      ]
+    ]
+    , div [] <| Array.toList
+      <| Array.indexedMap (\keywordIdx keyword -> keywordEditorView idx keywordIdx keyword d) (Maybe.withDefault Array.empty elem.datasetKeywords)
+  , button
+    [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetKeyword
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "+ Add keyword" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Language: "
+      , maybeLanguageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage << maybeLangFromStr
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Personal data: "
+      , personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData << personalDataTypeFromStr
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Sensitive data: "
+      , sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData << sensitiveDataTypeFromStr
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Reuse dataset: "
+      , maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Title: "
+      , input
+        [ value elem.datasetTitle
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetTitle
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Type: "
+      , input
+        [ value <| withDefault "" elem.datasetType
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetType << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , datasetIdEditorView idx elem.datasetDatasetId d
+  , div []
+    <| Array.toList <| Array.indexedMap (\i e -> distributionEditorView idx i e d) elem.datasetDistributions
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset idx
+      <| AddDatasetDistribution
+    , disabled d
+    , class "btn"
+    ]
+    [ text "+ Add distribution" ]
+  , div []
+    <| Array.toList <| Array.indexedMap (\i e -> metadataEditorView idx i e d) elem.datasetMetadata
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset idx
+      <| AddDatasetMetadata
+    , disabled d
+    , class "btn"
+    ]
+    [ text "+ Add metadata" ]
+  , div []
+    <| Array.toList <| Array.indexedMap (\i e -> rightsEditorView idx i e d) elem.datasetRightsRelatedToData
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset idx
+      <| AddDatasetRights
+    , disabled d
+    , class "btn"
+    ]
+    [ text "+ Add rights related to data" ]
+  , div []
+    <| Array.toList <| Array.indexedMap (\i e -> securityEditorView idx i e d) elem.datasetSecurityAndPrivacy
+  , button
+    [ onClick <| OnModifyDmp
+      <| ModifyDmpDataset idx
+      <| AddDatasetSecurity
+    , disabled d
+    , class "btn"
+    ]
+    [ text "+ Add security and privacy" ]
+  , button
+    [ onClick <| OnModifyDmp <| RemoveDmpDataset idx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove dataset" ]
+  , hr [] []
+  ]
+
+ethicalIssueEditorView : Int -> EthicalIssue -> Bool -> Html Msg
+ethicalIssueEditorView idx ethicalIssue d = div []
+  [ h3 [] [ text "Ethical issue" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Description: "
+      , input
+        [ value <| withDefault "" ethicalIssue.ethicalIssueDescription
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpEthicalIssue idx
+          << ModifyEthicalIssueDescription
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Exists: "
+      , ethicalIssuesTypeSelect ethicalIssue.ethicalIssueExist d <| OnModifyDmp
+        << ModifyDmpEthicalIssue idx
+        << ModifyEthicalIssueExist
+        << ethicalIssuesTypeFromStr
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Report: "
+      , input
+        [ value <| withDefault "" ethicalIssue.ethicalIssueReport
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpEthicalIssue idx
+          << ModifyEthicalIssueReport
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , button
+    [ onClick <| OnModifyDmp <| RemoveDmpEthicalIssue idx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove ethical issue" ]
+  , hr [] []
+  ]
+
+projectEditorView : Int -> Project -> Bool -> Html Msg
+projectEditorView idx project d = div []
+  [ h3 [] [ text "Project" ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Description: "
+      , input
+        [ value project.projectDescription
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpProject idx
+          << ModifyProjectDescription
+        ] []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "End date: "
+      , input
+        [ type_ "date"
+        , value <| withDefault "" (Maybe.map unwrapDay project.projectEndDate)
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpProject idx
+          << ModifyProjectEndDate
+          << Maybe.map Day
+          << parseMaybe
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Start date: "
+      , input
+        [ type_ "date"
+        , value <| unwrapDay project.projectStartDate
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpProject idx
+          << ModifyProjectStartDate
+          << Day
+        ]
+        []
+      ]
+    ]
+  , div [ class "form-field" ]
+    [ label []
+      [ text "Title: "
+      , input
+        [ value project.projectTitle
+        , disabled d
+        , onInput <| OnModifyDmp
+          << ModifyDmpProject idx
+          << ModifyProjectTitle
+        ] []
+      ]
+    ]
+  , button
+    [ onClick <| OnModifyDmp <| RemoveDmpProject idx
+    , disabled d
+    , class "btn btn-danger"
+    ]
+    [ text "- Remove project" ]
+  , hr [] []
   ]
 
 dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> Html Msg
@@ -694,7 +1647,7 @@ dmpEditorView dmp d mode session =
         , input
           [ value <| withDefault "" dmp.dmpDescription
           , disabled d
-          , onInput <| OnModifyDmp << ModifyDmpDescription
+          , onInput <| OnModifyDmp << ModifyDmpDescription << parseMaybe
           ]
           []
         ]
@@ -706,7 +1659,7 @@ dmpEditorView dmp d mode session =
           [ type_ "date"
           , value <| withDefault "" (Maybe.map unwrapDay dmp.dmpNextReviewDmp)
           , disabled d
-          , onInput <| OnModifyDmp << ModifyDmpNextReviewDmp << Day
+          , onInput <| OnModifyDmp << ModifyDmpNextReviewDmp << Maybe.map Day << parseMaybe
           ]
           []
         ]
@@ -728,29 +1681,51 @@ dmpEditorView dmp d mode session =
     , hr [] []
     , contactEditorView dmp.dmpContact d
     , hr [] []
-    , div [ class "dmp-editor-contributors" ]
+    , div []
       <| Array.toList <| Array.indexedMap (\idx elem -> contributorEditorView idx elem d) dmp.dmpContributors
-
-
-
---         [ id "distribution-access-url"
---         , value <| withDefault "" distribution.accessUrl
---         , disabled d
---         , onInput <| (\str -> OnModifyDistributionAccessUrl datasetIdx distributionIdx (
---           case str of
---             "" -> Nothing
---             s -> Just s
---         ))
---         ]
---    , div [ class "dmp-editor-dataset-list" ]
---      <| Array.toList
---      <| Array.indexedMap (\idx ds -> datasetEditorView ds idx d) dmp.datasets
---    , button
---      [ onClick OnAddDataset
---      , disabled d
---      , class "btn"
---      ]
---      [ text "+ Add dataset" ]
+    , button
+      [ onClick <| OnModifyDmp AddDmpContributor
+      , disabled d
+      , class "btn"
+      ]
+      [ text "+ Add contributor" ]
+    , hr [] []
+    , div []
+      <| Array.toList <| Array.indexedMap (\idx elem -> dataLifeCycleEditorView idx elem d) dmp.dmpDataLifeCycles
+    , button
+      [ onClick <| OnModifyDmp AddDmpDataLifeCycle
+      , disabled d
+      , class "btn"
+      ]
+      [ text "+ Add data life cycle" ]
+    , hr [] []
+    , div []
+      <| Array.toList <| Array.indexedMap (\idx elem -> datasetEditorView idx elem d) dmp.dmpDatasets
+    , button
+      [ onClick <| OnModifyDmp AddDmpDataset
+      , disabled d
+      , class "btn"
+      ]
+      [ text "+ Add dataset" ]
+    , hr [] []
+    , div []
+      <| Array.toList <| Array.indexedMap (\idx elem -> ethicalIssueEditorView idx elem d) dmp.dmpEthicalIssues
+    , button
+      [ onClick <| OnModifyDmp AddDmpEthicalIssue
+      , disabled d
+      , class "btn"
+      ]
+      [ text "+ Add ethical issue" ]
+    , hr [] []
+    , div []
+      <| Array.toList <| Array.indexedMap (\idx elem -> projectEditorView idx elem d) dmp.dmpProjects
+    , button
+      [ onClick <| OnModifyDmp AddDmpProject
+      , disabled d
+      , class "btn"
+      ]
+      [ text "+ Add project" ]
+    , hr [] []
     ]
 
 editorFormView : Model -> Html Msg
