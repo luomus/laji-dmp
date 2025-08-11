@@ -7,6 +7,7 @@ import Json.Decode.Pipeline exposing (required)
 import Json.Decode exposing (array)
 import Http
 import Json.Encode
+import Config exposing (Config)
 
 type PersonRole = Admin | SomethingElse
 
@@ -57,19 +58,19 @@ personDecoder =
     |> required "role" (array roleDecoder)
     |> required "organisation" (array string)
 
-getPerson : String -> (Result Http.Error PersonResponse -> msg) -> Cmd msg
-getPerson token msg =
+getPerson : Config -> String -> (Result Http.Error PersonResponse -> msg) -> Cmd msg
+getPerson cfg token msg =
   Http.get
-    { url = "https://dev.laji.fi/api/person/" ++ token
+    { url = cfg.lajiApiBase ++ "/person/" ++ token
     , expect = Http.expectJson msg personDecoder
     }
 
-deleteToken : String -> (Result Http.Error String -> msg) -> Cmd msg
-deleteToken token msg =
+deleteToken : Config -> String -> (Result Http.Error String -> msg) -> Cmd msg
+deleteToken cfg token msg =
   Http.request
     { method = "DELETE"
     , headers = []
-    , url = "https://dev.laji.fi/api/person-token/" ++ token
+    , url = cfg.lajiApiBase ++ "/person-token/" ++ token
     , body = Http.emptyBody
     , expect = Http.expectString msg
     , timeout = Nothing

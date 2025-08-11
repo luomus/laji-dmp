@@ -1,10 +1,8 @@
 module Pages.DmpInfo exposing (..)
 
-import Browser
 import Html.Attributes exposing (href)
 import Html exposing (a)
 import Html exposing (text)
-import Views.Navigation exposing (navigation)
 import Html exposing (Html)
 import Pages.DmpIndex exposing (Msg(..))
 import Http
@@ -17,6 +15,7 @@ import User
 import DmpApi exposing (getDmp)
 import Models exposing (..)
 import Utils exposing (..)
+import Config exposing (Config)
 
 type DmpState = Error | Loading | HasDmp Dmp
 
@@ -27,12 +26,12 @@ type alias Model =
 
 type Msg = GotDmpResponse (Result Http.Error Dmp)
 
-init : String -> User.LoginSession -> ( Model, Cmd Msg )
-init idStr session =
+init : Config -> String -> User.LoginSession -> ( Model, Cmd Msg )
+init cfg idStr session =
   let maybeId = String.toInt idStr
   in case maybeId of
     Just id ->
-      ({ dmp = Loading, session = session }, getDmp id GotDmpResponse)
+      ({ dmp = Loading, session = session }, getDmp cfg id GotDmpResponse)
     Nothing -> ({ dmp = Error, session = session }, Cmd.none)
 
 update : User.LoginSession -> Msg -> Model -> (Model, Cmd Msg)
@@ -256,7 +255,6 @@ view model =
                   then [ a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit", class "btn"] [text "Edit"] ]
                   else []
               _ -> []
-            -- , div [] <| Array.toList <| Array.indexedMap datasetView dmp.datasets
             ]
           Nothing -> [text "Error: expected DMP to have an id"]
       Loading -> [text "Loading data management plan..."]

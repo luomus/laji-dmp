@@ -10,7 +10,6 @@ import Html exposing (ul)
 import Html exposing (li)
 import Html exposing (Html)
 import Html exposing (div)
-import Config exposing (config)
 import Array
 import Platform.Cmd as Cmd
 import Platform.Cmd as Cmd
@@ -23,6 +22,7 @@ import Html exposing (h5)
 import User exposing (LoginSession)
 import DmpApi exposing (getDmpList)
 import Models exposing (Dmp)
+import Config exposing (Config)
 
 type DmpListState = Loading | Error | DmpList (Array.Array Dmp)
 
@@ -33,8 +33,8 @@ type alias Model =
 
 type Msg = GotDmpListResponse (Result Http.Error (Array.Array Dmp))
 
-init : LoginSession -> ( Model, Cmd Msg )
-init session = ({ dmpList = Loading, session = session }, getDmpList GotDmpListResponse)
+init : Config -> LoginSession -> ( Model, Cmd Msg )
+init cfg session = ({ dmpList = Loading, session = session }, getDmpList cfg GotDmpListResponse)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =

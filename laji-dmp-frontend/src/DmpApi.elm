@@ -4,12 +4,12 @@ import Json.Decode
 import Json.Decode.Pipeline
 import Array
 import Http
-import Config exposing (config)
 import Json.Encode as E
 import Json.Decode as D
 import Json.Decode.Pipeline as DP
 import Url.Builder as UB
 import Models exposing (..)
+import Config exposing (Config)
 
 dayDecoder : D.Decoder Day
 dayDecoder = D.map (\str -> Day str) D.string
@@ -488,50 +488,50 @@ encodeSecurity t = E.object
 
 -- Queries
 
-getDmpList : (Result Http.Error (Array.Array Dmp) -> msg) -> Cmd msg
-getDmpList msg =
+getDmpList : Config -> (Result Http.Error (Array.Array Dmp) -> msg) -> Cmd msg
+getDmpList cfg msg =
   Http.get
-    { url = UB.crossOrigin config.dmpApiUrl ["dmp"] []
+    { url = UB.crossOrigin cfg.dmpApiBase ["dmp"] []
     , expect = Http.expectJson msg (D.array dmpDecoder)
     }
 
-getDmp : Int -> (Result Http.Error Dmp -> msg) -> Cmd msg
-getDmp id msg =
+getDmp : Config -> Int -> (Result Http.Error Dmp -> msg) -> Cmd msg
+getDmp cfg id msg =
   Http.get
-    { url = UB.crossOrigin config.dmpApiUrl ["dmp", String.fromInt id] []
+    { url = UB.crossOrigin cfg.dmpApiBase ["dmp", String.fromInt id] []
     , expect = Http.expectJson msg dmpDecoder
     }
 
-newDmp : Dmp -> String -> (Result Http.Error String -> msg) -> Cmd msg
-newDmp dmp personToken msg =
+newDmp : Config -> Dmp -> String -> (Result Http.Error String -> msg) -> Cmd msg
+newDmp cfg dmp personToken msg =
   Http.request
     { method = "POST"
     , headers = []
-    , url = UB.crossOrigin config.dmpApiUrl ["dmp"] [ UB.string "personToken" personToken ]
+    , url = UB.crossOrigin cfg.dmpApiBase ["dmp"] [ UB.string "personToken" personToken ]
     , body = Http.jsonBody <| encodeDmp dmp
     , expect = Http.expectString msg
     , timeout = Nothing
     , tracker = Nothing
     }
 
-editDmp : String -> Dmp -> String -> (Result Http.Error String -> msg) -> Cmd msg
-editDmp id dmp personToken msg =
+editDmp : Config -> String -> Dmp -> String -> (Result Http.Error String -> msg) -> Cmd msg
+editDmp cfg id dmp personToken msg =
   Http.request
     { method = "PUT"
     , headers = []
-    , url = UB.crossOrigin config.dmpApiUrl ["dmp", id] [ UB.string "personToken" personToken ]
+    , url = UB.crossOrigin cfg.dmpApiBase ["dmp", id] [ UB.string "personToken" personToken ]
     , body = Http.jsonBody <| encodeDmp dmp
     , expect = Http.expectString msg
     , timeout = Nothing
     , tracker = Nothing
     }
 
-deleteDmp : String -> String -> (Result Http.Error String -> msg) -> Cmd msg
-deleteDmp id personToken msg =
+deleteDmp : Config -> String -> String -> (Result Http.Error String -> msg) -> Cmd msg
+deleteDmp cfg id personToken msg =
   Http.request
     { method = "DELETE"
     , headers = []
-    , url = UB.crossOrigin config.dmpApiUrl ["dmp", id] [ UB.string "personToken" personToken ]
+    , url = UB.crossOrigin cfg.dmpApiBase ["dmp", id] [ UB.string "personToken" personToken ]
     , body = Http.jsonBody <| E.null
     , expect = Http.expectString msg
     , timeout = Nothing

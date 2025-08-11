@@ -39,6 +39,7 @@ import User
 import Html.Attributes exposing (type_)
 import Html.Attributes exposing (checked)
 import Html.Events exposing (onCheck)
+import Config exposing (Config)
 
 type ModelStatus = Editing | Submitting | SubmitError Error | NotLoggedInError
 
@@ -513,8 +514,8 @@ updateDmp msg dmp = case msg of
   AddDmpProject -> { dmp | dmpProjects = Array.push defaultProject dmp.dmpProjects }
   RemoveDmpProject idx -> { dmp | dmpProjects = removeAt idx dmp.dmpProjects }
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
+update : Config -> Msg -> Model -> (Model, Cmd Msg)
+update cfg msg model =
   case msg of
     OnModifyDmp subMsg ->
       ( { model | dmp = updateDmp subMsg model.dmp }, Cmd.none )
@@ -523,8 +524,8 @@ update msg model =
       _-> case model.session of
         User.LoggedIn personToken person ->
           case model.mode of
-            New -> ({ model | status = Submitting }, newDmp model.dmp personToken GotDmpApiResponse)
-            Edit id -> ({ model | status = Submitting }, editDmp id model.dmp personToken GotDmpApiResponse)
+            New -> ({ model | status = Submitting }, newDmp cfg model.dmp personToken GotDmpApiResponse)
+            Edit id -> ({ model | status = Submitting }, editDmp cfg id model.dmp personToken GotDmpApiResponse)
         _ -> ({ model | status = NotLoggedInError }, Cmd.none)
     GotDmpApiResponse res -> case res of
       Ok str -> 
@@ -1748,3 +1749,4 @@ editorFormView model =
 
 view : Model -> Html Msg
 view model = editorFormView model
+

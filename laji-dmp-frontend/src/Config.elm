@@ -1,12 +1,7 @@
 module Config exposing (..)
 
 type alias Config =
-  { dmpApiUrl: String
-  , lajiApiUrl: String
+  { dmpApiBase : String
+  , lajiApiBase : String
   }
 
-config : Config
-config =
-  { dmpApiUrl = "http://localhost:4000"
-  , lajiApiUrl = ""
-  }

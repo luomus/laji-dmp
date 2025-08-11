@@ -18,6 +18,8 @@ import User exposing (LoginSession(..))
 import Views.Navigation
 import Html.Events
 import Html.Attributes
+import Json.Decode.Pipeline
+import Config exposing (Config)
 
 port updateLocalStorage : Json.Encode.Value -> Cmd msg
 port toggleDialog : String -> Cmd msg
@@ -27,6 +29,7 @@ type alias Model =
   , loginSession: LoginSession
   , routeModel: RouteModel
   , currentRoute: Maybe Route
+  , config: Config
   }
 
 type RouteModel
@@ -53,26 +56,50 @@ unwrapMaybeRoute route = case route of
   Just r -> r
   Nothing -> FrontRoute
 
-init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
+type alias Flags =
+  { maybeLogin : Maybe String
+  , dmpApiBase : String
+  , lajiApiBase : String
+  }
+
+decodeFlags : Json.Decode.Value -> Result Json.Decode.Error Flags
+decodeFlags flags = 
   let
-    maybeToken = User.decodeLogin flags
+    decoder = 
+      Json.Decode.succeed Flags
+      |> Json.Decode.Pipeline.optional "login" (Json.Decode.nullable Json.Decode.string) Nothing
+      |> Json.Decode.Pipeline.required "dmpApiBase" Json.Decode.string
+      |> Json.Decode.Pipeline.required "lajiApiBase" Json.Decode.string
+  in Json.Decode.decodeValue decoder flags
+
+parseFlags : Json.Decode.Value -> Flags
+parseFlags flags = case decodeFlags flags of
+  Err err -> Flags Nothing "http://localhost:4000" "https://dev.laji.fi/api/"
+  Ok f -> f
+
+init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flagsJson url key =
+  let
+    flags = parseFlags flagsJson
+    cfg = Config flags.dmpApiBase flags.lajiApiBase
     route = fromUrl url
   in
-    case maybeToken of
+    case flags.maybeLogin of
       Nothing -> changeRouteTo route
         { key = key
         , routeModel = NoModel
         , loginSession = NotLoggedIn
         , currentRoute = route
+        , config = cfg
         }
       Just token -> Tuple.mapSecond
-        (\c -> Cmd.batch [ c, User.getPerson token <| GotPerson token ])
+        (\c -> Cmd.batch [ c, User.getPerson cfg token <| GotPerson token ])
         ( changeRouteTo (fromUrl url)
           { key = key
           , routeModel = NoModel
           , loginSession = LoadingPerson token
           , currentRoute = route
+          , config = cfg
           }
         )
 
@@ -86,11 +113,11 @@ changeRouteTo maybeRoute model =
       Nothing -> ( model, Cmd.none )
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
       Just (DmpRoute dmpRoute) -> case dmpRoute of
-        DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg <| Pages.DmpIndex.init model.loginSession
+        DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg <| Pages.DmpIndex.init model.config model.loginSession
         DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key model.loginSession
         DmpElementRoute dmpElementRoute -> case dmpElementRoute of
-          (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init id model.loginSession
-          (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.key id model.loginSession
+          (DmpInfoRoute id) -> mapPageInit DmpInfoModel GotDmpInfoMsg <| Pages.DmpInfo.init model.config id model.loginSession
+          (DmpEditRoute id) -> mapPageInit DmpEditModel GotDmpEditMsg <| Pages.DmpEdit.init model.config model.key id model.loginSession
       Just (LoginRoute maybeToken maybeNext) ->
         case (maybeToken, maybeNext) of
           (Just token, next) ->
@@ -99,7 +126,7 @@ changeRouteTo maybeRoute model =
               [ Nav.pushUrl model.key <| case next of
                 Just n -> if String.length n > 0 then n else "/"
                 Nothing -> "/"
-              , User.getPerson token <| GotPerson token
+              , User.getPerson model.config token <| GotPerson token
               ]
             )
           (_, _) -> ( model, Nav.pushUrl model.key "/" )
@@ -138,9 +165,9 @@ update msg model =
         case subMsg of
           Pages.DmpEdit.OnDelete -> (model, toggleDialog Pages.DmpEdit.deleteDialogId)
           Pages.DmpEdit.OnCancelDelete -> (model, toggleDialog Pages.DmpEdit.deleteDialogId)
-          _ -> mapPageUpdate DmpEditModel GotDmpEditMsg (Pages.DmpEdit.update subMsg mod)
+          _ -> mapPageUpdate DmpEditModel GotDmpEditMsg (Pages.DmpEdit.update model.config subMsg mod)
       (GotDmpNewMsg subMsg, DmpNewModel mod) ->
-        mapPageUpdate DmpNewModel GotDmpNewMsg (Pages.DmpNew.update subMsg mod)
+        mapPageUpdate DmpNewModel GotDmpNewMsg (Pages.DmpNew.update model.config subMsg mod)
       (GotPerson token res, _) ->
         case res of
           Ok person ->
@@ -150,7 +177,7 @@ update msg model =
             let _ = Debug.log "Unable to get person" e
             in ( { model | loginSession = NotLoggedIn }, updateLocalStorage <| User.encodeLogin NotLoggedIn)
       (OnDeleteToken token, _) ->
-        ({ model | loginSession = DeletingToken token }, User.deleteToken token DeletedToken)
+        ({ model | loginSession = DeletingToken token }, User.deleteToken model.config token DeletedToken)
       (DeletedToken res, _) ->
         case res of
           Ok str ->

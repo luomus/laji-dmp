@@ -14,6 +14,7 @@ import DmpApi exposing (getDmp)
 import Models exposing (Dmp)
 import Html.Attributes exposing (class)
 import User
+import Config exposing (Config)
 
 type EditorState
   = EditorModel Views.DmpEditor.Model
@@ -36,24 +37,24 @@ type Msg
 deleteDialogId : String
 deleteDialogId = "delete-dialog"
 
-init : Nav.Key -> String -> User.LoginSession -> ( Model, Cmd Msg )
-init key strId session =
+init : Config -> Nav.Key -> String -> User.LoginSession -> ( Model, Cmd Msg )
+init cfg key strId session =
   let maybeId = String.toInt strId
   in case maybeId of
     Just id ->
-      ({ state = Loading key strId, session = session }, getDmp id GotDmpGetResponse)
+      ({ state = Loading key strId, session = session }, getDmp cfg id GotDmpGetResponse)
     Nothing -> ({ state = Error, session = session }, Cmd.none)
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model = case (msg, model.state) of
-  (EditorMsg subMsg, EditorModel subModel) -> Tuple.mapBoth (\m -> { model | state = EditorModel m }) (Cmd.map EditorMsg) <| Views.DmpEditor.update subMsg subModel
+update : Config -> Msg -> Model -> (Model, Cmd Msg)
+update cfg msg model = case (msg, model.state) of
+  (EditorMsg subMsg, EditorModel subModel) -> Tuple.mapBoth (\m -> { model | state = EditorModel m }) (Cmd.map EditorMsg) <| Views.DmpEditor.update cfg subMsg subModel
   (OnDelete, EditorModel _) -> (model, Cmd.none)
   (OnCancelDelete, EditorModel _) -> (model, Cmd.none)
   (OnConfirmDelete, EditorModel subModel) ->
     ( { model | state = EditorModel { subModel | status = Submitting } }
     , case subModel.mode of
       Edit id -> case model.session of
-        User.LoggedIn personToken person -> deleteDmp id personToken GotDmpDeleteResponse
+        User.LoggedIn personToken person -> deleteDmp cfg id personToken GotDmpDeleteResponse
         _ -> Debug.log "Error: tried to delete DMP while not logged in" Cmd.none
       _ -> Debug.log "Error: tried to delete DMP while not in edit mode" Cmd.none
     )
