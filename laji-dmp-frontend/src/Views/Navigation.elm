@@ -50,24 +50,32 @@ breadcrumbs currentRoute =
           DmpEditRoute id -> [link "/dmp" "Index", sep, link ("/dmp/" ++ id) <| "DMP " ++ id, sep, current "Edit"]
       _ -> []
 
+urlFromPath : String -> Url
+urlFromPath path =
+  { protocol = Url.Http
+  , host = ""
+  , port_ = Nothing
+  , path = if String.startsWith "/" path then path else "/" ++ path
+  , query = Nothing
+  , fragment = Nothing
+  }
+
 navigation : LoginSession -> Maybe Route -> (String -> msg) -> Html msg
 navigation loginSession maybeCurrentRoute deleteMsg = 
   let
     getLinkAttribs : String -> List (Html.Attribute msg)
-    getLinkAttribs url =
+    getLinkAttribs path =
       let
-        activeLinkAttribs = [href url, class "nav-link nav-link-active"]
-        defaultLinkAttribs = [href url, class "nav-link"]
+        activeLinkAttribs = [href path, class "nav-link nav-link-active"]
+        defaultLinkAttribs = [href path, class "nav-link"]
       in case maybeCurrentRoute of
-        Just currentRoute -> case (Url.fromString <| "http://0.0.0.0" ++ url) of
-          Just definitelyUrl -> case fromUrl definitelyUrl of
-            Just route -> case (route, currentRoute) of
-              (FrontRoute, FrontRoute) -> activeLinkAttribs
-              (DmpRoute _, DmpRoute _) -> activeLinkAttribs
-              (_, _) -> defaultLinkAttribs
-            Nothing -> Debug.log "Invalid path" defaultLinkAttribs
-          Nothing -> Debug.log "Invalid url" defaultLinkAttribs
-        Nothing -> Debug.log "Invalid current route" defaultLinkAttribs
+        Just currentRoute -> case fromUrl <| urlFromPath path of
+          Just route -> case (route, currentRoute) of
+            (FrontRoute, FrontRoute) -> activeLinkAttribs
+            (DmpRoute _, DmpRoute _) -> activeLinkAttribs
+            (_, _) -> defaultLinkAttribs
+          Nothing -> []
+        Nothing -> []
   in
     nav [ class "main-nav" ]
       [ h1 [class "nav-title"] [text "Data Management Plan Tool"]

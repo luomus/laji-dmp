@@ -1,6 +1,8 @@
 module Utils exposing (..)
 
 import Models exposing (..)
+import Http
+import Http exposing (Error(..))
 
 showUtcTime : UTCTime -> String
 showUtcTime (UTCTime str) = str
@@ -162,4 +164,15 @@ parseMaybe : String -> Maybe String
 parseMaybe s = case s of
   "" -> Nothing
   ss -> Just ss
+
+httpErrorToString : Http.Error -> String
+httpErrorToString err = case err of
+  BadUrl str -> "Bad URL: " ++ str
+  Timeout -> "Timeout"
+  NetworkError -> "Network error"
+  BadStatus int -> "Bad status: " ++ String.fromInt int
+  BadBody str -> "Bad body: " ++ str
+
+boolToString : Bool -> String
+boolToString b = if b then "True" else "False"
 

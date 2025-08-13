@@ -19,7 +19,7 @@ import Config exposing (Config)
 type EditorState
   = EditorModel Views.DmpEditor.Model
   | Loading Nav.Key String
-  | Error
+  | Error String
 
 type alias Model =
   { state: EditorState
@@ -43,7 +43,7 @@ init cfg key strId session =
   in case maybeId of
     Just id ->
       ({ state = Loading key strId, session = session }, getDmp cfg id GotDmpGetResponse)
-    Nothing -> ({ state = Error, session = session }, Cmd.none)
+    Nothing -> ({ state = Error "No id provided", session = session }, Cmd.none)
 
 update : Config -> Msg -> Model -> (Model, Cmd Msg)
 update cfg msg model = case (msg, model.state) of
@@ -51,13 +51,14 @@ update cfg msg model = case (msg, model.state) of
   (OnDelete, EditorModel _) -> (model, Cmd.none)
   (OnCancelDelete, EditorModel _) -> (model, Cmd.none)
   (OnConfirmDelete, EditorModel subModel) ->
-    ( { model | state = EditorModel { subModel | status = Submitting } }
-    , case subModel.mode of
+    case subModel.mode of
       Edit id -> case model.session of
-        User.LoggedIn personToken person -> deleteDmp cfg id personToken GotDmpDeleteResponse
-        _ -> Debug.log "Error: tried to delete DMP while not logged in" Cmd.none
-      _ -> Debug.log "Error: tried to delete DMP while not in edit mode" Cmd.none
-    )
+        User.LoggedIn personToken person ->
+          ( { model | state = EditorModel { subModel | status = Submitting } }
+            , deleteDmp cfg id personToken GotDmpDeleteResponse
+          )
+        _ -> ({ model | state = Error "Tried to delete DMP while not logged in" }, Cmd.none)
+      _ -> ({ model | state = Error "Tried to delete DMP while not in edit mode" }, Cmd.none)
   (GotDmpDeleteResponse res, EditorModel subModel) -> case res of
     Ok str -> 
       (model, Nav.pushUrl subModel.key "/dmp")
@@ -78,9 +79,8 @@ update cfg msg model = case (msg, model.state) of
         , Cmd.none
         )
       Err e ->
-        let _ = Debug.log "Error loading DMP" e
-        in ({ model | state = Error }, Cmd.none)
-  (_, _) -> ({ model | state = Error }, Cmd.none)
+        ({ model | state = Error "Error loading DMP response" }, Cmd.none)
+  (_, _) -> ({ model | state = Error "Error loading DMP" }, Cmd.none)
 
 view : Model -> { title : String, body : Html Msg }
 view model =
@@ -96,5 +96,5 @@ view model =
         ]
       ]
     Loading key id -> [text "Loading DMP..."]
-    Error -> [text "Error"]
+    Error err -> [text <| "Error: " ++ err]
   }

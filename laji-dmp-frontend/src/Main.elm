@@ -20,6 +20,7 @@ import Html.Events
 import Html.Attributes
 import Json.Decode.Pipeline
 import Config exposing (Config)
+import Utils exposing (httpErrorToString)
 
 port updateLocalStorage : Json.Encode.Value -> Cmd msg
 port toggleDialog : String -> Cmd msg
@@ -34,6 +35,7 @@ type alias Model =
 
 type RouteModel
   = NoModel
+  | ErrorModel String
   | FrontModel Pages.Front.Model
   | DmpIndexModel Pages.DmpIndex.Model
   | DmpInfoModel Pages.DmpInfo.Model
@@ -174,8 +176,7 @@ update msg model =
             let session = LoggedIn token person
             in ( { model | loginSession = session, routeModel = updateSession session model.routeModel }, updateLocalStorage <| User.encodeLogin session )
           Err e ->
-            let _ = Debug.log "Unable to get person" e
-            in ( { model | loginSession = NotLoggedIn }, updateLocalStorage <| User.encodeLogin NotLoggedIn)
+            ({ model | routeModel = ErrorModel <| String.append "Unable to get person: " <| httpErrorToString e, loginSession = NotLoggedIn }, updateLocalStorage <| User.encodeLogin NotLoggedIn)
       (OnDeleteToken token, _) ->
         ({ model | loginSession = DeletingToken token }, User.deleteToken model.config token DeletedToken)
       (DeletedToken res, _) ->
@@ -184,8 +185,7 @@ update msg model =
             let session = NotLoggedIn
             in ( { model | loginSession = session, routeModel = updateSession session model.routeModel }, updateLocalStorage <| User.encodeLogin session)
           Err e ->
-            let _ = Debug.log "Unable to delete person token" e
-            in (model, Cmd.none)
+            ({ model | routeModel = ErrorModel <| String.append "Unable to delete person token: " <| httpErrorToString e }, Cmd.none)
       (_, _) -> (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
@@ -206,6 +206,7 @@ view model =
   in
     case model.routeModel of
       NoModel -> { title = "", body = [] }
+      ErrorModel e -> viewPage GotFrontMsg <| { title = "Error", body = text <| "Error: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
       DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel
       DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view subModel

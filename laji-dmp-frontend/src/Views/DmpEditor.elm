@@ -9,7 +9,6 @@ import DmpApi exposing (newDmp, editDmp)
 import Models exposing (..)
 import Utils exposing (..)
 import Platform.Cmd as Cmd
-import Http exposing (Error)
 import Html exposing (div)
 import Html.Events exposing (onInput)
 import Html.Attributes exposing (value)
@@ -40,8 +39,9 @@ import Html.Attributes exposing (type_)
 import Html.Attributes exposing (checked)
 import Html.Events exposing (onCheck)
 import Config exposing (Config)
+import Http
 
-type ModelStatus = Editing | Submitting | SubmitError Error | NotLoggedInError
+type ModelStatus = Editing | Submitting | SubmitError Http.Error | NotLoggedInError
 
 type EditorMode = New | Edit String
 
@@ -191,7 +191,7 @@ type ModifyDmpMsg
 
 type Msg
   = OnSubmit
-  | GotDmpApiResponse (Result Error String)
+  | GotDmpApiResponse (Result Http.Error String)
   | OnModifyDmp ModifyDmpMsg
 
 defaultContributor : Contributor
@@ -1606,14 +1606,20 @@ projectEditorView idx project d = div []
   , hr [] []
   ]
 
+maybeFieldView : String -> Maybe String -> Html Msg
+maybeFieldView prefix maybeField =
+  case maybeField of
+    Just str -> div [] [text <| String.append prefix <| str]
+    Nothing -> text ""
+
 dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> Html Msg
 dmpEditorView dmp d mode session =
   let
     orgToOption org = option [ value org, selected <| dmp.dmpOrgId == org ] [ text org ]
   in div [ class "dmp-editor" ]
     [ h2 [] [ text "Edit DMP" ]
-    , div [] [ text <| String.append "Created: " <| Debug.toString <| Maybe.map showUtcTime dmp.dmpCreated ]
-    , div [] [ text <| String.append "Modified: " <| Debug.toString <| Maybe.map showUtcTime dmp.dmpModified ]
+    , maybeFieldView "Created: " (Maybe.map showUtcTime dmp.dmpCreated)
+    , maybeFieldView "Modified: " (Maybe.map showUtcTime dmp.dmpModified)
     , div [ class "form-field" ] <| case mode of
       Edit _ -> [ label [] [ text <| "Organization: " ++ dmp.dmpOrgId ] ]
       New ->
@@ -1742,7 +1748,7 @@ editorFormView model =
         [ text "Submit" ]
       ]
   , div [] <| case model.status of
-    SubmitError e -> [ text <| "Error submitting DMP: " ++ Debug.toString e ]
+    SubmitError e -> [ text <| "Error submitting DMP: " ++ httpErrorToString e ]
     NotLoggedInError -> [ text <| "Error submitting DMP: Not logged in!" ]
     _ -> []
   ]

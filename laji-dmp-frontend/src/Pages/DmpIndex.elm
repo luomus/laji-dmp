@@ -24,7 +24,7 @@ import DmpApi exposing (getDmpList)
 import Models exposing (Dmp)
 import Config exposing (Config)
 
-type DmpListState = Loading | Error | DmpList (Array.Array Dmp)
+type DmpListState = Loading | Error String | DmpList (Array.Array Dmp)
 
 type alias Model =
   { dmpList: DmpListState
@@ -43,8 +43,7 @@ update msg model =
       case res of
         Ok dmpList -> ({ model | dmpList = DmpList dmpList }, Cmd.none)
         Err e ->
-          let _ = Debug.log "Error loading DMP list" e
-          in ({ model | dmpList = Error }, Cmd.none)
+          ({ model | dmpList = Error "Failed to load DMP list response" }, Cmd.none )
 
 dmpElementView : Dmp -> Html msg
 dmpElementView elem =
@@ -64,7 +63,7 @@ view model =
   { title = "Dmp Index View"
   , body = div [class "dmp-index"]
     [ div [] <| case model.dmpList of
-      Error -> [ text "Failed to load the list of DMPs." ]
+      Error err -> [ text <| "Error: " ++ err ]
       Loading -> [ text "Loading the list of DMPs..." ]
       DmpList dmpList -> 
         [
