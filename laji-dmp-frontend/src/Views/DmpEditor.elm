@@ -566,7 +566,7 @@ maybeLanguageSelect l d msg = select
   , disabled d
   , onInput msg
   ]
-  [ option [ value "None" ] [ text "None" ]
+  [ option [ value "None" ] [ text "Ei tiedossa" ]
   , option [ value "LanguageTypeFi" ] [ text <| showLanguage LanguageTypeFi ]
   , option [ value "LanguageTypeSv" ] [ text <| showLanguage LanguageTypeSv ]
   , option [ value "LanguageTypeEn" ] [ text <| showLanguage LanguageTypeEn ]
@@ -771,17 +771,17 @@ maybeBoolSelect v d msg = select
       _ -> msg <| Nothing
     )
   ]
-  [ option [ value "undefined" ] [ text "undefined" ]
-  , option [ value "true" ] [ text "true" ]
-  , option [ value "false" ] [ text "false" ]
+  [ option [ value "undefined" ] [ text "Ei määritelty" ]
+  , option [ value "true" ] [ text "Kyllä" ]
+  , option [ value "false" ] [ text "Ei" ]
   ]
 
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
-  [ h3 [] [ text "Dmp id" ]
+  [ h3 [] [ text "DMP:n tunniste" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Dmp identifier: "
+      [ text "Tunniste: "
       , input
         [ value <| withDefault "" dmpId.dmpIdIdentifier
         , disabled d
@@ -791,7 +791,7 @@ dmpIdEditorView dmpId d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Dmp id type: "
+      [ text "Tyyppi: "
       , documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType << documentIdTypeFromStr
       ]
     ]
@@ -799,10 +799,10 @@ dmpIdEditorView dmpId d = div []
 
 datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
 datasetIdEditorView idx id d = div []
-  [ h4 [] [ text "Dataset id" ]
+  [ h4 [] [ text "Aineiston tunniste" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Dataset identifier: "
+      [ text "Tunniste: "
       , input
         [ value <| withDefault "" id.datasetIdIdentifier
         , disabled d
@@ -812,7 +812,7 @@ datasetIdEditorView idx id d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Dataset id type: "
+      [ text "Tyyppi: "
       , documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType << documentIdTypeFromStr
       ]
     ]
@@ -820,10 +820,10 @@ datasetIdEditorView idx id d = div []
 
 licenseEditorView : Int -> Int -> Int -> License -> Bool -> Html Msg
 licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
-  [ h5 [] [ text "License" ]
+  [ h5 [] [ text "Lisenssi" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Ref: "
+      [ text "Käytetty lisenssi: "
       , input
         [ value license.licenseRef
         , disabled d
@@ -837,7 +837,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Start date: "
+      [ text "Lisenssin käyttöönottopäivä: "
       , input
         [ type_ "date"
         , value <| unwrapDay license.licenseStartDate
@@ -860,15 +860,15 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove license" ]
+    [ text "- Poista lisenssi" ]
   ]
 
 distributionEditorView : Int -> Int -> Distribution -> Bool -> Html Msg
 distributionEditorView datasetIdx distributionIdx distribution d = div []
-  [ h4 [] [ text "Distribution" ]
+  [ h4 [] [ text "Julkaisu" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Access url: "
+      [ text "Julkaisun osoite: "
       , input
         [ value <| withDefault "" distribution.distributionAccessUrl
         , disabled d
@@ -878,13 +878,13 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Data access type: "
+      [ text "Saatavuus: "
       , maybeDataAccessTypeSelect distribution.distributionDataAccess d <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDataAccess << maybeDataAccessTypeFromStr
       ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Description: "
+      [ text "Kuvaus: "
       , input
         [ value <| withDefault "" distribution.distributionDescription
         , disabled d
@@ -894,7 +894,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Download uri: "
+      [ text "Latausosoite: "
       , input
         [ value <| withDefault "" distribution.distributionDownloadUri
         , disabled d
@@ -904,7 +904,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Format: "
+      [ text "Tiedostotyyppi: "
       , input
         [ value <| withDefault "" distribution.distributionFormat
         , disabled d
@@ -914,7 +914,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Title: "
+      [ text "Otsikko: "
       , input
         [ value distribution.distributionTitle
         , disabled d
@@ -932,7 +932,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
     , disabled d
     , class "btn"
     ]
-    [ text "+ Add license" ]
+    [ text "+ Lisää lisenssi" ]
   , button
     [ onClick <| OnModifyDmp
       <| ModifyDmpDataset datasetIdx
@@ -940,15 +940,15 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove distribution" ]
+    [ text "- Poista julkaisu" ]
   ]
 
 metadataIdEditorView : Int -> Int -> MetadataId -> Bool -> Html Msg
 metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
-  [ h5 [] [ text "Metadata id" ]
+  [ h5 [] [ text "Metadatan tunniste" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Metadata identifier: "
+      [ text "Tunniste: "
       , input
         [ value <| withDefault "" metadataId.metadataIdIdentifier
         , disabled d
@@ -963,7 +963,7 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Metadata id type: "
+      [ text "Tyyppi: "
       , metadataIdTypeSelect metadataId.metadataIdType d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
@@ -979,7 +979,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
   [ h4 [] [ text "Metadata" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Reuse dataset: "
+      [ text "Aineiston uudelleenkäyttö: "
       , maybeBoolSelect metadata.metadataAccessDocumentation d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
@@ -988,7 +988,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Data model: "
+      [ text "Datamalli: "
       , input
         [ value <| withDefault "" metadata.metadataDataModel
         , disabled d
@@ -1003,7 +1003,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Description: "
+      [ text "Kuvaus: "
       , input
         [ value <| withDefault "" metadata.metadataDescription
         , disabled d
@@ -1018,7 +1018,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Language: "
+      [ text "Kieli: "
       , languageSelect metadata.metadataLanguage d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
@@ -1027,7 +1027,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Location documentation: "
+      [ text "Dokumentaation sijainti: "
       , input
         [ value <| withDefault "" metadata.metadataLocationDocumentation
         , disabled d
@@ -1042,7 +1042,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Open: "
+      [ text "Metadatan avoimuus: "
       , maybeBoolSelect metadata.metadataOpen d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
@@ -1051,7 +1051,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Location: "
+      [ text "Metadatan osoite: "
       , input
         [ value <| withDefault "" metadata.metadataLocation
         , disabled d
@@ -1066,7 +1066,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Schema: "
+      [ text "Metadata perustuu tietomalliin: "
       , maybeBoolSelect metadata.metadataSchema d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
@@ -1081,15 +1081,15 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove metadata" ]
+    [ text "- Poista metadata-osio" ]
   ]
 
 rightsEditorView : Int -> Int -> RightsRelatedToData -> Bool -> Html Msg
 rightsEditorView datasetIdx rightsIdx rights d = div []
-  [ h4 [] [ text "Rights related to data" ]
+  [ h4 [] [ text "Datan oikeudet" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Ownership data right: "
+      [ text "Datan omistaja: "
       , input
         [ value <| withDefault "" rights.rightsOwnershipDataRight
         , disabled d
@@ -1109,15 +1109,15 @@ rightsEditorView datasetIdx rightsIdx rights d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove rights" ]
+    [ text "- Poista 'datan oikeudet' -osio" ]
   ]
 
 securityEditorView : Int -> Int -> SecurityAndPrivacy -> Bool -> Html Msg
 securityEditorView datasetIdx securityIdx security d = div []
-  [ h4 [] [ text "Security and privacy" ]
+  [ h4 [] [ text "Tietoturva" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Description: "
+      [ text "Tietoturvakäytäntöjen kuvaus: "
       , input
         [ value <| security.securityDescription
         , disabled d
@@ -1131,7 +1131,7 @@ securityEditorView datasetIdx securityIdx security d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Title: "
+      [ text "Otsikko: "
       , input
         [ value <| security.securityTitle
         , disabled d
@@ -1150,15 +1150,15 @@ securityEditorView datasetIdx securityIdx security d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove security and privacy" ]
+    [ text "- Poista tietoturva-osio" ]
   ]
 
 contactIdEditorView : ContactId -> Bool -> Html Msg
 contactIdEditorView c d = div []
-  [ h4 [] [ text "Contact id" ]
+  [ h4 [] [ text "Kontaktin tunniste" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Contact identifier: "
+      [ text "Tunniste: "
       , input
         [ value <| withDefault "" c.contactIdIdentifier
         , disabled d
@@ -1168,7 +1168,7 @@ contactIdEditorView c d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Contact id type: "
+      [ text "Tyyppi: "
       , personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType << personIdTypeFromStr
       ]
     ]
@@ -1176,10 +1176,10 @@ contactIdEditorView c d = div []
 
 contactEditorView : Contact -> Bool -> Html Msg
 contactEditorView c d = div []
-  [ h3 [] [ text "Contact" ]
+  [ h3 [] [ text "Kontakti" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Mbox: "
+      [ text "Sähköpostiosoite: "
       , input
         [ value c.contactMbox
         , disabled d
@@ -1189,7 +1189,7 @@ contactEditorView c d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Name: "
+      [ text "Nimi: "
       , input
         [ value c.contactName
         , disabled d
@@ -1199,7 +1199,7 @@ contactEditorView c d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Organization: "
+      [ text "Organisaatio: "
       , input
         [ value <| withDefault "" c.contactOrganization
         , disabled d
@@ -1212,10 +1212,10 @@ contactEditorView c d = div []
 
 contributorIdEditorView : Int -> ContributorId -> Bool -> Html Msg
 contributorIdEditorView idx c d = div []
-  [ h4 [] [ text "Contributor id" ]
+  [ h4 [] [ text "Osallistujan tunniste" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Contributor identifier: "
+      [ text "Tunniste: "
       , input
         [ value <| withDefault "" c.contributorIdIdentifier
         , disabled d
@@ -1225,7 +1225,7 @@ contributorIdEditorView idx c d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Contributor id type: "
+      [ text "Tyyppi: "
       , personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType << personIdTypeFromStr
       ]
     ]
@@ -1233,10 +1233,10 @@ contributorIdEditorView idx c d = div []
 
 contributorEditorView : Int -> Contributor -> Bool -> Html Msg
 contributorEditorView idx elem d = div []
-  [ h3 [] [ text "Contributor" ]
+  [ h3 [] [ text "Osallistuja" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Mbox: "
+      [ text "Sähköpostiosoite: "
       , input
         [ value <| withDefault "" elem.contributorMbox
         , disabled d
@@ -1246,7 +1246,7 @@ contributorEditorView idx elem d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Name: "
+      [ text "Nimi: "
       , input
         [ value elem.contributorName
         , disabled d
@@ -1256,7 +1256,7 @@ contributorEditorView idx elem d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Organization: "
+      [ text "Organisaatio: "
       , input
         [ value <| withDefault "" elem.contributorOrganization
         , disabled d
@@ -1266,7 +1266,7 @@ contributorEditorView idx elem d = div []
     ]
     , div [ class "form-field" ]
       [ label []
-        [ text "Role type: "
+        [ text "Rooli: "
         , roleTypeSelect elem.contributorRole d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorRole << roleTypeFromStr
         ]
       ]
@@ -1276,16 +1276,16 @@ contributorEditorView idx elem d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove contributor" ]
+    [ text "- Poista osallistuja" ]
   , hr [] []
   ]
 
 dataLifeCycleEditorView : Int -> DataLifeCycle -> Bool -> Html Msg
 dataLifeCycleEditorView idx elem d = div []
-  [ h3 [] [ text "Data life cycle" ]
+  [ h3 [] [ text "Datan elinkaari" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Archiving services data: "
+      [ text "Arkistointi: "
       , input
         [ checked elem.dataLifeCycleArchivingServicesData
         , type_ "checkbox"
@@ -1296,7 +1296,7 @@ dataLifeCycleEditorView idx elem d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Backup data: "
+      [ text "Datan varmuuskopiointi: "
       , input
         [ value elem.dataLifeCycleBackupData
         , disabled d
@@ -1307,7 +1307,7 @@ dataLifeCycleEditorView idx elem d = div []
   , deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionData << deletionDataTypeFromStr
   , div [ class "form-field" ]
     [ label []
-      [ text "Deletion when data: "
+      [ text "Datan poistamispäivä: "
       , input
         [ type_ "date"
         , value <| withDefault "" (Maybe.map unwrapDay elem.dataLifeCycleDeletionWhenData)
@@ -1323,7 +1323,7 @@ keywordEditorView : Int -> Int -> String -> Bool -> Html Msg
 keywordEditorView datasetIdx keywordIdx keyword d = div []
   [ div [ class "form-field" ]
     [ label []
-      [ text "Keyword: "
+      [ text "Avainsanat: "
       , input
         [ value keyword
         , disabled d
@@ -1337,14 +1337,14 @@ keywordEditorView datasetIdx keywordIdx keyword d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove keyword" ]
+    [ text "- Poista avainsana" ]
   ]
 
 datasetEditorView : Int -> Dataset -> Bool -> Html Msg
-datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
+datasetEditorView idx elem d = div [] [ h3 [] [ text "Aineisto" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Data quality assurance: "
+      [ text "Laadunvarmistuksen kuvaus: "
       , input
         [ value <| withDefault "" elem.datasetDataQualityAssurance
         , disabled d
@@ -1355,7 +1355,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Data sharing issues: "
+      [ text "Datanjakamisen haasteet: "
       , input
         [ value <| withDefault "" elem.datasetDataSharingIssues
         , disabled d
@@ -1366,7 +1366,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Description: "
+      [ text "Kuvaus: "
       , input
         [ value <| withDefault "" elem.datasetDescription
         , disabled d
@@ -1377,7 +1377,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Issued: "
+      [ text "Aineiston tuotantoajankohta: "
       , input
         [ value <| withDefault "" <| Maybe.map unwrapDay elem.datasetIssued
         , disabled d
@@ -1393,34 +1393,34 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "+ Add keyword" ]
+    [ text "+ Lisää avainsana" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Language: "
+      [ text "Kieli: "
       , maybeLanguageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage << maybeLangFromStr
       ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Personal data: "
+      [ text "Henkilötiedot: "
       , personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData << personalDataTypeFromStr
       ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Sensitive data: "
+      [ text "Sensitiivinen data: "
       , sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData << sensitiveDataTypeFromStr
       ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Reuse dataset: "
+      [ text "Aineiston uudelleenkäyttö: "
       , maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
       ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Title: "
+      [ text "Otsikko: "
       , input
         [ value elem.datasetTitle
         , disabled d
@@ -1431,7 +1431,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Type: "
+      [ text "Tyyppi: "
       , input
         [ value <| withDefault "" elem.datasetType
         , disabled d
@@ -1450,7 +1450,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     , disabled d
     , class "btn"
     ]
-    [ text "+ Add distribution" ]
+    [ text "+ Lisää julkaisu" ]
   , div []
     <| Array.toList <| Array.indexedMap (\i e -> metadataEditorView idx i e d) elem.datasetMetadata
   , button
@@ -1460,7 +1460,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     , disabled d
     , class "btn"
     ]
-    [ text "+ Add metadata" ]
+    [ text "+ Lisää metadata-osio" ]
   , div []
     <| Array.toList <| Array.indexedMap (\i e -> rightsEditorView idx i e d) elem.datasetRightsRelatedToData
   , button
@@ -1470,7 +1470,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     , disabled d
     , class "btn"
     ]
-    [ text "+ Add rights related to data" ]
+    [ text "+ Lisää 'datan oikeudet' -osio" ]
   , div []
     <| Array.toList <| Array.indexedMap (\i e -> securityEditorView idx i e d) elem.datasetSecurityAndPrivacy
   , button
@@ -1480,22 +1480,22 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Dataset" ]
     , disabled d
     , class "btn"
     ]
-    [ text "+ Add security and privacy" ]
+    [ text "+ Lisää tietoturva-osio" ]
   , button
     [ onClick <| OnModifyDmp <| RemoveDmpDataset idx
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove dataset" ]
+    [ text "- Poista aineisto" ]
   , hr [] []
   ]
 
 ethicalIssueEditorView : Int -> EthicalIssue -> Bool -> Html Msg
 ethicalIssueEditorView idx ethicalIssue d = div []
-  [ h3 [] [ text "Ethical issue" ]
+  [ h3 [] [ text "Eettiset haasteet" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Description: "
+      [ text "Kuvaus: "
       , input
         [ value <| withDefault "" ethicalIssue.ethicalIssueDescription
         , disabled d
@@ -1509,7 +1509,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Exists: "
+      [ text "Eettisiä haasteita on: "
       , ethicalIssuesTypeSelect ethicalIssue.ethicalIssueExist d <| OnModifyDmp
         << ModifyDmpEthicalIssue idx
         << ModifyEthicalIssueExist
@@ -1518,7 +1518,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Report: "
+      [ text "Raportti eettisistä haasteista: "
       , input
         [ value <| withDefault "" ethicalIssue.ethicalIssueReport
         , disabled d
@@ -1535,16 +1535,16 @@ ethicalIssueEditorView idx ethicalIssue d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove ethical issue" ]
+    [ text "- Poista 'eettiset haasteet' -osio" ]
   , hr [] []
   ]
 
 projectEditorView : Int -> Project -> Bool -> Html Msg
 projectEditorView idx project d = div []
-  [ h3 [] [ text "Project" ]
+  [ h3 [] [ text "Projekti" ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Description: "
+      [ text "Kuvaus: "
       , input
         [ value project.projectDescription
         , disabled d
@@ -1556,7 +1556,7 @@ projectEditorView idx project d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "End date: "
+      [ text "Projektin loppumispäivä: "
       , input
         [ type_ "date"
         , value <| withDefault "" (Maybe.map unwrapDay project.projectEndDate)
@@ -1572,7 +1572,7 @@ projectEditorView idx project d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Start date: "
+      [ text "Projektin alkamispäivä: "
       , input
         [ type_ "date"
         , value <| unwrapDay project.projectStartDate
@@ -1587,7 +1587,7 @@ projectEditorView idx project d = div []
     ]
   , div [ class "form-field" ]
     [ label []
-      [ text "Title: "
+      [ text "Otsikko: "
       , input
         [ value project.projectTitle
         , disabled d
@@ -1602,7 +1602,7 @@ projectEditorView idx project d = div []
     , disabled d
     , class "btn btn-danger"
     ]
-    [ text "- Remove project" ]
+    [ text "- Poista projekti-osio" ]
   , hr [] []
   ]
 
@@ -1617,15 +1617,15 @@ dmpEditorView dmp d mode session =
   let
     orgToOption org = option [ value org, selected <| dmp.dmpOrgId == org ] [ text org ]
   in div [ class "dmp-editor" ]
-    [ h2 [] [ text "Edit DMP" ]
-    , maybeFieldView "Created: " (Maybe.map showUtcTime dmp.dmpCreated)
-    , maybeFieldView "Modified: " (Maybe.map showUtcTime dmp.dmpModified)
+    [ h2 [] [ text "DMP - Lomake" ]
+    , maybeFieldView "Luotu: " (Maybe.map showUtcTime dmp.dmpCreated)
+    , maybeFieldView "Muokattu: " (Maybe.map showUtcTime dmp.dmpModified)
     , div [ class "form-field" ] <| case mode of
-      Edit _ -> [ label [] [ text <| "Organization: " ++ dmp.dmpOrgId ] ]
+      Edit _ -> [ label [] [ text <| "Organisaatio: " ++ dmp.dmpOrgId ] ]
       New ->
         case session of
           User.LoggedIn personToken person ->
-            [ label [ for "dmp-editor-org" ] [ text "Organization" ]
+            [ label [ for "dmp-editor-org" ] [ text "Organisaatio" ]
             , select
               [ id "dmp-editor-org"
               , value <| case Array.get 0 person.organisation of
@@ -1636,10 +1636,10 @@ dmpEditorView dmp d mode session =
               ]
               (Array.toList <| Array.map orgToOption person.organisation)
             ]
-          _ -> [ text "You have to be logged in to use the DMP editor." ]
+          _ -> [ text "Kirjaudu sisään, jotta voit käsitellä DMP:itä." ]
     , div [ class "form-field" ]
       [ label []
-        [ text "Title: "
+        [ text "Otsikko: "
         , input
           [ value dmp.dmpTitle
           , disabled d
@@ -1650,7 +1650,7 @@ dmpEditorView dmp d mode session =
       ]
     , div [ class "form-field" ]
       [ label []
-        [ text "Description: "
+        [ text "Kuvaus: "
         , input
           [ value <| withDefault "" dmp.dmpDescription
           , disabled d
@@ -1661,7 +1661,7 @@ dmpEditorView dmp d mode session =
       ]
     , div [ class "form-field" ]
       [ label []
-        [ text "Next review: "
+        [ text "Seuraava tarkastuspäivä: "
         , input
           [ type_ "date"
           , value <| withDefault "" (Maybe.map unwrapDay dmp.dmpNextReviewDmp)
@@ -1673,13 +1673,13 @@ dmpEditorView dmp d mode session =
       ]
     , div [ class "form-field" ]
       [ label []
-        [ text "Language: "
+        [ text "Kieli: "
         , languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage << langFromStr
         ]
       ]
     , div [ class "form-field" ]
       [ label []
-        [ text "Dmp type: "
+        [ text "Tyyppi: "
         , dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp << dmpTypeFromStr
         ]
       ]
@@ -1695,7 +1695,7 @@ dmpEditorView dmp d mode session =
       , disabled d
       , class "btn"
       ]
-      [ text "+ Add contributor" ]
+      [ text "+ Lisää osallistuja" ]
     , hr [] []
     , div []
       <| Array.toList <| Array.indexedMap (\idx elem -> dataLifeCycleEditorView idx elem d) dmp.dmpDataLifeCycles
@@ -1704,7 +1704,7 @@ dmpEditorView dmp d mode session =
       , disabled d
       , class "btn"
       ]
-      [ text "+ Add data life cycle" ]
+      [ text "+ Lisää 'datan elinkaari' -osio" ]
     , hr [] []
     , div []
       <| Array.toList <| Array.indexedMap (\idx elem -> datasetEditorView idx elem d) dmp.dmpDatasets
@@ -1713,7 +1713,7 @@ dmpEditorView dmp d mode session =
       , disabled d
       , class "btn"
       ]
-      [ text "+ Add dataset" ]
+      [ text "+ Lisää aineisto" ]
     , hr [] []
     , div []
       <| Array.toList <| Array.indexedMap (\idx elem -> ethicalIssueEditorView idx elem d) dmp.dmpEthicalIssues
@@ -1722,7 +1722,7 @@ dmpEditorView dmp d mode session =
       , disabled d
       , class "btn"
       ]
-      [ text "+ Add ethical issue" ]
+      [ text "+ Lisää 'eettiset haasteet' -osio" ]
     , hr [] []
     , div []
       <| Array.toList <| Array.indexedMap (\idx elem -> projectEditorView idx elem d) dmp.dmpProjects
@@ -1731,7 +1731,7 @@ dmpEditorView dmp d mode session =
       , disabled d
       , class "btn"
       ]
-      [ text "+ Add project" ]
+      [ text "+ Lisää projekti-osio" ]
     , hr [] []
     ]
 
@@ -1745,11 +1745,11 @@ editorFormView model =
         , disabled (model.status == Submitting)
         , class "btn btn-primary"
         ]
-        [ text "Submit" ]
+        [ text "Tallenna" ]
       ]
   , div [] <| case model.status of
-    SubmitError e -> [ text <| "Error submitting DMP: " ++ httpErrorToString e ]
-    NotLoggedInError -> [ text <| "Error submitting DMP: Not logged in!" ]
+    SubmitError e -> [ text <| "Virhe DMP:tä tallennettaessa: " ++ httpErrorToString e ]
+    NotLoggedInError -> [ text <| "Virhe DMP:tä tallennettaessa: Kirjautuminen puuttuu!" ]
     _ -> []
   ]
 
