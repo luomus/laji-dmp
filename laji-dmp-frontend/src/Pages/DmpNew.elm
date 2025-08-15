@@ -18,6 +18,6 @@ update = Views.DmpEditor.update
 
 view : Model -> { title : String, body : Html Msg }
 view model =
-  { title = "Dmp New View"
+  { title = "Uusi DMP"
   , body = Views.DmpEditor.view model
   }

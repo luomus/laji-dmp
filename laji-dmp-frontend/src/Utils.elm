@@ -18,9 +18,9 @@ langFromStr s = case s of
 
 showLanguage : LanguageType -> String
 showLanguage lang = case lang of
-  LanguageTypeFi -> "finnish"
-  LanguageTypeEn -> "english"
-  LanguageTypeSv -> "swedish"
+  LanguageTypeFi -> "Suomi"
+  LanguageTypeEn -> "Englanti"
+  LanguageTypeSv -> "Ruotsi"
 
 dmpTypeFromStr : String -> DmpType
 dmpTypeFromStr s = case s of
@@ -32,11 +32,11 @@ dmpTypeFromStr s = case s of
 
 showDmpType : DmpType -> String
 showDmpType a = case a of
-  DmpTypeStudent -> "student"
-  DmpTypeAcademic -> "academic"
-  DmpTypeNational -> "national"
-  DmpTypeInternational -> "international"
-  DmpTypeOrganizational -> "organizational"
+  DmpTypeStudent -> "Opiskelijaprojekti"
+  DmpTypeAcademic -> "Akateeminen"
+  DmpTypeNational -> "Kansallinen"
+  DmpTypeInternational -> "Kansainvälinen"
+  DmpTypeOrganizational -> "Organisaation sisäinen"
 
 documentIdTypeFromStr : String -> DocumentIdType
 documentIdTypeFromStr s = case s of
@@ -53,8 +53,8 @@ showDocumentIdType a = case a of
   DocumentIdTypeDoi -> "doi"
   DocumentIdTypeArk -> "ark"
   DocumentIdTypeUrl -> "url"
-  DocumentIdTypeOther -> "other"
-  DocumentIdTypeNone -> "none"
+  DocumentIdTypeOther -> "Muu"
+  DocumentIdTypeNone -> "Ei tiedossa"
 
 roleTypeFromStr : String -> RoleType
 roleTypeFromStr s = case s of
@@ -66,11 +66,11 @@ roleTypeFromStr s = case s of
 
 showRoleType : RoleType -> String
 showRoleType role = case role of
-  RoleTypeWorkPackageLeader -> "Work package leader"
-  RoleTypeDataController -> "Data controller"
-  RoleTypePrincipleInvestigator -> "Principle investigator"
-  RoleTypeAuthorOfDataSet -> "Author of dataset"
-  RoleTypeOther -> "Other"
+  RoleTypeWorkPackageLeader -> "Työpaketin johtaja"
+  RoleTypeDataController -> "Datan hallinnoija"
+  RoleTypePrincipleInvestigator -> "Pääasiallinen tutkija"
+  RoleTypeAuthorOfDataSet -> "Aineiston tekijä"
+  RoleTypeOther -> "Muu"
 
 personIdTypeFromStr : String -> PersonIdType
 personIdTypeFromStr s = case s of
@@ -86,7 +86,7 @@ showPersonIdType t = case t of
   PersonIdTypeIsni -> "Isni"
   PersonIdTypeOpenid -> "OpenId"
   PersonIdTypeOther -> "Other"
-  PersonIdTypeNone -> "None"
+  PersonIdTypeNone -> "Ei tiedossa"
   
 deletionDataTypeFromStr : String -> DeletionDataType
 deletionDataTypeFromStr s = case s of
@@ -126,39 +126,39 @@ metadataIdTypeFromStr s = case s of
 
 showDeletionDataType : DeletionDataType -> String
 showDeletionDataType d = case d of
-  DeletionDataTypeYes -> "Yes"
-  DeletionDataTypeNo -> "No"
-  DeletionDataTypeUnknown -> "Unknown"
+  DeletionDataTypeYes -> "Kyllä"
+  DeletionDataTypeNo -> "Ei"
+  DeletionDataTypeUnknown -> "Ei tiedossa"
 
 showPersonalDataType : PersonalDataType -> String
 showPersonalDataType p = case p of
-  PersonalDataTypeYes -> "yes"
-  PersonalDataTypeNo -> "no"
-  PersonalDataTypeUnknown -> "unknown"
+  PersonalDataTypeYes -> "Kyllä"
+  PersonalDataTypeNo -> "Ei"
+  PersonalDataTypeUnknown -> "Ei tiedossa"
 
 showSensitiveDataType : SensitiveDataType -> String
 showSensitiveDataType p = case p of
-  SensitiveDataTypeYes -> "yes"
-  SensitiveDataTypeNo -> "no"
-  SensitiveDataTypeUnknown -> "unknown"
+  SensitiveDataTypeYes -> "Kyllä"
+  SensitiveDataTypeNo -> "Ei"
+  SensitiveDataTypeUnknown -> "Ei tiedossa"
 
 showEthicalIssuesType : EthicalIssuesType -> String
 showEthicalIssuesType p = case p of
-  EthicalIssuesTypeYes -> "yes"
-  EthicalIssuesTypeNo -> "no"
-  EthicalIssuesTypeUnknown -> "unknown"
+  EthicalIssuesTypeYes -> "Kyllä"
+  EthicalIssuesTypeNo -> "Ei"
+  EthicalIssuesTypeUnknown -> "Ei tiedossa"
 
 showDataAccessType : DataAccessType -> String
 showDataAccessType d = case d of
-  DataAccessTypeOpen -> "open"
-  DataAccessTypeShared -> "shared"
-  DataAccessTypeClosed -> "closed"
+  DataAccessTypeOpen -> "Avoin"
+  DataAccessTypeShared -> "Jaettavissa"
+  DataAccessTypeClosed -> "Suljettu"
 
 showMetadataIdType : MetadataIdType -> String
 showMetadataIdType m = case m of
   MetadataIdTypeUrl -> "url"
-  MetadataIdTypeOther -> "other"
-  MetadataIdTypeNone -> "none"
+  MetadataIdTypeOther -> "Muu"
+  MetadataIdTypeNone -> "Ei tiedossa"
 
 parseMaybe : String -> Maybe String
 parseMaybe s = case s of

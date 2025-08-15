@@ -27,11 +27,11 @@ loginView loginSession deleteMsg =
     [ case loginSession of
       LoggedIn token person -> div [class "logged-in"]
         [ text <| person.fullName ++ " (" ++ person.id ++ ")"
-        , Html.button [ Html.Events.onClick <| deleteMsg token] [Html.text "Log out"]
+        , Html.button [ Html.Events.onClick <| deleteMsg token] [Html.text "Kirjaudu ulos"]
         ]
-      NotLoggedIn -> a [ href "https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next=" ] [ text "Login" ]
-      LoadingPerson token -> Html.text "Logging in..."
-      DeletingToken token -> Html.text "Logging out..."
+      NotLoggedIn -> a [ href "https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next=" ] [ text "Kirjaudu" ]
+      LoadingPerson token -> Html.text "Kirjaudutaan..."
+      DeletingToken token -> Html.text "Kirjaudutaan ulos..."
     ]
 
 breadcrumbs : Route -> Html msg
@@ -43,11 +43,11 @@ breadcrumbs currentRoute =
   in
     div [class "breadcrumbs"] <| case currentRoute of
       DmpRoute dmpRoute -> case dmpRoute of
-        DmpIndexRoute -> [current "Index"]
-        DmpNewRoute -> [link "/dmp" "Index", sep, current "New DMP"]
+        DmpIndexRoute -> [current "Luettelo"]
+        DmpNewRoute -> [link "/dmp" "Luettelo", sep, current "Uusi DMP"]
         DmpElementRoute dmpElementRoute -> case dmpElementRoute of
-          DmpInfoRoute id -> [link "/dmp" "Index", sep, current <| "DMP " ++ id]
-          DmpEditRoute id -> [link "/dmp" "Index", sep, link ("/dmp/" ++ id) <| "DMP " ++ id, sep, current "Edit"]
+          DmpInfoRoute id -> [link "/dmp" "Luettelo", sep, current <| "DMP " ++ id]
+          DmpEditRoute id -> [link "/dmp" "Luettelo", sep, link ("/dmp/" ++ id) <| "DMP " ++ id, sep, current "Muokkaa"]
       _ -> []
 
 urlFromPath : String -> Url
@@ -78,11 +78,11 @@ navigation loginSession maybeCurrentRoute deleteMsg =
         Nothing -> []
   in
     nav [ class "main-nav" ]
-      [ h1 [class "nav-title"] [text "Data Management Plan Tool"]
+      [ h1 [class "nav-title"] [text "Laji-DMP"]
       , div [class "navbar"]
         [ ul []
-          [ li [] [a (getLinkAttribs "/") [text "About"]]
-          , li [] [a (getLinkAttribs "/dmp") [text "Index"]]
+          [ li [] [a (getLinkAttribs "/") [text "Etusivu"]]
+          , li [] [a (getLinkAttribs "/dmp") [text "DMP luettelo"]]
           ]
         , loginView loginSession deleteMsg
         ]

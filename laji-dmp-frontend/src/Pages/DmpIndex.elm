@@ -50,28 +50,28 @@ dmpElementView elem =
   case elem.dmpId of
     Just id -> a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
       [ h5 [] [ text <| elem.dmpTitle ]
-      , div [] [ text <| "Organization: " ++ elem.dmpOrgId ]
-      , div [] [ text <| String.fromInt (Array.length elem.dmpDatasets) ++ " datasets" ]
+      , div [] [ text <| "Organisaatio: " ++ elem.dmpOrgId ]
+      , div [] [ text <| String.fromInt (Array.length elem.dmpDatasets) ++ " aineistoa" ]
       ]
-    Nothing -> li [] [text "Error: expected DMP to have an id"]
+    Nothing -> li [] [text "Virhe: DMP:n tunniste puuttuu"]
 
 dmpTableView : Array.Array Dmp -> Html Msg
 dmpTableView dmpList = div [] (Array.toList <| Array.map dmpElementView dmpList)
 
 view : Model -> { title : String, body : Html Msg }
 view model =
-  { title = "Dmp Index View"
+  { title = "DMP luettelo"
   , body = div [class "dmp-index"]
     [ div [] <| case model.dmpList of
-      Error err -> [ text <| "Error: " ++ err ]
-      Loading -> [ text "Loading the list of DMPs..." ]
+      Error err -> [ text <| "Virhe: " ++ err ]
+      Loading -> [ text "Ladataan DMP luetteloa..." ]
       DmpList dmpList -> 
         [
           dmpTableView dmpList
         ]
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->
-        [ a [href "/dmp/new", class "btn btn-primary"] [text "+ New DMP"] ]
+        [ a [href "/dmp/new", class "btn btn-primary"] [text "+ Uusi DMP"] ]
       _ -> []
     ]
   }

@@ -84,17 +84,17 @@ update cfg msg model = case (msg, model.state) of
 
 view : Model -> { title : String, body : Html Msg }
 view model =
-  { title = "DMP Edit View"
+  { title = "DMP:n muokkaus"
   , body = Html.div [] <| case model.state of
     EditorModel subModel ->
       [ Html.map EditorMsg <| Views.DmpEditor.view subModel
-      , button [ onClick OnDelete, class "btn btn-danger" ] [text "Delete DMP"]
+      , button [ onClick OnDelete, class "btn btn-danger" ] [text "Poista DMP"]
       , dialog deleteDialogId []
-        [ text "Do you really want to delete the DMP?"
-        , button [ onClick OnConfirmDelete ] [text "Delete DMP"]
-        , button [ onClick OnCancelDelete ] [text "Cancel"]
+        [ text "Haluatko varmasti poistaa DMP:n?"
+        , button [ onClick OnConfirmDelete ] [text "Poista DMP"]
+        , button [ onClick OnCancelDelete ] [text "Peruuta"]
         ]
       ]
-    Loading key id -> [text "Loading DMP..."]
-    Error err -> [text <| "Error: " ++ err]
+    Loading key id -> [text "Ladataan DMP:tä..."]
+    Error err -> [text <| "Virhe: " ++ err]
   }
