@@ -779,33 +779,33 @@ maybeBoolSelect v d msg = select
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
   [ h3 [] [ text "DMP:n tunniste" ]
-  , inputFieldView "Tunniste: " (Just "description paragraph")
+  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä kontaktille tunnisteen (esim. DOI).")
     <| input
       [ value <| withDefault "" dmpId.dmpIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "description paragraph")
+  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
     <| documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType << documentIdTypeFromStr
   ]
 
 datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
 datasetIdEditorView idx id d = div []
   [ h4 [] [ text "Aineiston tunniste" ]
-  , inputFieldView "Tunniste: " (Just "description paragraph")
+  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä aineistolle tunnisteen (esim. DOI).")
     <| input
       [ value <| withDefault "" id.datasetIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "description paragraph")
+  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
     <| documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType << documentIdTypeFromStr
   ]
 
 licenseEditorView : Int -> Int -> Int -> License -> Bool -> Html Msg
 licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
   [ h5 [] [ text "Lisenssi" ]
-  , inputFieldView "Käytetty lisenssi: " (Just "description paragraph")
+  , inputFieldView "Käytetty lisenssi: " (Just "Lisää linkki käytettyyn lisenssiin, esim: https://creativecommons.org/licenses/by/4.0/")
     <| input
       [ value license.licenseRef
       , disabled d
@@ -815,7 +815,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
         << ModifyDistributionLicense licenseIdx
         << ModifyLicenseRef
       ] []
-  , inputFieldView "Lisenssin käyttöönottopäivä: " (Just "description paragraph")
+  , inputFieldView "Lisenssin käyttöönottopäivä: " Nothing
     <| input
       [ type_ "date"
       , value <| unwrapDay license.licenseStartDate
@@ -841,33 +841,33 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
 distributionEditorView : Int -> Int -> Distribution -> Bool -> Html Msg
 distributionEditorView datasetIdx distributionIdx distribution d = div []
   [ h4 [] [ text "Julkaisu" ]
-  , inputFieldView "Julkaisun osoite: " (Just "description paragraph")
+  , inputFieldView "Julkaisun osoite: " (Just "Verkkosivun osoite, jossa aineisto on julkaistu.")
     <| input
       [ value <| withDefault "" distribution.distributionAccessUrl
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionAccessUrl << parseMaybe
       ] []
-  , inputFieldView "Saatavuus: " (Just "description paragraph")
+  , inputFieldView "Saatavuus: " (Just "Onko aineisto julkisesti saatavilla avoimesti tai pyydettäessä?")
     <| maybeDataAccessTypeSelect distribution.distributionDataAccess d <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDataAccess << maybeDataAccessTypeFromStr
-  , inputFieldView "Kuvaus: " (Just "description paragraph")
+  , inputFieldView "Kuvaus: " Nothing
     <| input
       [ value <| withDefault "" distribution.distributionDescription
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDescription << parseMaybe
       ] []
-  , inputFieldView "Latausosoite: " (Just "description paragraph")
+  , inputFieldView "Latausosoite: " (Just "Verkkosivun osoite, josta aineiston voi ladata tiedostona.")
     <| input
       [ value <| withDefault "" distribution.distributionDownloadUri
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDownloadUri << parseMaybe
       ] []
-  , inputFieldView "Tiedostotyyppi: " (Just "description paragraph")
+  , inputFieldView "Tiedostotyyppi: " (Just "Ilmoita ladattavan tiedoston formaatti esim. '.json' tai '.xlsx'.")
     <| input
       [ value <| withDefault "" distribution.distributionFormat
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionFormat << parseMaybe
       ] []
-  , inputFieldView "Otsikko: " (Just "description paragraph")
+  , inputFieldView "Otsikko: " Nothing
     <| input
       [ value distribution.distributionTitle
       , disabled d
@@ -897,7 +897,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
 metadataIdEditorView : Int -> Int -> MetadataId -> Bool -> Html Msg
 metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
   [ h5 [] [ text "Metadatan tunniste" ]
-  , inputFieldView "Tunniste: " (Just "description paragraph")
+  , inputFieldView "Tunniste: " (Just "Kopioi linkki metatiedon standardin kuvaukseen, tai muu tunniste.")
     <| input
       [ value <| withDefault "" metadataId.metadataIdIdentifier
       , disabled d
@@ -908,7 +908,7 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
         << ModifyMetadataIdIdentifier
         << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "description paragraph")
+  , inputFieldView "Tyyppi: " (Just "Valitse listasta metatiedon tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
     <| metadataIdTypeSelect metadataId.metadataIdType d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
@@ -920,12 +920,12 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
 metadataEditorView : Int -> Int -> Metadata -> Bool -> Html Msg
 metadataEditorView datasetIdx metadataIdx metadata d = div []
   [ h4 [] [ text "Metadata" ]
-  , inputFieldView "Aineiston uudelleenkäyttö: " (Just "description paragraph")
+  , inputFieldView "Aineiston uudelleenkäyttö: " Nothing
     <| maybeBoolSelect metadata.metadataAccessDocumentation d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
       << ModifyMetadataAccessDocumentation
-  , inputFieldView "Datamalli: " (Just "description paragraph")
+  , inputFieldView "Datamalli: " Nothing
     <| input
       [ value <| withDefault "" metadata.metadataDataModel
       , disabled d
@@ -935,7 +935,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyMetadataDataModel
         << parseMaybe
       ] []
-  , inputFieldView "Kuvaus: " (Just "description paragraph")
+  , inputFieldView "Kuvaus: " Nothing
     <| input
       [ value <| withDefault "" metadata.metadataDescription
       , disabled d
@@ -945,12 +945,12 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyMetadataDescription
         << parseMaybe
       ] []
-  , inputFieldView "Kieli: " (Just "description paragraph")
+  , inputFieldView "Kieli: " Nothing
     <| languageSelect metadata.metadataLanguage d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
       << ModifyMetadataLanguage << langFromStr
-  , inputFieldView "Dokumentaation sijainti: " (Just "description paragraph")
+  , inputFieldView "Dokumentaation sijainti: " (Just "Verkkosivun osoite, jossa dokumentaatio sijaitsee.")
     <| input
       [ value <| withDefault "" metadata.metadataLocationDocumentation
       , disabled d
@@ -960,12 +960,12 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyMetadataLocationDocumentation
         << parseMaybe
       ] []
-  , inputFieldView "Metadatan avoimuus: " (Just "description paragraph")
+  , inputFieldView "Metadatan avoimuus: " (Just "Metadatan avoimuus")
     <| maybeBoolSelect metadata.metadataOpen d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
       << ModifyMetadataOpen
-  , inputFieldView "Metadatan osoite: " (Just "description paragraph")
+  , inputFieldView "Metadatan osoite: " (Just "Metadatan osoite")
       <| input
       [ value <| withDefault "" metadata.metadataLocation
       , disabled d
@@ -975,7 +975,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyMetadataLocation
         << parseMaybe
       ] []
-  , inputFieldView "Metadata perustuu tietomalliin: " (Just "description paragraph")
+  , inputFieldView "Metadata perustuu tietomalliin: " (Just "Perustuuko metadata johonkin datamalliin?")
     <| maybeBoolSelect metadata.metadataSchema d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
@@ -994,7 +994,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
 rightsEditorView : Int -> Int -> RightsRelatedToData -> Bool -> Html Msg
 rightsEditorView datasetIdx rightsIdx rights d = div []
   [ h4 [] [ text "Datan oikeudet" ]
-  , inputFieldView "Datan omistaja: " (Just "description paragraph")
+  , inputFieldView "Datan omistaja: " (Just "Kuka omistaa oikeudet aineston dataan?")
     <| input
       [ value <| withDefault "" rights.rightsOwnershipDataRight
       , disabled d
@@ -1017,7 +1017,7 @@ rightsEditorView datasetIdx rightsIdx rights d = div []
 securityEditorView : Int -> Int -> SecurityAndPrivacy -> Bool -> Html Msg
 securityEditorView datasetIdx securityIdx security d = div []
   [ h4 [] [ text "Tietoturva" ]
-  , inputFieldView "Tietoturvakäytäntöjen kuvaus: " (Just "description paragraph")
+  , inputFieldView "Tietoturvakäytäntöjen kuvaus: " Nothing
     <| input
       [ value <| security.securityDescription
       , disabled d
@@ -1026,7 +1026,7 @@ securityEditorView datasetIdx securityIdx security d = div []
         << ModifyDatasetSecurity securityIdx
         << ModifySecurityDescription
       ] []
-  , inputFieldView "Otsikko: " (Just "description paragraph")
+  , inputFieldView "Otsikko: " Nothing
     <| input
       [ value <| security.securityTitle
       , disabled d
@@ -1048,32 +1048,32 @@ securityEditorView datasetIdx securityIdx security d = div []
 contactIdEditorView : ContactId -> Bool -> Html Msg
 contactIdEditorView c d = div []
   [ h4 [] [ text "Kontaktin tunniste" ]
-  , inputFieldView "Tunniste: " (Just "description paragraph")
+  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä kontaktille tunnisteen (esim. ORCID).")
     <| input
       [ value <| withDefault "" c.contactIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "description paragraph")
+  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
     <| personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType << personIdTypeFromStr
   ]
 
 contactEditorView : Contact -> Bool -> Html Msg
 contactEditorView c d = div []
   [ h3 [] [ text "Kontakti" ]
-  , inputFieldView "Sähköpostiosoite: " (Just "description paragraph")
+  , inputFieldView "Sähköpostiosoite: " (Just "Ilmoita kontaktihenkilön tai organisaation sähköpostiosoite.")
     <| input
       [ value c.contactMbox
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
       ] []
-  , inputFieldView "Nimi: " (Just "description paragraph")
+  , inputFieldView "Nimi: " (Just "Ilmoita kontaktihenkilön nimi.")
     <| input
       [ value c.contactName
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactName
       ] []
-  , inputFieldView "Organisaatio: " (Just "description paragraph")
+  , inputFieldView "Organisaatio: " Nothing
     <| input
       [ value <| withDefault "" c.contactOrganization
       , disabled d
@@ -1085,38 +1085,38 @@ contactEditorView c d = div []
 contributorIdEditorView : Int -> ContributorId -> Bool -> Html Msg
 contributorIdEditorView idx c d = div []
   [ h4 [] [ text "Osallistujan tunniste" ]
-  , inputFieldView "Tunniste: " (Just "description paragraph")
+  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä osallistujalle tunnisteen (esim. ORCID).")
     <| input
       [ value <| withDefault "" c.contributorIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "description paragraph")
+  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
     <| personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType << personIdTypeFromStr
   ]
 
 contributorEditorView : Int -> Contributor -> Bool -> Html Msg
 contributorEditorView idx elem d = div []
   [ h3 [] [ text "Osallistuja" ]
-  , inputFieldView "Sähköpostiosoite: " (Just "description paragraph")
+  , inputFieldView "Sähköpostiosoite: " (Just "Ilmoita aineistonhallintasuunnitelmaan osallistuvan tahon sähköpostiosoite.")
     <| input
       [ value <| withDefault "" elem.contributorMbox
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
       ] []
-  , inputFieldView "Nimi: " (Just "description paragraph")
+  , inputFieldView "Nimi: " (Just "Ilmoita aineistonhallintasuunnitelmaan osallistuvan tahon nimi.")
     <| input
       [ value elem.contributorName
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorName
       ] []
-  , inputFieldView "Organisaatio: " (Just "description paragraph")
+  , inputFieldView "Organisaatio: " Nothing
     <| input
       [ value <| withDefault "" elem.contributorOrganization
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorOrganization << parseMaybe
       ] []
-  , inputFieldView "Rooli: " (Just "description paragraph")
+  , inputFieldView "Rooli: " (Just "Valitse listasta osallistujan roolia parhaiten kuvaava nimike.")
     <| roleTypeSelect elem.contributorRole d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorRole << roleTypeFromStr
   , contributorIdEditorView idx elem.contributorContributorId d
   , button
@@ -1131,22 +1131,22 @@ contributorEditorView idx elem d = div []
 dataLifeCycleEditorView : Int -> DataLifeCycle -> Bool -> Html Msg
 dataLifeCycleEditorView idx elem d = div []
   [ h3 [] [ text "Datan elinkaari" ]
-  , inputFieldView "Arkistointi: " (Just "description paragraph")
+  , inputFieldView "Arkistointi: " (Just "Arkistoidaanko aineiston dataa, eli siirtyykö se aktiivikäytöstä erilliseen säilytykseen projektin jälkeen?")
     <| input
       [ checked elem.dataLifeCycleArchivingServicesData
       , type_ "checkbox"
       , disabled d
       , onCheck <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleArchivingServicesData
       ] []
-  , inputFieldView "Datan varmuuskopiointi: " (Just "description paragraph")
+  , inputFieldView "Datan varmuuskopiointi: " (Just "Kuvaile, kuinka aineistoa varmuuskopioidaan.")
     <| input
       [ value elem.dataLifeCycleBackupData
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleBackupData
       ] []
-  , inputFieldView "Datan poisto: " (Just "description paragraph")
+  , inputFieldView "Datan poisto: " (Just "Millä tavoin aineisto poistetaan?")
     <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionData << deletionDataTypeFromStr
-  , inputFieldView "Datan poistamispäivä: " (Just "description paragraph")
+  , inputFieldView "Datan poistamispäivä: " (Just "Jos ainesto poistetaan, ilmoita tähän poistamisen päivämäärä.")
     <| input
       [ type_ "date"
       , value <| withDefault "" (Maybe.map unwrapDay elem.dataLifeCycleDeletionWhenData)
@@ -1157,7 +1157,7 @@ dataLifeCycleEditorView idx elem d = div []
 
 keywordEditorView : Int -> Int -> String -> Bool -> Html Msg
 keywordEditorView datasetIdx keywordIdx keyword d = div []
-  [ inputFieldView "Avainsanat: " (Just "description paragraph")
+  [ inputFieldView "Avainsanat: " Nothing
     <| input
       [ value keyword
       , disabled d
@@ -1173,25 +1173,25 @@ keywordEditorView datasetIdx keywordIdx keyword d = div []
 
 datasetEditorView : Int -> Dataset -> Bool -> Html Msg
 datasetEditorView idx elem d = div [] [ h3 [] [ text "Aineisto" ]
-  , inputFieldView "Laadunvarmistuksen kuvaus: " (Just "description paragraph")
+  , inputFieldView "Laadunvarmistuksen kuvaus: " (Just "Kirjoita tähän vapaamuotoisesti aineiston laadunvarmistuksesta, esim. validoinnista ja käytetyistä menetelmistä.")
     <| input
       [ value <| withDefault "" elem.datasetDataQualityAssurance
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataQualityAssurance << parseMaybe
       ] []
-  , inputFieldView "Datanjakamisen haasteet: " (Just "description paragraph")
+  , inputFieldView "Datanjakamisen haasteet: " (Just "Miten datan jakamiseen liittyvät oikeudelliset ja eettiset kysymykset (esim. omistajuus, tekijänoikeudet, arkaluontoisuus) ratkaistaan. Voit vastata myös 'ei tiedossa'.")
     <| input
       [ value <| withDefault "" elem.datasetDataSharingIssues
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataSharingIssues << parseMaybe
       ] []
-  , inputFieldView "Kuvaus: " (Just "description paragraph")
+  , inputFieldView "Kuvaus: " (Just "Kuvaile aineistoa lyhyesti, esimerkiksi perustuuko se joihinkin olemassa oleviin lähdeaineistoihin, tai uuteen aineestoon.")
     <| input
       [ value <| withDefault "" elem.datasetDescription
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDescription << parseMaybe
       ] []
-  , inputFieldView "Aineiston tuotantoajankohta: " (Just "description paragraph")
+  , inputFieldView "Aineiston tuotantoajankohta: " (Just "Ilmoita aineiston tuotantoajankohta, eli päivämäärä milloin sen tuottaminen valmistuu tai on valmistunut.")
     <| input
       [ value <| withDefault "" <| Maybe.map unwrapDay elem.datasetIssued
       , disabled d
@@ -1205,21 +1205,21 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Aineisto" ]
     , class "btn btn-danger"
     ]
     [ text "+ Lisää avainsana" ]
-  , inputFieldView "Kieli: " (Just "description paragraph")
+  , inputFieldView "Kieli: " Nothing
     <| maybeLanguageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage << maybeLangFromStr
-  , inputFieldView "Henkilötiedot: " (Just "description paragraph")
+  , inputFieldView "Henkilötiedot: " (Just "Sisältääkö aineisto henkilötietoja, esim. henkilöiden nimi, henkilötunnus, sähköposti, puhelinnumero?")
     <| personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData << personalDataTypeFromStr
-  , inputFieldView "Sensitiivinen data: " (Just "description paragraph")
+  , inputFieldView "Sensitiivinen data: " (Just "Sisältääkö aineisto sensitiivistä dataa, esim. uhanalaisten lajien paikkatietoa, tms.?")
     <| sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData << sensitiveDataTypeFromStr
-  , inputFieldView "Aineiston uudelleenkäyttö: " (Just "description paragraph")
+  , inputFieldView "Aineiston uudelleenkäyttö: " Nothing
     <| maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
-  , inputFieldView "Otsikko: " (Just "description paragraph")
+  , inputFieldView "Otsikko: " Nothing
     <| input
       [ value elem.datasetTitle
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetTitle
       ] []
-  , inputFieldView "Tyyppi: " (Just "description paragraph")
+  , inputFieldView "Tyyppi: " Nothing
     <| input
       [ value <| withDefault "" elem.datasetType
       , disabled d
@@ -1278,7 +1278,7 @@ datasetEditorView idx elem d = div [] [ h3 [] [ text "Aineisto" ]
 ethicalIssueEditorView : Int -> EthicalIssue -> Bool -> Html Msg
 ethicalIssueEditorView idx ethicalIssue d = div []
   [ h3 [] [ text "Eettiset haasteet" ]
-  , inputFieldView "Kuvaus: " (Just "description paragraph")
+  , inputFieldView "Kuvaus: " (Just "Kuvaile vapaamuotoisesti eettisiä haasteita, joita aineistoon liittyy.")
     <| input
       [ value <| withDefault "" ethicalIssue.ethicalIssueDescription
       , disabled d
@@ -1287,12 +1287,12 @@ ethicalIssueEditorView idx ethicalIssue d = div []
         << ModifyEthicalIssueDescription
         << parseMaybe
       ] []
-  , inputFieldView "Eettisiä haasteita on: " (Just "description paragraph")
+  , inputFieldView "Eettisiä haasteita on: " (Just "Liittyykö aineistoon eettisiä haasteita?")
     <| ethicalIssuesTypeSelect ethicalIssue.ethicalIssueExist d <| OnModifyDmp
       << ModifyDmpEthicalIssue idx
       << ModifyEthicalIssueExist
       << ethicalIssuesTypeFromStr
-  , inputFieldView "Raportti eettisistä haasteista: " (Just "description paragraph")
+  , inputFieldView "Raportti eettisistä haasteista: " Nothing
     <| input
       [ value <| withDefault "" ethicalIssue.ethicalIssueReport
       , disabled d
@@ -1313,7 +1313,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
 projectEditorView : Int -> Project -> Bool -> Html Msg
 projectEditorView idx project d = div []
   [ h3 [] [ text "Projekti" ]
-  , inputFieldView "Kuvaus: " (Just "description paragraph")
+  , inputFieldView "Kuvaus: " Nothing
     <| input
       [ value project.projectDescription
       , disabled d
@@ -1321,7 +1321,7 @@ projectEditorView idx project d = div []
         << ModifyDmpProject idx
         << ModifyProjectDescription
       ] []
-  , inputFieldView "Projektin loppumispäivä: " (Just "description paragraph")
+  , inputFieldView "Projektin loppumispäivä: " Nothing
     <| input
       [ type_ "date"
       , value <| withDefault "" (Maybe.map unwrapDay project.projectEndDate)
@@ -1332,7 +1332,7 @@ projectEditorView idx project d = div []
         << Maybe.map Day
         << parseMaybe
       ] []
-  , inputFieldView "Projektin alkamispäivä: " (Just "description paragraph")
+  , inputFieldView "Projektin alkamispäivä: " Nothing
     <| input
       [ type_ "date"
       , value <| unwrapDay project.projectStartDate
@@ -1342,7 +1342,7 @@ projectEditorView idx project d = div []
         << ModifyProjectStartDate
         << Day
       ] []
-  , inputFieldView "Otsikko: " (Just "description paragraph")
+  , inputFieldView "Otsikko: " Nothing
     <| input
       [ value project.projectTitle
       , disabled d
@@ -1402,21 +1402,21 @@ dmpEditorView dmp d mode session =
               (Array.toList <| Array.map orgToOption person.organisation)
             ]
           _ -> [ text "Kirjaudu sisään, jotta voit käsitellä DMP:itä." ]
-    , inputFieldView "Otsikko: " (Just "description paragraph")
+    , inputFieldView "Otsikko: " Nothing
       <| input
         [ value dmp.dmpTitle
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpTitle
         ]
         []
-    , inputFieldView "Kuvaus: " (Just "description paragraph")
+    , inputFieldView "Kuvaus: " Nothing
         <| input
           [ value <| withDefault "" dmp.dmpDescription
           , disabled d
           , onInput <| OnModifyDmp << ModifyDmpDescription << parseMaybe
           ]
           []
-    , inputFieldView "Seuraava tarkastuspäivä: " (Just "description paragraph")
+    , inputFieldView "Seuraava tarkastuspäivä: " (Just "Ilmoita tähän päivämäärä, jolloin aineistonhallintasuunnitelma tarkastetaan seuraavan kerran.")
         <| input
           [ type_ "date"
           , value <| withDefault "" (Maybe.map unwrapDay dmp.dmpNextReviewDmp)
@@ -1424,9 +1424,9 @@ dmpEditorView dmp d mode session =
           , onInput <| OnModifyDmp << ModifyDmpNextReviewDmp << Maybe.map Day << parseMaybe
           ]
           []
-    , inputFieldView "Kieli: " (Just "description paragraph")
+    , inputFieldView "Kieli: " Nothing
         <| languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage << langFromStr
-    , inputFieldView "Tyyppi: " (Just "description paragraph")
+    , inputFieldView "Tyyppi: " (Just "Ilmoita 'Priodiversity LIFE', mikäli aineistonhallintasuunnitelma liittyy siihen.")
         <| dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp << dmpTypeFromStr
     , hr [] []
     , dmpIdEditorView dmp.dmpDmpId d
