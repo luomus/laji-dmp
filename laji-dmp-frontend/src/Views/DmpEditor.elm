@@ -779,22 +779,14 @@ maybeBoolSelect v d msg = select
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
   [ h3 [] [ text "Dmp id" ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Dmp identifier: "
-      , input
-        [ value <| withDefault "" dmpId.dmpIdIdentifier
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
-        ] []
-      ]
-    ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Dmp id type: "
-      , documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType << documentIdTypeFromStr
-      ]
-    ]
+  , inputFieldView "Dmp identifier: " (Just "description paragraph")
+    <| input
+      [ value <| withDefault "" dmpId.dmpIdIdentifier
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
+      ] []
+  , inputFieldView "Dmp id type: " (Just "description paragraph")
+    <| documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType << documentIdTypeFromStr
   ]
 
 datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
@@ -1156,57 +1148,37 @@ securityEditorView datasetIdx securityIdx security d = div []
 contactIdEditorView : ContactId -> Bool -> Html Msg
 contactIdEditorView c d = div []
   [ h4 [] [ text "Contact id" ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Contact identifier: "
-      , input
-        [ value <| withDefault "" c.contactIdIdentifier
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
-        ] []
-      ]
-    ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Contact id type: "
-      , personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType << personIdTypeFromStr
-      ]
-    ]
+  , inputFieldView "Contact identifier: " (Just "description paragraph")
+    <| input
+      [ value <| withDefault "" c.contactIdIdentifier
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
+      ] []
+  , inputFieldView "Contact id type: " (Just "description paragraph")
+    <| personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType << personIdTypeFromStr
   ]
 
 contactEditorView : Contact -> Bool -> Html Msg
 contactEditorView c d = div []
   [ h3 [] [ text "Contact" ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Mbox: "
-      , input
-        [ value c.contactMbox
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
-        ] []
-      ]
-    ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Name: "
-      , input
-        [ value c.contactName
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactName
-        ] []
-      ]
-    ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Organization: "
-      , input
-        [ value <| withDefault "" c.contactOrganization
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactOrganization << parseMaybe
-        ] []
-      ]
-    ]
+  , inputFieldView "Mbox: " (Just "description paragraph")
+    <| input
+      [ value c.contactMbox
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
+      ] []
+  , inputFieldView "Name: " (Just "description paragraph")
+    <| input
+      [ value c.contactName
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactName
+      ] []
+  , inputFieldView "Organization: " (Just "description paragraph")
+    <| input
+      [ value <| withDefault "" c.contactOrganization
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactOrganization << parseMaybe
+      ] []
   , contactIdEditorView c.contactContactId d
   ]
 
@@ -1234,16 +1206,12 @@ contributorIdEditorView idx c d = div []
 contributorEditorView : Int -> Contributor -> Bool -> Html Msg
 contributorEditorView idx elem d = div []
   [ h3 [] [ text "Contributor" ]
-  , div [ class "form-field" ]
-    [ label []
-      [ text "Mbox: "
-      , input
-        [ value <| withDefault "" elem.contributorMbox
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
-        ] []
-      ]
-    ]
+  , inputFieldView "Mbox: " (Just "description paragraph")
+    <| input
+      [ value <| withDefault "" elem.contributorMbox
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
+      ] []
   , div [ class "form-field" ]
     [ label []
       [ text "Name: "
@@ -1606,11 +1574,23 @@ projectEditorView idx project d = div []
   , hr [] []
   ]
 
-maybeFieldView : String -> Maybe String -> Html Msg
-maybeFieldView prefix maybeField =
+displayFieldView : String -> Maybe String -> Html Msg
+displayFieldView prefix maybeField =
   case maybeField of
     Just str -> div [] [text <| String.append prefix <| str]
     Nothing -> text ""
+
+inputFieldView : String -> Maybe String -> Html Msg -> Html Msg
+inputFieldView lab maybeDesc inp =
+  div [ class "form-field" ]
+    [ label []
+      [ text lab
+      , inp
+      ]
+    , case maybeDesc of
+      Just desc -> Html.p [] [ text desc ]
+      Nothing -> text ""
+    ]
 
 dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> Html Msg
 dmpEditorView dmp d mode session =
@@ -1618,8 +1598,8 @@ dmpEditorView dmp d mode session =
     orgToOption org = option [ value org, selected <| dmp.dmpOrgId == org ] [ text org ]
   in div [ class "dmp-editor" ]
     [ h2 [] [ text "Edit DMP" ]
-    , maybeFieldView "Created: " (Maybe.map showUtcTime dmp.dmpCreated)
-    , maybeFieldView "Modified: " (Maybe.map showUtcTime dmp.dmpModified)
+    , displayFieldView "Created: " (Maybe.map showUtcTime dmp.dmpCreated)
+    , displayFieldView "Modified: " (Maybe.map showUtcTime dmp.dmpModified)
     , div [ class "form-field" ] <| case mode of
       Edit _ -> [ label [] [ text <| "Organization: " ++ dmp.dmpOrgId ] ]
       New ->
@@ -1637,52 +1617,32 @@ dmpEditorView dmp d mode session =
               (Array.toList <| Array.map orgToOption person.organisation)
             ]
           _ -> [ text "You have to be logged in to use the DMP editor." ]
-    , div [ class "form-field" ]
-      [ label []
-        [ text "Title: "
-        , input
-          [ value dmp.dmpTitle
-          , disabled d
-          , onInput <| OnModifyDmp << ModifyDmpTitle
-          ]
-          []
+    , inputFieldView "Title: " (Just "description paragraph")
+      <| input
+        [ value dmp.dmpTitle
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpTitle
         ]
-      ]
-    , div [ class "form-field" ]
-      [ label []
-        [ text "Description: "
-        , input
+        []
+    , inputFieldView "Description: " (Just "description paragraph")
+        <| input
           [ value <| withDefault "" dmp.dmpDescription
           , disabled d
           , onInput <| OnModifyDmp << ModifyDmpDescription << parseMaybe
           ]
           []
-        ]
-      ]
-    , div [ class "form-field" ]
-      [ label []
-        [ text "Next review: "
-        , input
+    , inputFieldView "Next review: " (Just "description paragraph")
+        <| input
           [ type_ "date"
           , value <| withDefault "" (Maybe.map unwrapDay dmp.dmpNextReviewDmp)
           , disabled d
           , onInput <| OnModifyDmp << ModifyDmpNextReviewDmp << Maybe.map Day << parseMaybe
           ]
           []
-        ]
-      ]
-    , div [ class "form-field" ]
-      [ label []
-        [ text "Language: "
-        , languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage << langFromStr
-        ]
-      ]
-    , div [ class "form-field" ]
-      [ label []
-        [ text "Dmp type: "
-        , dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp << dmpTypeFromStr
-        ]
-      ]
+    , inputFieldView "Language: " (Just "description paragraph")
+        <| languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage << langFromStr
+    , inputFieldView "Dmp type: " (Just "description paragraph")
+        <| dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp << dmpTypeFromStr
     , hr [] []
     , dmpIdEditorView dmp.dmpDmpId d
     , hr [] []

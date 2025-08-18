@@ -132,11 +132,16 @@ table th {
 }
 
 .form-field {
-  margin-top: 6px;
-  margin-bottom: 12px;
+  margin-top: 8px;
+  margin-bottom: 24px;
 }
 
-.form-field > label {
+.form-field p {
+  margin-top: 8px;
+}
+
+.form-field label {
   display: block;
-  color: var(--neutral-7);
+  color: var(--neutral-6);
+  font-weight: 600;
 }
