@@ -20,6 +20,6 @@ update msg model =
 
 view : Model -> { title : String, body : Html Msg }
 view model =
-  { title = "Front View"
-  , body = text "Some introduction to the DMP tool"
+  { title = "Etusivu"
+  , body = text "Laji-DMP sovelluksella voit hallita datanhallintasuunnitelmia (DMP)."
   }
