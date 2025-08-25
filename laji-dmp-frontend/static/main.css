@@ -158,3 +158,8 @@ input:not([type='checkbox']), textarea, select {
   padding: 6px 12px;
 }
 
+section {
+  margin-top: 64px;
+  margin-bottom: 48px;
+}
+
