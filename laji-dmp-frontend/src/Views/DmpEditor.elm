@@ -1455,17 +1455,19 @@ dmpEditorView dmp d mode session =
       New ->
         case session of
           User.LoggedIn personToken person ->
-            [ label [ for "dmp-editor-org" ] [ text "Organisaatio" ]
-            , select
-              [ id "dmp-editor-org"
-              , value <| case Array.get 0 person.organisation of
-                Just org -> org
-                Nothing -> ""
-              , disabled d
-              , onInput (\str -> OnModifyDmp (ModifyDmpOrgId str))
+            if Array.length person.organisation > 1 then
+              [ label [ for "dmp-editor-org" ] [ text "Organisaatio" ]
+              , select
+                [ id "dmp-editor-org"
+                , value <| case Array.get 0 person.organisation of
+                  Just org -> org
+                  Nothing -> ""
+                , disabled d
+                , onInput (\str -> OnModifyDmp (ModifyDmpOrgId str))
+                ]
+                (Array.toList <| Array.map orgToOption person.organisation)
               ]
-              (Array.toList <| Array.map orgToOption person.organisation)
-            ]
+            else [ label [] [ text <| "Organisaatio: " ++ Maybe.withDefault "-" (Array.get 0 person.organisation) ] ]
           _ -> [ text "Kirjaudu sisään, jotta voit käsitellä DMP:itä." ]
     , inputFieldView "Otsikko: " Nothing
       <| input
