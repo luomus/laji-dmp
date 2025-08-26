@@ -454,7 +454,11 @@ updateDataset msg val = case msg of
   ModifyDatasetDatasetId v -> { val | datasetDatasetId = updateDatasetId v val.datasetDatasetId }
 
   ModifyDatasetKeywords idx v -> { val | datasetKeywords = Maybe.map (updateAt idx (\_ -> v)) val.datasetKeywords }
-  AddDatasetKeyword -> { val | datasetKeywords = Maybe.map (Array.push "") val.datasetKeywords }
+  AddDatasetKeyword ->
+    { val | datasetKeywords = case val.datasetKeywords of
+      Just k -> Just <| Array.push "" k
+      Nothing -> Just <| Array.fromList [""]
+    }
   RemoveDatasetKeyword idx -> { val | datasetKeywords = Maybe.map (removeAt idx) val.datasetKeywords }
 
   ModifyDatasetDistribution idx v -> { val | datasetDistributions = updateAt idx (updateDistribution v) val.datasetDistributions }
@@ -536,248 +540,216 @@ update cfg msg model =
       Err e ->
         ({ model | status = SubmitError e }, Cmd.none)
 
-languageSelect : LanguageType -> Bool -> (String -> a) -> Html a
-languageSelect l d msg = select
-  [ value (
-    case l of
-      LanguageTypeFi -> "LanguageTypeFi"
-      LanguageTypeSv -> "LanguageTypeSv"
-      LanguageTypeEn -> "LanguageTypeEn"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "LanguageTypeFi" ] [ text <| showLanguage LanguageTypeFi ]
-  , option [ value "LanguageTypeSv" ] [ text <| showLanguage LanguageTypeSv ]
-  , option [ value "LanguageTypeEn" ] [ text <| showLanguage LanguageTypeEn ]
-  ]
+type alias EnumSelectParams a msg =
+  { current : a
+  , options : List a
+  , optionToString : (a -> String)
+  , optionFromString : (String -> a)
+  , optionToLabel : (a -> String)
+  , msg : (a -> msg)
+  , disabled : Bool
+  }
 
-maybeLangFromStr : String -> Maybe LanguageType
-maybeLangFromStr s = case s of
-  "None" -> Nothing
-  _ -> Just <| langFromStr s
+enumSelect : EnumSelectParams a msg -> Html msg
+enumSelect params =
+  let
+    mapOption : a -> Html b
+    mapOption op = option
+      [ value <| params.optionToString op
+      , selected <| params.current == op
+      ]
+      [ text <| params.optionToLabel op ]
+  in
+    select
+    [ disabled params.disabled
+    , onInput <| params.msg << params.optionFromString
+    ]
+    <| List.map mapOption params.options
 
-maybeLanguageSelect : Maybe LanguageType -> Bool -> (String -> a) -> Html a
-maybeLanguageSelect l d msg = select
-  [ value (
-    case l of
-      Just LanguageTypeFi -> "LanguageTypeFi"
-      Just LanguageTypeSv -> "LanguageTypeSv"
-      Just LanguageTypeEn -> "LanguageTypeEn"
+languageSelect : LanguageType -> Bool -> (LanguageType -> a) -> Html a
+languageSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ LanguageTypeFi, LanguageTypeSv, LanguageTypeEn ]
+    , optionToString = langToStr
+    , optionFromString = langFromStr
+    , optionToLabel = showLanguage
+    , msg = toMsg
+    , disabled = d
+    }
+
+maybeLanguageSelect : Maybe LanguageType -> Bool -> (Maybe LanguageType -> a) -> Html a
+maybeLanguageSelect curr d toMsg =
+  let
+    optionToString o = case o of
       Nothing -> "None"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "None" ] [ text "Ei tiedossa" ]
-  , option [ value "LanguageTypeFi" ] [ text <| showLanguage LanguageTypeFi ]
-  , option [ value "LanguageTypeSv" ] [ text <| showLanguage LanguageTypeSv ]
-  , option [ value "LanguageTypeEn" ] [ text <| showLanguage LanguageTypeEn ]
-  ]
+      Just l -> langToStr l
+    optionFromString o = case o of
+      "None" -> Nothing
+      str -> Just <| langFromStr str
+    optionToLabel o = case o of
+      Nothing -> "Ei tiedossa"
+      Just l -> showLanguage l
+  in
+    enumSelect
+      { current = curr
+      , options = [ Just LanguageTypeFi, Just LanguageTypeSv, Just LanguageTypeEn, Nothing ]
+      , optionToString = optionToString
+      , optionFromString = optionFromString
+      , optionToLabel = optionToLabel
+      , msg = toMsg
+      , disabled = d
+      }
 
-dmpTypeSelect : DmpType -> Bool -> (String -> a) -> Html a
-dmpTypeSelect l d msg = select
-  [ value (
-    case l of
-      DmpTypeStudent -> "DmpTypeStudent"
-      DmpTypeAcademic -> "DmpTypeAcademic"
-      DmpTypeNational -> "DmpTypeNational"
-      DmpTypeInternational -> "DmpTypeInternational"
-      DmpTypeOrganizational -> "DmpTypeOrganizational"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "DmpTypeStudent" ] [ text <| showDmpType DmpTypeStudent ]
-  , option [ value "DmpTypeAcademic" ] [ text <| showDmpType DmpTypeAcademic ]
-  , option [ value "DmpTypeNational" ] [ text <| showDmpType DmpTypeNational ]
-  , option [ value "DmpTypeInternational" ] [ text <| showDmpType DmpTypeInternational ]
-  , option [ value "DmpTypeOrganizational" ] [ text <| showDmpType DmpTypeOrganizational ]
-  ]
+dmpTypeSelect : DmpType -> Bool -> (DmpType -> msg) -> Html msg
+dmpTypeSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ DmpTypeStudent, DmpTypeAcademic, DmpTypeNational, DmpTypeInternational, DmpTypeOrganizational ]
+    , optionToString = dmpTypeToStr
+    , optionFromString = dmpTypeFromStr
+    , optionToLabel = showDmpType
+    , msg = toMsg
+    , disabled = d
+    }
 
-documentIdTypeSelect : DocumentIdType -> Bool -> (String -> a) -> Html a
-documentIdTypeSelect l d msg = select
-  [ value (
-    case l of
-      DocumentIdTypeHandle -> "DocumentIdTypeHandle"
-      DocumentIdTypeDoi    -> "DocumentIdTypeDoi"
-      DocumentIdTypeArk    -> "DocumentIdTypeArk"
-      DocumentIdTypeUrl    -> "DocumentIdTypeUrl"
-      DocumentIdTypeOther  -> "DocumentIdTypeOther"
-      DocumentIdTypeNone   -> "DocumentIdTypeNone"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "DocumentIdTypeHandle" ] [ text <| showDocumentIdType DocumentIdTypeHandle]
-  , option [ value "DocumentIdTypeDoi"    ] [ text <| showDocumentIdType DocumentIdTypeDoi    ]
-  , option [ value "DocumentIdTypeArk"    ] [ text <| showDocumentIdType DocumentIdTypeArk    ]
-  , option [ value "DocumentIdTypeUrl"    ] [ text <| showDocumentIdType DocumentIdTypeUrl    ]
-  , option [ value "DocumentIdTypeOther"  ] [ text <| showDocumentIdType DocumentIdTypeOther  ]
-  , option [ value "DocumentIdTypeNone"   ] [ text <| showDocumentIdType DocumentIdTypeNone   ]
-  ]
+documentIdTypeSelect : DocumentIdType -> Bool -> (DocumentIdType -> msg) -> Html msg
+documentIdTypeSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ DocumentIdTypeHandle, DocumentIdTypeDoi, DocumentIdTypeArk, DocumentIdTypeUrl, DocumentIdTypeOther, DocumentIdTypeNone ]
+    , optionToString = documentIdTypeToStr
+    , optionFromString = documentIdTypeFromStr
+    , optionToLabel = showDocumentIdType
+    , msg = toMsg
+    , disabled = d
+    }
 
-personIdTypeSelect : PersonIdType -> Bool -> (String -> a) -> Html a
-personIdTypeSelect l d msg = select
-  [ value (
-    case l of
-      PersonIdTypeOrcid  -> "PersonIdTypeOrcid"
-      PersonIdTypeIsni   -> "PersonIdTypeIsni"
-      PersonIdTypeOpenid -> "PersonIdTypeOpenid"
-      PersonIdTypeOther  -> "PersonIdTypeOther"
-      PersonIdTypeNone   -> "PersonIdTypeNone"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "PersonIdTypeOrcid"  ] [ text <| showPersonIdType PersonIdTypeOrcid  ]
-  , option [ value "PersonIdTypeIsni"   ] [ text <| showPersonIdType PersonIdTypeIsni   ]
-  , option [ value "PersonIdTypeOpenid" ] [ text <| showPersonIdType PersonIdTypeOpenid ]
-  , option [ value "PersonIdTypeOther"  ] [ text <| showPersonIdType PersonIdTypeOther  ]
-  , option [ value "PersonIdTypeNone"   ] [ text <| showPersonIdType PersonIdTypeNone   ]
-  ]
+personIdTypeSelect : PersonIdType -> Bool -> (PersonIdType -> msg) -> Html msg
+personIdTypeSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ PersonIdTypeOrcid, PersonIdTypeIsni, PersonIdTypeOpenid, PersonIdTypeOther, PersonIdTypeNone ]
+    , optionToString = personIdTypeToStr
+    , optionFromString = personIdTypeFromStr
+    , optionToLabel = showPersonIdType
+    , msg = toMsg
+    , disabled = d
+    }
 
-roleTypeSelect : RoleType -> Bool -> (String -> a) -> Html a
-roleTypeSelect l d msg = select
-  [ value (
-    case l of
-      RoleTypeWorkPackageLeader     -> "RoleTypeWorkPackageLeader"
-      RoleTypeDataController        -> "RoleTypeDataController"
-      RoleTypePrincipleInvestigator -> "RoleTypePrincipleInvestigator"
-      RoleTypeAuthorOfDataSet       -> "RoleTypeAuthorOfDataSet"
-      RoleTypeOther                 -> "RoleTypeOther"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "RoleTypeWorkPackageLeader"     ] [ text <| showRoleType RoleTypeWorkPackageLeader     ]
-  , option [ value "RoleTypeDataController"        ] [ text <| showRoleType RoleTypeDataController        ]
-  , option [ value "RoleTypePrincipleInvestigator" ] [ text <| showRoleType RoleTypePrincipleInvestigator ]
-  , option [ value "RoleTypeAuthorOfDataSet"       ] [ text <| showRoleType RoleTypeAuthorOfDataSet       ]
-  , option [ value "RoleTypeOther"                 ] [ text <| showRoleType RoleTypeOther                 ]
-  ]
+roleTypeSelect : RoleType -> Bool -> (RoleType -> msg) -> Html msg
+roleTypeSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ RoleTypeWorkPackageLeader, RoleTypeDataController, RoleTypePrincipleInvestigator, RoleTypeAuthorOfDataSet, RoleTypeOther ]
+    , optionToString = roleTypeToStr
+    , optionFromString = roleTypeFromStr
+    , optionToLabel = showRoleType
+    , msg = toMsg
+    , disabled = d
+    }
 
-deletionDataTypeSelect : DeletionDataType -> Bool -> (String -> a) -> Html a
-deletionDataTypeSelect l d msg = select
-  [ value (
-    case l of
-      DeletionDataTypeYes     -> "DeletionDataTypeYes"
-      DeletionDataTypeNo      -> "DeletionDataTypeNo"
-      DeletionDataTypeUnknown -> "DeletionDataTypeUnknown"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "DeletionDataTypeYes"     ] [ text <| showDeletionDataType DeletionDataTypeYes     ]
-  , option [ value "DeletionDataTypeNo"      ] [ text <| showDeletionDataType DeletionDataTypeNo      ]
-  , option [ value "DeletionDataTypeUnknown" ] [ text <| showDeletionDataType DeletionDataTypeUnknown ]
-  ]
+deletionDataTypeSelect : DeletionDataType -> Bool -> (DeletionDataType -> msg) -> Html msg
+deletionDataTypeSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ DeletionDataTypeUnknown, DeletionDataTypeYes, DeletionDataTypeNo ]
+    , optionToString = deletionDataTypeToStr
+    , optionFromString = deletionDataTypeFromStr
+    , optionToLabel = showDeletionDataType
+    , msg = toMsg
+    , disabled = d
+    }
 
-personalDataTypeSelect : PersonalDataType -> Bool -> (String -> a) -> Html a
-personalDataTypeSelect l d msg = select
-  [ value (
-    case l of
-      PersonalDataTypeYes     -> "PersonalDataTypeYes"
-      PersonalDataTypeNo      -> "PersonalDataTypeNo"
-      PersonalDataTypeUnknown -> "PersonalDataTypeUnknown"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "PersonalDataTypeYes"     ] [ text <| showPersonalDataType PersonalDataTypeYes     ]
-  , option [ value "PersonalDataTypeNo"      ] [ text <| showPersonalDataType PersonalDataTypeNo      ]
-  , option [ value "PersonalDataTypeUnknown" ] [ text <| showPersonalDataType PersonalDataTypeUnknown ]
-  ]
+personalDataTypeSelect : PersonalDataType -> Bool -> (PersonalDataType -> b) -> Html b
+personalDataTypeSelect curr d msg = enumSelect
+  { current = curr
+  , options = [ PersonalDataTypeUnknown, PersonalDataTypeYes, PersonalDataTypeNo ]
+  , optionToString = personalDataTypeToStr
+  , optionFromString = personalDataTypeFromStr
+  , optionToLabel = showPersonalDataType
+  , msg = msg
+  , disabled = d
+  }
 
-sensitiveDataTypeSelect : SensitiveDataType -> Bool -> (String -> a) -> Html a
-sensitiveDataTypeSelect l d msg = select
-  [ value (
-    case l of
-      SensitiveDataTypeYes     -> "SensitiveDataTypeYes"
-      SensitiveDataTypeNo      -> "SensitiveDataTypeNo"
-      SensitiveDataTypeUnknown -> "SensitiveDataTypeUnknown"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "SensitiveDataTypeYes"     ] [ text <| showSensitiveDataType SensitiveDataTypeYes     ]
-  , option [ value "SensitiveDataTypeNo"      ] [ text <| showSensitiveDataType SensitiveDataTypeNo      ]
-  , option [ value "SensitiveDataTypeUnknown" ] [ text <| showSensitiveDataType SensitiveDataTypeUnknown ]
-  ]
+sensitiveDataTypeSelect : SensitiveDataType -> Bool -> (SensitiveDataType -> msg) -> Html msg
+sensitiveDataTypeSelect curr d toMsg = enumSelect
+  { current = curr
+  , options = [ SensitiveDataTypeUnknown, SensitiveDataTypeYes, SensitiveDataTypeNo ]
+  , optionToString = sensitiveDataTypeToStr
+  , optionFromString = sensitiveDataTypeFromStr
+  , optionToLabel = showSensitiveDataType
+  , msg = toMsg
+  , disabled = d
+  }
 
-ethicalIssuesTypeSelect : EthicalIssuesType -> Bool -> (String -> a) -> Html a
-ethicalIssuesTypeSelect l d msg = select
-  [ value (
-    case l of
-      EthicalIssuesTypeYes     -> "EthicalIssuesTypeYes"
-      EthicalIssuesTypeNo      -> "EthicalIssuesTypeNo"
-      EthicalIssuesTypeUnknown -> "EthicalIssuesTypeUnknown"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "EthicalIssuesTypeYes"     ] [ text <| showEthicalIssuesType EthicalIssuesTypeYes     ]
-  , option [ value "EthicalIssuesTypeNo"      ] [ text <| showEthicalIssuesType EthicalIssuesTypeNo      ]
-  , option [ value "EthicalIssuesTypeUnknown" ] [ text <| showEthicalIssuesType EthicalIssuesTypeUnknown ]
-  ]
+ethicalIssuesTypeSelect : EthicalIssuesType -> Bool -> (EthicalIssuesType -> msg) -> Html msg
+ethicalIssuesTypeSelect curr d toMsg = enumSelect
+  { current = curr
+  , options = [ EthicalIssuesTypeUnknown, EthicalIssuesTypeYes, EthicalIssuesTypeNo ]
+  , optionToString = ethicalIssuesTypeToStr
+  , optionFromString = ethicalIssuesTypeFromStr
+  , optionToLabel = showEthicalIssuesType
+  , msg = toMsg
+  , disabled = d
+  }
 
-metadataIdTypeSelect : MetadataIdType -> Bool -> (String -> a) -> Html a
-metadataIdTypeSelect l d msg = select
-  [ value (
-    case l of
-      MetadataIdTypeUrl   -> "MetadataIdTypeUrl"
-      MetadataIdTypeOther -> "MetadataIdTypeOther"
-      MetadataIdTypeNone  -> "MetadataIdTypeNone"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "MetadataIdTypeUrl"   ] [ text <| showMetadataIdType MetadataIdTypeUrl   ]
-  , option [ value "MetadataIdTypeOther" ] [ text <| showMetadataIdType MetadataIdTypeOther ]
-  , option [ value "MetadataIdTypeNone"  ] [ text <| showMetadataIdType MetadataIdTypeNone  ]
-  ]
+metadataIdTypeSelect : MetadataIdType -> Bool -> (MetadataIdType -> msg) -> Html msg
+metadataIdTypeSelect curr d toMsg = enumSelect
+  { current = curr
+  , options = [ MetadataIdTypeNone, MetadataIdTypeUrl, MetadataIdTypeOther ]
+  , optionToString = metadataIdTypeToStr
+  , optionFromString = metadataIdTypeFromStr
+  , optionToLabel = showMetadataIdType
+  , msg = toMsg
+  , disabled = d
+  }
 
-maybeDataAccessTypeSelect : Maybe DataAccessType -> Bool -> (String -> a) -> Html a
-maybeDataAccessTypeSelect l d msg = select
-  [ value (
-    case l of
-      Just DataAccessTypeOpen   -> "DataAccessTypeOpen"
-      Just DataAccessTypeClosed -> "DataAccessTypeClosed"
-      Just DataAccessTypeShared -> "DataAccessTypeShared"
+maybeDataAccessTypeSelect : Maybe DataAccessType -> Bool -> (Maybe DataAccessType -> a) -> Html a
+maybeDataAccessTypeSelect curr d toMsg = 
+  let
+    optionToString o = case o of
       Nothing -> "undefined"
-    )
-  , disabled d
-  , onInput msg
-  ]
-  [ option [ value "undefined"            ] [ text "undefined" ]
-  , option [ value "DataAccessTypeOpen"   ] [ text <| showDataAccessType DataAccessTypeOpen   ]
-  , option [ value "DataAccessTypeClosed" ] [ text <| showDataAccessType DataAccessTypeClosed ]
-  , option [ value "DataAccessTypeShared" ] [ text <| showDataAccessType DataAccessTypeShared ]
-  ]
-
-maybeDataAccessTypeFromStr : String -> Maybe DataAccessType
-maybeDataAccessTypeFromStr s = case s of
-  "undefined" -> Nothing
-  _ -> Just <| dataAccessTypeFromStr s
+      Just l -> dataAccessTypeToStr l
+    optionFromString o = case o of
+      "undefined" -> Nothing
+      str -> Just <| dataAccessTypeFromStr str
+    optionToLabel o = case o of
+      Nothing -> "Ei määritelty"
+      Just l -> showDataAccessType l
+  in
+    enumSelect
+      { current = curr
+      , options = [ Just DataAccessTypeOpen, Just DataAccessTypeShared, Just DataAccessTypeClosed, Nothing ]
+      , optionToString = optionToString
+      , optionFromString = optionFromString
+      , optionToLabel = optionToLabel
+      , msg = toMsg
+      , disabled = d
+      }
 
 maybeBoolSelect : Maybe Bool -> Bool -> (Maybe Bool -> a) -> Html a
-maybeBoolSelect v d msg = select
-  [ value <| case v of
-    Just True -> "true"
-    Just False -> "false"
-    Nothing -> "undefined"
-  , disabled d
-  , onInput (\str ->
-    case str of
-      "true" -> msg <| Just True
-      "false" -> msg <| Just False
-      _ -> msg <| Nothing
-    )
-  ]
-  [ option [ value "undefined" ] [ text "Ei määritelty" ]
-  , option [ value "true" ] [ text "Kyllä" ]
-  , option [ value "false" ] [ text "Ei" ]
-  ]
+maybeBoolSelect curr d toMsg = 
+  let
+    optionToString o = case o of
+      Nothing -> "undefined"
+      Just l -> boolToString l
+    optionFromString o = case o of
+      "undefined" -> Nothing
+      str -> Just <| boolFromString str
+    optionToLabel o = case o of
+      Nothing -> "Ei määritelty"
+      Just l -> showBool l
+  in
+    enumSelect
+      { current = curr
+      , options = [ Just True, Just False, Nothing ]
+      , optionToString = optionToString
+      , optionFromString = optionFromString
+      , optionToLabel = optionToLabel
+      , msg = toMsg
+      , disabled = d
+      }
 
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
@@ -789,7 +761,7 @@ dmpIdEditorView dmpId d = div []
       , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
       ] []
   , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
-    <| documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType << documentIdTypeFromStr
+    <| documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType
   ]
 
 datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
@@ -802,7 +774,7 @@ datasetIdEditorView idx id d = div []
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdIdentifier << parseMaybe
       ] []
   , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
-    <| documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType << documentIdTypeFromStr
+    <| documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType
   ]
 
 licenseEditorView : Int -> Int -> Int -> License -> Bool -> Html Msg
@@ -866,7 +838,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionAccessUrl << parseMaybe
         ] []
     , inputFieldView "Saatavuus: " (Just "Onko aineisto julkisesti saatavilla avoimesti tai pyydettäessä?")
-      <| maybeDataAccessTypeSelect distribution.distributionDataAccess d <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDataAccess << maybeDataAccessTypeFromStr
+      <| maybeDataAccessTypeSelect distribution.distributionDataAccess d <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDataAccess
     , inputFieldView "Kuvaus: " Nothing
       <| textarea
         [ value <| withDefault "" distribution.distributionDescription
@@ -928,7 +900,6 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
       << ModifyDatasetMetadata metadataIdx
       << ModifyMetadataMetadataId
       << ModifyMetadataIdType
-      << metadataIdTypeFromStr
   ]
 
 metadataEditorView : Int -> Int -> Metadata -> Bool -> Html Msg
@@ -975,7 +946,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
       <| languageSelect metadata.metadataLanguage d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
-        << ModifyMetadataLanguage << langFromStr
+        << ModifyMetadataLanguage
     , inputFieldView "Dokumentaation sijainti: " (Just "Verkkosivun osoite, jossa dokumentaatio sijaitsee.")
       <| input
         [ value <| withDefault "" metadata.metadataLocationDocumentation
@@ -1082,7 +1053,7 @@ contactIdEditorView c d = div []
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
       ] []
   , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
-    <| personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType << personIdTypeFromStr
+    <| personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType
   ]
 
 contactEditorView : Contact -> Bool -> Html Msg
@@ -1119,7 +1090,7 @@ contributorIdEditorView idx c d = div []
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdIdentifier << parseMaybe
       ] []
   , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'ei tunnistetta', jos et halua lisätä tunnistetta.")
-    <| personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType << personIdTypeFromStr
+    <| personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType
   ]
 
 contributorEditorView : Int -> Contributor -> Bool -> Html Msg
@@ -1153,7 +1124,7 @@ contributorEditorView idx elem d = div []
         , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorOrganization << parseMaybe
         ] []
     , inputFieldView "Rooli: " (Just "Valitse listasta osallistujan roolia parhaiten kuvaava nimike.")
-      <| roleTypeSelect elem.contributorRole d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorRole << roleTypeFromStr
+      <| roleTypeSelect elem.contributorRole d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorRole
     , section [] [ contributorIdEditorView idx elem.contributorContributorId d ]
     ]
   ]
@@ -1184,7 +1155,7 @@ dataLifeCycleEditorView idx elem d = div []
         , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleBackupData
         ] []
     , inputFieldView "Datan poisto: " (Just "Millä tavoin aineisto poistetaan?")
-      <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionData << deletionDataTypeFromStr
+      <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionData
     , inputFieldView "Datan poistamispäivä: " (Just "Jos ainesto poistetaan, ilmoita tähän poistamisen päivämäärä.")
       <| input
         [ type_ "date"
@@ -1261,11 +1232,11 @@ datasetEditorView idx elem d = div []
         [ text "+ Lisää avainsana" ]
       ]
     , inputFieldView "Kieli: " Nothing
-      <| maybeLanguageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage << maybeLangFromStr
+      <| maybeLanguageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage
     , inputFieldView "Henkilötiedot: " (Just "Sisältääkö aineisto henkilötietoja, esim. henkilöiden nimi, henkilötunnus, sähköposti, puhelinnumero?")
-      <| personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData << personalDataTypeFromStr
+      <| personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData
     , inputFieldView "Sensitiivinen data: " (Just "Sisältääkö aineisto sensitiivistä dataa, esim. uhanalaisten lajien paikkatietoa, tms.?")
-      <| sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData << sensitiveDataTypeFromStr
+      <| sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData
     , inputFieldView "Aineiston uudelleenkäyttö: " Nothing
       <| maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
     , inputFieldView "Otsikko: " Nothing
@@ -1358,7 +1329,6 @@ ethicalIssueEditorView idx ethicalIssue d = div []
       <| ethicalIssuesTypeSelect ethicalIssue.ethicalIssueExist d <| OnModifyDmp
         << ModifyDmpEthicalIssue idx
         << ModifyEthicalIssueExist
-        << ethicalIssuesTypeFromStr
     , inputFieldView "Raportti eettisistä haasteista: " Nothing
       <| input
         [ value <| withDefault "" ethicalIssue.ethicalIssueReport
@@ -1493,9 +1463,9 @@ dmpEditorView dmp d mode session =
           ]
           []
     , inputFieldView "Kieli: " Nothing
-        <| languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage << langFromStr
+        <| languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage
     , inputFieldView "Tyyppi: " (Just "Ilmoita 'Priodiversity LIFE', mikäli aineistonhallintasuunnitelma liittyy siihen.")
-        <| dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp << dmpTypeFromStr
+        <| dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp
     , section [] [ dmpIdEditorView dmp.dmpDmpId d ]
     , section [] [ contactEditorView dmp.dmpContact d ]
     , section []

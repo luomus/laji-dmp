@@ -16,6 +16,12 @@ langFromStr s = case s of
   "LanguageTypeSv" -> LanguageTypeSv
   _ -> LanguageTypeFi
 
+langToStr : LanguageType -> String
+langToStr l = case l of
+  LanguageTypeEn -> "LanguageTypeEn"
+  LanguageTypeSv -> "LanguageTypeSv"
+  _ -> "LanguageTypeFi"
+
 showLanguage : LanguageType -> String
 showLanguage lang = case lang of
   LanguageTypeFi -> "Suomi"
@@ -29,6 +35,15 @@ dmpTypeFromStr s = case s of
   "DmpTypeNational" -> DmpTypeNational
   "DmpTypeInternational" -> DmpTypeInternational
   _ -> DmpTypeOrganizational
+
+dmpTypeToStr : DmpType -> String
+dmpTypeToStr v =
+  case v of
+    DmpTypeStudent       -> "DmpTypeStudent"
+    DmpTypeAcademic      -> "DmpTypeAcademic"
+    DmpTypeNational      -> "DmpTypeNational"
+    DmpTypeInternational -> "DmpTypeInternational"
+    DmpTypeOrganizational -> "DmpTypeOrganizational"
 
 showDmpType : DmpType -> String
 showDmpType a = case a of
@@ -47,6 +62,16 @@ documentIdTypeFromStr s = case s of
   "DocumentIdTypeOther" -> DocumentIdTypeOther
   _                    -> DocumentIdTypeNone
 
+documentIdTypeToStr : DocumentIdType -> String
+documentIdTypeToStr v =
+  case v of
+    DocumentIdTypeHandle -> "DocumentIdTypeHandle"
+    DocumentIdTypeDoi    -> "DocumentIdTypeDoi"
+    DocumentIdTypeArk    -> "DocumentIdTypeArk"
+    DocumentIdTypeUrl    -> "DocumentIdTypeUrl"
+    DocumentIdTypeOther  -> "DocumentIdTypeOther"
+    DocumentIdTypeNone   -> "DocumentIdTypeNone"
+
 showDocumentIdType : DocumentIdType -> String
 showDocumentIdType a = case a of
   DocumentIdTypeHandle -> "handle"
@@ -64,6 +89,15 @@ roleTypeFromStr s = case s of
   "RoleTypeAuthorOfDataSet"       -> RoleTypeAuthorOfDataSet
   _                               -> RoleTypeOther
 
+roleTypeToStr : RoleType -> String
+roleTypeToStr v =
+  case v of
+    RoleTypeWorkPackageLeader     -> "RoleTypeWorkPackageLeader"
+    RoleTypeDataController        -> "RoleTypeDataController"
+    RoleTypePrincipleInvestigator -> "RoleTypePrincipleInvestigator"
+    RoleTypeAuthorOfDataSet       -> "RoleTypeAuthorOfDataSet"
+    RoleTypeOther                 -> "RoleTypeOther"
+
 showRoleType : RoleType -> String
 showRoleType role = case role of
   RoleTypeWorkPackageLeader -> "Työpaketin johtaja"
@@ -80,6 +114,15 @@ personIdTypeFromStr s = case s of
   "PersonIdTypeOther"  -> PersonIdTypeOther
   _                    -> PersonIdTypeNone
 
+personIdTypeToStr : PersonIdType -> String
+personIdTypeToStr v =
+  case v of
+    PersonIdTypeOrcid  -> "PersonIdTypeOrcid"
+    PersonIdTypeIsni   -> "PersonIdTypeIsni"
+    PersonIdTypeOpenid -> "PersonIdTypeOpenid"
+    PersonIdTypeOther  -> "PersonIdTypeOther"
+    PersonIdTypeNone   -> "PersonIdTypeNone"
+
 showPersonIdType : PersonIdType -> String
 showPersonIdType t = case t of
   PersonIdTypeOrcid -> "Orcid"
@@ -94,11 +137,24 @@ deletionDataTypeFromStr s = case s of
   "DeletionDataTypeNo"      -> DeletionDataTypeNo
   _                         -> DeletionDataTypeUnknown
 
+deletionDataTypeToStr : DeletionDataType -> String
+deletionDataTypeToStr v =
+  case v of
+    DeletionDataTypeYes     -> "DeletionDataTypeYes"
+    DeletionDataTypeNo      -> "DeletionDataTypeNo"
+    DeletionDataTypeUnknown -> "DeletionDataTypeUnknown"
+
 personalDataTypeFromStr : String -> PersonalDataType
 personalDataTypeFromStr s = case s of
   "PersonalDataTypeYes"     -> PersonalDataTypeYes
   "PersonalDataTypeNo"      -> PersonalDataTypeNo
   _                         -> PersonalDataTypeUnknown
+
+personalDataTypeToStr : PersonalDataType -> String
+personalDataTypeToStr p = case p of
+  PersonalDataTypeYes -> "PersonalDataTypeYes"
+  PersonalDataTypeNo -> "PersonalDataTypeNo"
+  PersonalDataTypeUnknown -> "PersonalDataTypeUnknown"
 
 sensitiveDataTypeFromStr : String -> SensitiveDataType
 sensitiveDataTypeFromStr s = case s of
@@ -106,11 +162,25 @@ sensitiveDataTypeFromStr s = case s of
   "SensitiveDataTypeNo"      -> SensitiveDataTypeNo
   _                          -> SensitiveDataTypeUnknown
 
+sensitiveDataTypeToStr : SensitiveDataType -> String
+sensitiveDataTypeToStr v =
+  case v of
+    SensitiveDataTypeYes -> "SensitiveDataTypeYes"
+    SensitiveDataTypeNo -> "SensitiveDataTypeNo"
+    SensitiveDataTypeUnknown -> "SensitiveDataTypeUnknown"
+
 ethicalIssuesTypeFromStr : String -> EthicalIssuesType
 ethicalIssuesTypeFromStr s = case s of
   "EthicalIssuesTypeYes" -> EthicalIssuesTypeYes
   "EthicalIssuesTypeNo"  -> EthicalIssuesTypeNo
   _                      -> EthicalIssuesTypeUnknown
+
+ethicalIssuesTypeToStr : EthicalIssuesType -> String
+ethicalIssuesTypeToStr v =
+  case v of
+    EthicalIssuesTypeYes -> "EthicalIssuesTypeYes"
+    EthicalIssuesTypeNo -> "EthicalIssuesTypeNo"
+    EthicalIssuesTypeUnknown -> "EthicalIssuesTypeUnknown"
 
 dataAccessTypeFromStr : String -> DataAccessType
 dataAccessTypeFromStr s = case s of
@@ -118,11 +188,24 @@ dataAccessTypeFromStr s = case s of
   "DataAccessTypeClosed"     -> DataAccessTypeClosed
   _                          -> DataAccessTypeOpen
 
+dataAccessTypeToStr : DataAccessType -> String
+dataAccessTypeToStr s = case s of
+  DataAccessTypeShared     -> "DataAccessTypeShared"
+  DataAccessTypeClosed     -> "DataAccessTypeClosed"
+  _                        -> "DataAccessTypeOpen"
+
 metadataIdTypeFromStr : String -> MetadataIdType
 metadataIdTypeFromStr s = case s of
   "MetadataIdTypeUrl"       -> MetadataIdTypeUrl
   "MetadataIdTypeOther"     -> MetadataIdTypeOther
   _                         -> MetadataIdTypeNone
+
+metadataIdTypeToStr : MetadataIdType -> String
+metadataIdTypeToStr v =
+  case v of
+    MetadataIdTypeUrl -> "MetadataIdTypeUrl"
+    MetadataIdTypeOther -> "MetadataIdTypeOther"
+    MetadataIdTypeNone -> "MetadataIdTypeNone"
 
 showDeletionDataType : DeletionDataType -> String
 showDeletionDataType d = case d of
@@ -175,4 +258,14 @@ httpErrorToString err = case err of
 
 boolToString : Bool -> String
 boolToString b = if b then "True" else "False"
+
+boolFromString : String -> Bool
+boolFromString b = case b of
+  "True" -> True
+  _ -> False
+
+showBool : Bool -> String
+showBool b = case b of
+  True -> "Kyllä"
+  False -> "Ei"
 
