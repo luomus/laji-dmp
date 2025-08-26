@@ -6,8 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-backend
-  BACKEND_DIR: ./laji-dmp-backend
 
 jobs:
   build-and-push-image:
@@ -15,7 +13,13 @@ jobs:
     permissions:
       contents: read
       packages: write
-
+    strategy:
+      matrix:
+        include:
+          - image: ${{ github.repository }}-backend
+            context: ./laji-dmp-backend
+          - image: ${{ github.repository }}-frontend
+            context: ./laji-dmp-frontend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,18 +28,18 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ matrix.image }}
 
       - name: Buildah Action
         id: build_image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ matrix.image }}
           tags: ${{ steps.meta.outputs.tags }}
           oci: true
-          context: ${{env.BACKEND_DIR}}
+          context: ${{ matrix.context }}
           containerfiles: |
-            ${{env.BACKEND_DIR}}/Dockerfile
+            ${{ matrix.context }}/Dockerfile
 
       - name: Push To GHCR
         uses: redhat-actions/push-to-registry@v2
