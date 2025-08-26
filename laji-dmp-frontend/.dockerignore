@@ -1,0 +1,4 @@
+.env
+.env.*
+openshift/
+docker-compose.yml
