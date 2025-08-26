@@ -15,6 +15,8 @@ import Models exposing (Dmp)
 import Html.Attributes exposing (class)
 import User
 import Config exposing (Config)
+import Utils exposing (httpErrorToString)
+import User exposing (LoginSession(..))
 
 type EditorState
   = EditorModel Views.DmpEditor.Model
@@ -79,22 +81,26 @@ update cfg msg model = case (msg, model.state) of
         , Cmd.none
         )
       Err e ->
-        ({ model | state = Error "Error loading DMP response" }, Cmd.none)
+        ({ model | state = Error <| "Error loading DMP response: " ++ httpErrorToString e }, Cmd.none)
   (_, _) -> ({ model | state = Error "Error loading DMP" }, Cmd.none)
 
 view : Model -> { title : String, body : Html Msg }
 view model =
   { title = "DMP:n muokkaus"
-  , body = Html.div [] <| case model.state of
-    EditorModel subModel ->
-      [ Html.map EditorMsg <| Views.DmpEditor.view subModel
-      , button [ onClick OnDelete, class "btn btn-danger" ] [text "Poista DMP"]
-      , dialog deleteDialogId []
-        [ text "Haluatko varmasti poistaa DMP:n?"
-        , button [ onClick OnConfirmDelete ] [text "Poista DMP"]
-        , button [ onClick OnCancelDelete ] [text "Peruuta"]
+  , body = case model.session of
+    LoggedIn token person ->
+      Html.div [] <| case model.state of
+      EditorModel subModel ->
+        [ Html.map EditorMsg <| Views.DmpEditor.view subModel
+        , button [ onClick OnDelete, class "btn btn-danger" ] [text "Poista DMP"]
+        , dialog deleteDialogId []
+          [ text "Haluatko varmasti poistaa DMP:n?"
+          , button [ onClick OnConfirmDelete ] [text "Poista DMP"]
+          , button [ onClick OnCancelDelete ] [text "Peruuta"]
+          ]
         ]
-      ]
-    Loading key id -> [text "Ladataan DMP:tä..."]
-    Error err -> [text <| "Virhe: " ++ err]
+      Loading key id -> [text "Ladataan DMP:tä..."]
+      Error err -> [text <| "Virhe: " ++ err]
+    LoadingPerson token -> Html.div [] [ text "Logging in..." ]
+    _ -> Html.div [] [ text "Error: not logged in!" ]
   }

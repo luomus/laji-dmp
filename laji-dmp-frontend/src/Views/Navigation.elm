@@ -27,9 +27,9 @@ loginView loginSession deleteMsg =
     [ case loginSession of
       LoggedIn token person -> div [class "logged-in"]
         [ text <| person.fullName ++ " (" ++ person.id ++ ")"
-        , Html.button [ Html.Events.onClick <| deleteMsg token] [Html.text "Kirjaudu ulos"]
+        , Html.button [ class "btn", Html.Events.onClick <| deleteMsg token] [Html.text "Kirjaudu ulos"]
         ]
-      NotLoggedIn -> a [ href "https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next=" ] [ text "Kirjaudu" ]
+      NotLoggedIn -> a [ class "btn", href "https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next=" ] [ text "Kirjaudu" ]
       LoadingPerson token -> Html.text "Kirjaudutaan..."
       DeletingToken token -> Html.text "Kirjaudutaan ulos..."
     ]

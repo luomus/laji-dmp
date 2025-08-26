@@ -16,6 +16,9 @@ import DmpApi exposing (getDmp)
 import Models exposing (..)
 import Utils exposing (..)
 import Config exposing (Config)
+import Html exposing (b)
+import Html exposing (section)
+import Array exposing (Array)
 
 type DmpState = Error String | Loading | HasDmp Dmp
 
@@ -45,28 +48,28 @@ update session msg model =
 
 maybeFieldView : String -> Maybe String -> Html Msg
 maybeFieldView label m = case m of
-  Just str -> p [] [ text <| label ++ str ]
+  Just str -> fieldView label str
   Nothing -> text ""
 
 dmpIdView : DmpId -> Html Msg
 dmpIdView dmpId = div []
-  [ h3 [] [ text "DMP:n tunniste" ]
+  [ h4 [] [ text "DMP:n tunniste" ]
   , maybeFieldView "Tunniste: " dmpId.dmpIdIdentifier
-  , p [] [ text <| "Tyyppi: " ++ showDocumentIdType dmpId.dmpIdType ]
+  , fieldView "Tyyppi: " <| showDocumentIdType dmpId.dmpIdType
   ]
 
 contactIdView : ContactId -> Html Msg
 contactIdView contactId = div []
-  [ h3 [] [ text "Kontaktin tunniste" ]
+  [ h4 [] [ text "Kontaktin tunniste" ]
   , maybeFieldView "Tunniste: " contactId.contactIdIdentifier
-  , p [] [ text <| "Tyyppi: " ++ showPersonIdType contactId.contactIdType ]
+  , fieldView "Tyyppi: " <| showPersonIdType contactId.contactIdType
   ]
 
 contactView : Contact -> Html Msg
 contactView contact = div []
   [ h3 [] [ text "Kontakti" ]
-  , p [] [ text <| "Sähköpostiosoite: " ++ contact.contactMbox ]
-  , p [] [ text <| "Nimi: " ++ contact.contactName ]
+  , fieldView "Sähköpostiosoite: " contact.contactMbox
+  , fieldView "Nimi: " contact.contactName
   , maybeFieldView "Organisaatio: " contact.contactOrganization
   , contactIdView contact.contactContactId
   ]
@@ -75,79 +78,79 @@ contributorIdView : ContributorId -> Html Msg
 contributorIdView c = div []
   [ h4 [] [ text "Osallistujan tunniste" ]
   , maybeFieldView "Tunniste: " c.contributorIdIdentifier
-  , p [] [ text <| "Tyyppi: " ++ showPersonIdType c.contributorIdType ]
+  , fieldView "Tyyppi: " <| showPersonIdType c.contributorIdType
   ]
 
-contributorView : Contributor -> Html Msg
-contributorView c = div []
-  [ h3 [] [ text "Osallistuja" ]
+contributorView : Int -> Contributor -> Html Msg
+contributorView idx c = div []
+  [ h3 [] [ text <| "Osallistuja " ++ String.fromInt (idx + 1) ]
   , maybeFieldView "Sähköpostiosoite: " c.contributorMbox
-  , p [] [ text <| "Nimi: " ++ c.contributorName ]
+  , fieldView "Nimi: " <| c.contributorName
   , maybeFieldView "Organisaatio: " c.contributorOrganization
-  , p [] [ text <| "Rooli: " ++ showRoleType c.contributorRole ]
+  , fieldView "Rooli: " <| showRoleType c.contributorRole
   , contributorIdView c.contributorContributorId
   ]
 
-contributorsView : Array.Array Contributor -> Html Msg
-contributorsView c = div [] <| Array.toList <| Array.map contributorView c
+contributorsView : Array Contributor -> Html Msg
+contributorsView c = div [] <| Array.toList <| Array.indexedMap contributorView c
 
-dataLifeCycleView : DataLifeCycle -> Html Msg
-dataLifeCycleView d = div []
-  [ h3 [] [ text "Datan elinkaari" ]
-  , p [] [ text <| "Arkistointi: " ++ boolToString d.dataLifeCycleArchivingServicesData ]
-  , p [] [ text <| "Datan varmuuskopiointi: " ++ d.dataLifeCycleBackupData ]
-  , p [] [ text <| "Datan poistaminen: " ++ showDeletionDataType d.dataLifeCycleDeletionData ]
+dataLifeCycleView : Int -> DataLifeCycle -> Html Msg
+dataLifeCycleView idx d = div []
+  [ h3 [] [ text <| "Datan elinkaari " ++ String.fromInt (idx + 1) ]
+  , fieldView "Arkistointi: " <| boolToString d.dataLifeCycleArchivingServicesData
+  , fieldView "Datan varmuuskopiointi: " <| d.dataLifeCycleBackupData
+  , fieldView "Datan poistaminen: " <| showDeletionDataType d.dataLifeCycleDeletionData
   , maybeFieldView "Datan poistamispäivä: " <| Maybe.map showDay d.dataLifeCycleDeletionWhenData
   ]
 
-dataLifeCyclesView : Array.Array DataLifeCycle -> Html Msg
-dataLifeCyclesView c = div [] <| Array.toList <| Array.map dataLifeCycleView c
+dataLifeCyclesView : Array DataLifeCycle -> Html Msg
+dataLifeCyclesView c = div [] <| Array.toList <| Array.indexedMap dataLifeCycleView c
 
 datasetIdView : DatasetId -> Html Msg
 datasetIdView d = div []
   [ h4 [] [ text "Aineiston tunniste" ]
   , maybeFieldView "Tunniste: " d.datasetIdIdentifier
-  , p [] [ text <| "Tyyppi: " ++ showDocumentIdType d.datasetIdType ]
+  , fieldView "Tyyppi: " <| showDocumentIdType d.datasetIdType
   ]
 
-licenseView : License -> Html Msg
-licenseView l = div []
-  [ h5 [] [ text "Lisenssi" ]
-  , p [] [ text <| "Käytetty lisenssi: " ++ l.licenseRef ]
-  , p [] [ text <| "Lisenssin käyttöönottopäivä: " ++ showDay l.licenseStartDate ]
+licenseView : Int -> License -> Html Msg
+licenseView idx l = div []
+  [ h5 [] [ text <| "Lisenssi " ++ String.fromInt (idx + 1) ]
+  , fieldView "Käytetty lisenssi: " <| l.licenseRef
+  , fieldView "Lisenssin käyttöönottopäivä: " <| showDay l.licenseStartDate
   ]
 
-licensesView : Array.Array License -> Html Msg
-licensesView c = div [] <| Array.toList <| Array.map licenseView c
+licensesView : Array License -> Html Msg
+licensesView c = div [] <| Array.toList <| Array.indexedMap licenseView c
 
-distributionView : Distribution -> Html Msg
-distributionView d = div []
-  [ h4 [] [ text "Julkaisu" ]
-  , p [] [ text <| "Otsikko: " ++ d.distributionTitle ]
+distributionView : Int -> Distribution -> Html Msg
+distributionView idx d = div []
+  [ h4 [] [ text <| "Julkaisu " ++ String.fromInt (idx + 1) ]
+  , fieldView "Otsikko: " <| d.distributionTitle
   , maybeFieldView "Kuvaus: " d.distributionDescription
   , maybeFieldView "Julkaisun osoite: " d.distributionAccessUrl
   , maybeFieldView "Saatavuus: " <| Maybe.map showDataAccessType d.distributionDataAccess
   , maybeFieldView "Latausosoite: " d.distributionDownloadUri
   , maybeFieldView "Tiedostotyyppi: " d.distributionFormat
-  , div [] [ licensesView d.distributionLicenses ]
+  , section [] [ licensesView d.distributionLicenses ]
   ]
 
-distributionsView : Array.Array Distribution -> Html Msg
-distributionsView c = div [] <| Array.toList <| Array.map distributionView c
+distributionsView : Array Distribution -> Html Msg
+distributionsView c = div [] <| Array.toList <| Array.indexedMap distributionView c
 
 metadataIdView : MetadataId -> Html Msg
 metadataIdView m = div []
   [ maybeFieldView "Tunniste: " m.metadataIdIdentifier
-  , p [] [ text <| "Tyyppi: " ++ showMetadataIdType m.metadataIdType ]
+  , fieldView "Tyyppi: " <| showMetadataIdType m.metadataIdType
   ]
 
-metadataView : Metadata -> Html Msg
-metadataView m = div []
-  [ h4 [] [ text "Metadata" ]
+metadataView : Int -> Metadata -> Html Msg
+metadataView idx m = div []
+  [ h4 [] [ text <| "Metadata " ++ String.fromInt (idx + 1) ]
   , maybeFieldView "Dokumentaation avoimuus: " <| Maybe.map boolToString m.metadataAccessDocumentation
   , maybeFieldView "Datamalli: " m.metadataDataModel
   , maybeFieldView "Kuvaus: " m.metadataDescription
-  , p [] [ text <| "Kieli: " ++ showLanguage m.metadataLanguage ]
+  , fieldView "Kieli: " <| showLanguage m.metadataLanguage
   , maybeFieldView "Dokumentaation sijainti: " m.metadataLocationDocumentation
   , maybeFieldView "Metadatan avoimuus: " <| Maybe.map boolToString m.metadataOpen
   , maybeFieldView "Metadatan osoite: " m.metadataLocation
@@ -155,92 +158,96 @@ metadataView m = div []
   , metadataIdView m.metadataMetadataId
   ]
 
-metadatasView : Array.Array Metadata -> Html Msg
-metadatasView c = div [] <| Array.toList <| Array.map metadataView c
+metadatasView : Array Metadata -> Html Msg
+metadatasView c = div [] <| Array.toList <| Array.indexedMap metadataView c
 
-rightsView : RightsRelatedToData -> Html Msg
-rightsView r = div []
-  [ h4 [] [ text "Datan oikeudet" ]
+rightsView : Int -> RightsRelatedToData -> Html Msg
+rightsView idx r = div []
+  [ h4 [] [ text <| "Datan oikeudet " ++ String.fromInt (idx + 1) ]
   , maybeFieldView "Datan omistaja: " r.rightsOwnershipDataRight
   ]
 
-rightsArrView : Array.Array RightsRelatedToData -> Html Msg
-rightsArrView c = div [] <| Array.toList <| Array.map rightsView c
+rightsArrView : Array RightsRelatedToData -> Html Msg
+rightsArrView c = div [] <| Array.toList <| Array.indexedMap rightsView c
 
-securityView : SecurityAndPrivacy -> Html Msg
-securityView s = div []
-  [ h4 [] [ text "Tietoturva" ]
-  , p [] [ text <| "Otsikko: " ++ s.securityTitle ]
-  , p [] [ text <| "Tietoturvakäytäntöjen kuvaus: " ++ s.securityDescription ]
+securityView : Int -> SecurityAndPrivacy -> Html Msg
+securityView idx s = div []
+  [ h4 [] [ text <| "Tietoturva " ++ String.fromInt (idx + 1) ]
+  , fieldView "Otsikko: " <| s.securityTitle
+  , fieldView "Tietoturvakäytäntöjen kuvaus: " <| s.securityDescription
   ]
 
-securityArrView : Array.Array SecurityAndPrivacy -> Html Msg
-securityArrView c = div [] <| Array.toList <| Array.map securityView c
+securityArrView : Array SecurityAndPrivacy -> Html Msg
+securityArrView c = div [] <| Array.toList <| Array.indexedMap securityView c
 
-datasetView : Dataset -> Html Msg
-datasetView d = div []
-  [ h3 [] [ text <| "Aineisto" ]
+datasetView : Int -> Dataset -> Html Msg
+datasetView idx d = div []
+  [ h3 [] [ text <| "Aineisto " ++ String.fromInt (idx + 1) ]
   , maybeFieldView "Laadunvarmistuksen kuvaus: " d.datasetDataQualityAssurance
   , maybeFieldView "Datanjakamisen haasteet: " d.datasetDataSharingIssues
   , maybeFieldView "Aineiston kuvaus: " d.datasetDescription
   , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
   , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
   , maybeFieldView "Kieli: " <| Maybe.map showLanguage d.datasetLanguage
-  , p [] [ text <| "Henkilötiedot: " ++ showPersonalDataType d.datasetPersonalData ]
-  , p [] [ text <| "Sensitiivinen data: " ++ showSensitiveDataType d.datasetSensitiveData ]
+  , fieldView "Henkilötiedot: " <| showPersonalDataType d.datasetPersonalData
+  , fieldView "Sensitiivinen data: " <| showSensitiveDataType d.datasetSensitiveData
   , maybeFieldView "Aineston uudelleenkäyttö: " <| Maybe.map boolToString d.datasetReuseDataset
-  , p [] [ text <| "Otsikko: " ++ d.datasetTitle ]
+  , fieldView "Otsikko: " <| d.datasetTitle
   , maybeFieldView "Tyyppi: " d.datasetType
   , datasetIdView d.datasetDatasetId
-  , distributionsView d.datasetDistributions
-  , metadatasView d.datasetMetadata
-  , rightsArrView d.datasetRightsRelatedToData
-  , securityArrView d.datasetSecurityAndPrivacy
+  , section [] [ distributionsView d.datasetDistributions ]
+  , section [] [ metadatasView d.datasetMetadata ]
+  , section [] [ rightsArrView d.datasetRightsRelatedToData ]
+  , section [] [ securityArrView d.datasetSecurityAndPrivacy ]
   ]
 
-datasetsView : Array.Array Dataset -> Html Msg
-datasetsView c = div [] <| Array.toList <| Array.map datasetView c
+datasetsView : Array Dataset -> Html Msg
+datasetsView c = div [] <| Array.toList <| Array.indexedMap datasetView c
 
-ethicalIssueView : EthicalIssue -> Html Msg
-ethicalIssueView s = div []
-  [ h3 [] [ text "Eettiset haasteet" ]
+ethicalIssueView : Int -> EthicalIssue -> Html Msg
+ethicalIssueView idx s = div []
+  [ h3 [] [ text <| "Eettiset haasteet " ++ String.fromInt (idx + 1) ]
   , maybeFieldView "Kuvaus eettisistä haasteista: " s.ethicalIssueDescription
-  , p [] [ text <| "Eettisiä haasteita on: " ++ showEthicalIssuesType s.ethicalIssueExist ]
+  , fieldView "Eettisiä haasteita on: " <| showEthicalIssuesType s.ethicalIssueExist
   , maybeFieldView "Raportti eettisistä haasteista: " s.ethicalIssueReport
   ]
 
-ethicalIssuesView : Array.Array EthicalIssue -> Html Msg
-ethicalIssuesView c = div [] <| Array.toList <| Array.map ethicalIssueView c
+ethicalIssuesView : Array EthicalIssue -> Html Msg
+ethicalIssuesView c = div [] <| Array.toList <| Array.indexedMap ethicalIssueView c
 
-projectView : Project -> Html Msg
-projectView s = div []
-  [ h3 [] [ text "Projekti" ]
-  , p [] [ text <| "Kuvaus: " ++ s.projectDescription ]
+projectView : Int -> Project -> Html Msg
+projectView idx s = div []
+  [ h3 [] [ text <| "Projekti " ++ String.fromInt (idx + 1) ]
+  , fieldView "Kuvaus: " <| s.projectDescription
   , maybeFieldView "Projektin loppumispäivä: " <| Maybe.map unwrapDay s.projectEndDate
-  , p [] [ text <| "Projektin alkamispäivä: " ++ unwrapDay s.projectStartDate ]
-  , p [] [ text <| "Otsikko: " ++ s.projectTitle ]
+  , fieldView "Projektin alkamispäivä: " <| unwrapDay s.projectStartDate
+  , fieldView "Otsikko: " <| s.projectTitle
   ]
 
-projectsView : Array.Array Project -> Html Msg
-projectsView c = div [] <| Array.toList <| Array.map projectView c
+projectsView : Array Project -> Html Msg
+projectsView c = div [] <| Array.toList <| Array.indexedMap projectView c
+
+fieldView : String -> String -> Html Msg
+fieldView label value = 
+  div [ class "info-field" ] [ div [ class "field-label" ] [ text label ], div [ class "field-value" ] [ text value ] ]
 
 dmpView : Dmp -> Html Msg
 dmpView dmp = div []
-  [ p [] [ text <| "Otsikko: " ++ dmp.dmpTitle ]
-  , p [] [ text <| "Organisaatio: " ++ dmp.dmpOrgId ]
+  [ fieldView "Otsikko: " dmp.dmpTitle
+  , fieldView "Organisaatio: " dmp.dmpOrgId
   , maybeFieldView "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated
   , maybeFieldView "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified
   , maybeFieldView "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp
-  , p [] [ text <| "Kieli: " ++ showLanguage dmp.dmpLanguage ]
-  , p [] [ text <| "Tyyppi: " ++ showDmpType dmp.dmpTypeDmp ]
+  , fieldView "Kieli: " <| showLanguage dmp.dmpLanguage
+  , fieldView "Tyyppi: " <| showDmpType dmp.dmpTypeDmp
   , maybeFieldView "Kuvaus: " <| dmp.dmpDescription
   , dmpIdView dmp.dmpDmpId
   , contactView dmp.dmpContact
-  , contributorsView dmp.dmpContributors
-  , dataLifeCyclesView dmp.dmpDataLifeCycles
-  , datasetsView dmp.dmpDatasets
-  , ethicalIssuesView dmp.dmpEthicalIssues
-  , projectsView dmp.dmpProjects
+  , section [] [ contributorsView dmp.dmpContributors ]
+  , section [] [ dataLifeCyclesView dmp.dmpDataLifeCycles ]
+  , section [] [ datasetsView dmp.dmpDatasets ]
+  , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
+  , section [] [ projectsView dmp.dmpProjects ]
   ]
 
 view : Model -> { title : String, body : Html Msg }
@@ -252,13 +259,13 @@ view model =
         case dmp.dmpId of
           Just id ->
             [ h2 [] [ text <| "DMP " ++ (String.fromInt id) ++ " tiedot" ]
-            , dmpView dmp
             , div [] <| case model.session of
               User.LoggedIn _ person ->
                 if Array.length (Array.filter (\r -> r == User.Admin) person.role) > 0
                   then [ a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit", class "btn"] [text "Muokkaa"] ]
                   else []
               _ -> []
+            , dmpView dmp
             ]
           Nothing -> [text "Virhe: DMP:n tunniste puuttuu"]
       Loading -> [text "Ladataan DMP:tä..."]

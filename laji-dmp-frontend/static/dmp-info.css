@@ -1,0 +1,12 @@
+.info-field {
+  margin: 16px 0px;
+}
+.info-field .field-label {
+  display: inline;
+  color: var(--neutral-7);
+}
+.info-field .field-value {
+  display: inline;
+  color: var(--neutral-8);
+  font-size: 18px;
+}

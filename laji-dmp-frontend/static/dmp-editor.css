@@ -38,3 +38,41 @@
   margin: 24px 0px;
   background-color: var(--neutral-1);
 }
+
+.dmp-editor .keyword-editor input {
+  display: inline-block;
+}
+
+.sub-form {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px dashed var(--neutral-5);
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.dmp-editor .form-field {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.dmp-editor .form-field p {
+  margin-top: 8px;
+}
+
+.dmp-editor .form-field label {
+  display: block;
+  color: var(--neutral-7);
+}
+
+.btn.btn-danger.btn-remove {
+  display: inline-block;
+  border-radius: 100%;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  margin-left: 8px;
+}
+

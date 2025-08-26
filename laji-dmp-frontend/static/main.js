@@ -14,6 +14,7 @@ var app = Elm.Main.init({
 });
 
 app.ports.updateLocalStorage.subscribe(message => {
+  console.log(message)
   localStorage.setItem("login", JSON.stringify(message));
 });
 app.ports.toggleDialog.subscribe(id => {
