@@ -6,9 +6,9 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine3.22-slim AS front-end
+FROM nginxinc/nginx-unprivileged:1-alpine3.22-slim AS front-end
 
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=nginx:root --chmod=664 ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dmp-frontend/dist /usr/share/nginx/html/
 
 CMD ["nginx", "-g", "daemon off;"]
