@@ -6,8 +6,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  VITE_DMP_API_BASE: ${{ github.ref == 'refs.heads.master' && vars.PROD_DMP_API_BASE || vars.DEV_DMP_API_BASE }}
-  VITE_LAJI_API_BASE: ${{ github.ref == 'refs.heads.development' && vars.PROD_LAJI_API_BASE || vars.DEV_LAJI_API_BASE }}
+  DMP_API_BASE: ${{ github.ref == 'refs.heads.master' && vars.PROD_DMP_API_BASE || vars.DEV_DMP_API_BASE }}
+  LAJI_API_BASE: ${{ github.ref == 'refs.heads.development' && vars.PROD_LAJI_API_BASE || vars.DEV_LAJI_API_BASE }}
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -37,6 +37,9 @@ jobs:
         with:
           image: ${{ matrix.image }}
           tags: ${{ steps.meta.outputs.tags }}
+          envs: |
+            VITE_DMP_API_BASE=${{ env.DMP_API_BASE }}
+            VITE_LAJI_API_BASE=${{ env.LAJI_API_BASE }}
           oci: true
           context: ${{ matrix.context }}
           containerfiles: |
