@@ -357,7 +357,7 @@ dmpDecoder = Json.Decode.succeed Dmp
   |> DP.required "dmpContact" contactDecoder
   |> DP.required "dmpDmpId" dmpIdDecoder
   |> DP.required "dmpContributors" (D.array contributorDecoder)
-  |> DP.required "dmpDataLifeCycles" (D.array dataLifeCycleDecoder)
+  |> DP.optional "dmpDataLifeCycle" (D.nullable dataLifeCycleDecoder) Nothing
   |> DP.required "dmpDatasets" (D.array datasetDecoder)
   |> DP.required "dmpEthicalIssues" (D.array ethicalIssueDecoder)
   |> DP.required "dmpProjects" (D.array projectDecoder)
@@ -376,7 +376,7 @@ encodeDmp t = E.object
   , ( "dmpContact", encodeContact t.dmpContact)
   , ( "dmpDmpId", encodeDmpId t.dmpDmpId)
   , ( "dmpContributors", E.array encodeContributor t.dmpContributors)
-  , ( "dmpDataLifeCycles", E.array encodeDataLifeCycle t.dmpDataLifeCycles)
+  , ( "dmpDataLifeCycle", encodeMaybe encodeDataLifeCycle t.dmpDataLifeCycle)
   , ( "dmpDatasets", E.array encodeDataset t.dmpDatasets)
   , ( "dmpEthicalIssues", E.array encodeEthicalIssue t.dmpEthicalIssues)
   , ( "dmpProjects", E.array encodeProject t.dmpProjects)

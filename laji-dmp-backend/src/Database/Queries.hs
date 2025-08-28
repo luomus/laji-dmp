@@ -23,6 +23,7 @@ import Database.PostgreSQL.Simple.FromField ()
 import qualified Data.Text as T
 import Database.PostgreSQL.Simple.Types (PGArray(PGArray, fromPGArray))
 import qualified Data.Maybe
+import Data.Maybe (listToMaybe)
 
 groupQueryResultBy :: Ord b => [t] -> (t -> b) -> [[t]]
 groupQueryResultBy dmps by = groupBy (\a b -> by a == by b) (sortOn by dmps)
@@ -298,7 +299,7 @@ parseDmp rows =
           (head contacts)
           (head dmpIds)
           contributors
-          dataLifeCycles
+          (listToMaybe dataLifeCycles)
           datasets
           ethicalIssues
           projects
@@ -788,7 +789,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
     , Models.dmpTypeDmp self
     )
   forM_ (Models.dmpContributors self) (\a -> insertContributor conn a i)
-  forM_ (Models.dmpDataLifeCycles self) (\a -> insertDataLifeCycle conn a i)
+  forM_ (Models.dmpDataLifeCycle self) (\a -> insertDataLifeCycle conn a i)
   forM_ (Models.dmpDatasets self) (\a -> insertDataset conn a i)
   forM_ (Models.dmpEthicalIssues self) (\a -> insertEthicalIssue conn a i)
   forM_ (Models.dmpProjects self) (\a -> insertProject conn a i)
@@ -874,7 +875,7 @@ WHERE id = ?;
   _ <- deleteContributors conn i
   forM_ (Models.dmpContributors self) (\a -> insertContributor conn a i)
   _ <- deleteDataLifeCycles conn i
-  forM_ (Models.dmpDataLifeCycles self) (\a -> insertDataLifeCycle conn a i)
+  forM_ (Models.dmpDataLifeCycle self) (\a -> insertDataLifeCycle conn a i)
   _ <- deleteDatasets conn i
   forM_ (Models.dmpDatasets self) (\a -> insertDataset conn a i)
   _ <- deleteEthicalIssues conn i

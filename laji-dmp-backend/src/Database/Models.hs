@@ -337,7 +337,7 @@ data Dmp = Dmp
   , dmpContact :: Contact
   , dmpDmpId :: DmpId
   , dmpContributors :: [Contributor]
-  , dmpDataLifeCycles :: [DataLifeCycle]
+  , dmpDataLifeCycle :: Maybe DataLifeCycle
   , dmpDatasets :: [Dataset]
   , dmpEthicalIssues :: [EthicalIssue]
   , dmpProjects :: [Project]
