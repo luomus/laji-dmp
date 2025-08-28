@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-
+  MODE: ${{ github.ref == 'refs.heads.master' && 'production' || 'staging' }}
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -36,6 +36,8 @@ jobs:
         with:
           image: ${{ matrix.image }}
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            MODE=${{ env.MODE }}
           oci: true
           context: ${{ matrix.context }}
           containerfiles: |
