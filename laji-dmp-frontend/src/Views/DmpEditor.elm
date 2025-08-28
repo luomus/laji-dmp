@@ -1154,7 +1154,7 @@ dataLifeCycleEditorView elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleBackupData
         ] []
-    , inputFieldView "Datan poisto: " (Just "Millä tavoin aineisto poistetaan?")
+    , inputFieldView "Datan poisto: " (Just "Poistetaanko aineisto tietyn päivämäärän jälkeen?")
       <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleDeletionData
     , inputFieldView "Datan poistamispäivä: " (Just "Jos ainesto poistetaan, ilmoita tähän poistamisen päivämäärä.")
       <| input
