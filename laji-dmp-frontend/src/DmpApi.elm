@@ -64,6 +64,7 @@ dmpTypeDecoder = Json.Decode.map
     "DmpTypeAcademic" -> DmpTypeAcademic
     "DmpTypeNational" -> DmpTypeNational
     "DmpTypeInternational" -> DmpTypeInternational
+    "DmpTypePriodiversityLife" -> DmpTypePriodiversityLife
     _ -> DmpTypeOrganizational
   ) D.string
 
@@ -74,6 +75,7 @@ encodeDmpType t = E.string <| case t of
   DmpTypeNational -> "DmpTypeNational"
   DmpTypeInternational -> "DmpTypeInternational"
   DmpTypeOrganizational -> "DmpTypeOrganizational"
+  DmpTypePriodiversityLife -> "DmpTypePriodiversityLife"
 
 documentIdTypeDecoder : Json.Decode.Decoder DocumentIdType
 documentIdTypeDecoder = Json.Decode.map

@@ -28,6 +28,7 @@ type DmpType
   | DmpTypeNational
   | DmpTypeInternational
   | DmpTypeOrganizational
+  | DmpTypePriodiversityLife
 
 type DocumentIdType
   = DocumentIdTypeHandle

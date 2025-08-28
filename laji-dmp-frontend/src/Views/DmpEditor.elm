@@ -303,7 +303,7 @@ defaultDmp org =
   , dmpNextReviewDmp = Nothing
   , dmpOrgId = org
   , dmpTitle = ""
-  , dmpTypeDmp = DmpTypeOrganizational
+  , dmpTypeDmp = DmpTypePriodiversityLife
   , dmpContact =
     { contactMbox = ""
     , contactName = ""
@@ -605,7 +605,7 @@ dmpTypeSelect : DmpType -> Bool -> (DmpType -> msg) -> Html msg
 dmpTypeSelect curr d toMsg =
   enumSelect
     { current = curr
-    , options = [ DmpTypeStudent, DmpTypeAcademic, DmpTypeNational, DmpTypeInternational, DmpTypeOrganizational ]
+    , options = [ DmpTypePriodiversityLife, DmpTypeStudent, DmpTypeAcademic, DmpTypeNational, DmpTypeInternational, DmpTypeOrganizational ]
     , optionToString = dmpTypeToStr
     , optionFromString = dmpTypeFromStr
     , optionToLabel = showDmpType
