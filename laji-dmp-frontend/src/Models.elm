@@ -28,6 +28,7 @@ type DmpType
   | DmpTypeNational
   | DmpTypeInternational
   | DmpTypeOrganizational
+  | DmpTypePriodiversityLife
 
 type DocumentIdType
   = DocumentIdTypeHandle
@@ -155,7 +156,7 @@ type alias Dmp =
   , dmpContact: Contact
   , dmpDmpId: DmpId
   , dmpContributors: Array.Array Contributor
-  , dmpDataLifeCycles: Array.Array DataLifeCycle
+  , dmpDataLifeCycle: Maybe DataLifeCycle
   , dmpDatasets: Array.Array Dataset
   , dmpEthicalIssues: Array.Array EthicalIssue
   , dmpProjects: Array.Array Project

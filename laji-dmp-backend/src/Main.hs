@@ -38,6 +38,7 @@ import qualified Data.Text.Lazy as Text.Lazy
 import qualified Database.Models
 import qualified Data.ByteString.Lazy.Char8
 import Text.Read (readMaybe)
+import Database.PostgreSQL.Simple.Migration (runMigration, defaultOptions, MigrationCommand(MigrationDirectory, MigrationInitialization))
 
 data AppState = AppState
   { appDbConnection :: Connection
@@ -203,11 +204,13 @@ main = do
   connectInfo <- lookupDbConnectInfo
   conn <- connect connectInfo
   hostPort <- lookupEnvInt "LAJI_DMP_PORT" 4000
-  Queries.initializeDatabase conn
-  print ("Hosting on port " ++ show hostPort :: String)
+  _ <- runMigration conn defaultOptions MigrationInitialization
+  _ <- runMigration conn defaultOptions $ MigrationDirectory "./migrations"
+
   personCache <- newTVarIO HM.empty
   lajiApiConfig <- lookupLajiApiConfig
   httpConfig <- createHttpConfig lajiApiConfig
   let appState = AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig, appLajiApiConfig = lajiApiConfig }
+  print ("Hosting on port " ++ show hostPort :: String)
   run hostPort (app appState)
 

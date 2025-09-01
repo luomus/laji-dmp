@@ -63,6 +63,7 @@ data DmpType
   | DmpTypeNational
   | DmpTypeInternational
   | DmpTypeOrganizational
+  | DmpTypePriodiversityLife
   deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 instance FromField DmpType where
@@ -72,6 +73,7 @@ instance FromField DmpType where
     Just "national" -> return DmpTypeNational
     Just "international" -> return DmpTypeInternational
     Just "organizational" -> return DmpTypeOrganizational
+    Just "priodiversity-life" -> return DmpTypePriodiversityLife
     _ -> returnError ConversionFailed f $ "Invalid value for DmpType: " ++ show mbs
 
 instance ToField DmpType where
@@ -80,6 +82,7 @@ instance ToField DmpType where
   toField DmpTypeNational = toField ("national" :: Text)
   toField DmpTypeInternational = toField ("international" :: Text)
   toField DmpTypeOrganizational = toField ("organizational" :: Text)
+  toField DmpTypePriodiversityLife = toField ("priodiversity-life" :: Text)
 
 data DocumentIdType
   = DocumentIdTypeHandle
@@ -334,7 +337,7 @@ data Dmp = Dmp
   , dmpContact :: Contact
   , dmpDmpId :: DmpId
   , dmpContributors :: [Contributor]
-  , dmpDataLifeCycles :: [DataLifeCycle]
+  , dmpDataLifeCycle :: Maybe DataLifeCycle
   , dmpDatasets :: [Dataset]
   , dmpEthicalIssues :: [EthicalIssue]
   , dmpProjects :: [Project]

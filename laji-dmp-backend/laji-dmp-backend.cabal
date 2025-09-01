@@ -80,6 +80,7 @@ executable laji-dmp-backend
                       warp,
                       aeson,
                       postgresql-simple >= 0.6.2,
+                      postgresql-migration,
                       http-types,
                       unordered-containers,
                       http-client,

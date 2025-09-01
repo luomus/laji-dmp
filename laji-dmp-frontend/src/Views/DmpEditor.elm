@@ -179,9 +179,9 @@ type ModifyDmpMsg
   | ModifyDmpContributor Int ModifyContributorMsg
   | AddDmpContributor
   | RemoveDmpContributor Int
-  | ModifyDmpDataLifeCycle Int ModifyDataLifeCycleMsg
+  | ModifyDmpDataLifeCycle ModifyDataLifeCycleMsg
   | AddDmpDataLifeCycle
-  | RemoveDmpDataLifeCycle Int
+  | RemoveDmpDataLifeCycle
   | ModifyDmpDataset Int ModifyDatasetMsg
   | AddDmpDataset
   | RemoveDmpDataset Int
@@ -303,7 +303,7 @@ defaultDmp org =
   , dmpNextReviewDmp = Nothing
   , dmpOrgId = org
   , dmpTitle = ""
-  , dmpTypeDmp = DmpTypeOrganizational
+  , dmpTypeDmp = DmpTypePriodiversityLife
   , dmpContact =
     { contactMbox = ""
     , contactName = ""
@@ -312,7 +312,7 @@ defaultDmp org =
     }
   , dmpDmpId = { dmpIdType = DocumentIdTypeNone, dmpIdIdentifier = Nothing }
   , dmpContributors = Array.empty
-  , dmpDataLifeCycles = Array.empty
+  , dmpDataLifeCycle = Nothing
   , dmpDatasets = Array.empty
   , dmpEthicalIssues = Array.empty
   , dmpProjects = Array.empty
@@ -505,9 +505,9 @@ updateDmp msg dmp = case msg of
   AddDmpContributor -> { dmp | dmpContributors = Array.push defaultContributor dmp.dmpContributors }
   RemoveDmpContributor idx -> { dmp | dmpContributors = removeAt idx dmp.dmpContributors }
 
-  ModifyDmpDataLifeCycle idx v -> { dmp | dmpDataLifeCycles = updateAt idx (updateDataLifeCycle v) dmp.dmpDataLifeCycles }
-  AddDmpDataLifeCycle -> { dmp | dmpDataLifeCycles = Array.push defaultDataLifeCycle dmp.dmpDataLifeCycles }
-  RemoveDmpDataLifeCycle idx -> { dmp | dmpDataLifeCycles = removeAt idx dmp.dmpDataLifeCycles }
+  ModifyDmpDataLifeCycle v -> { dmp | dmpDataLifeCycle = Maybe.map (updateDataLifeCycle v) dmp.dmpDataLifeCycle }
+  AddDmpDataLifeCycle -> { dmp | dmpDataLifeCycle = Just defaultDataLifeCycle }
+  RemoveDmpDataLifeCycle -> { dmp | dmpDataLifeCycle = Nothing }
 
   ModifyDmpDataset idx v -> { dmp | dmpDatasets = updateAt idx (updateDataset v) dmp.dmpDatasets }
   AddDmpDataset -> { dmp | dmpDatasets = Array.push defaultDataset dmp.dmpDatasets }
@@ -605,7 +605,7 @@ dmpTypeSelect : DmpType -> Bool -> (DmpType -> msg) -> Html msg
 dmpTypeSelect curr d toMsg =
   enumSelect
     { current = curr
-    , options = [ DmpTypeStudent, DmpTypeAcademic, DmpTypeNational, DmpTypeInternational, DmpTypeOrganizational ]
+    , options = [ DmpTypePriodiversityLife, DmpTypeStudent, DmpTypeAcademic, DmpTypeNational, DmpTypeInternational, DmpTypeOrganizational ]
     , optionToString = dmpTypeToStr
     , optionFromString = dmpTypeFromStr
     , optionToLabel = showDmpType
@@ -1129,12 +1129,12 @@ contributorEditorView idx elem d = div []
     ]
   ]
 
-dataLifeCycleEditorView : Int -> DataLifeCycle -> Bool -> Html Msg
-dataLifeCycleEditorView idx elem d = div []
+dataLifeCycleEditorView : DataLifeCycle -> Bool -> Html Msg
+dataLifeCycleEditorView elem d = div []
   [ div []
-    [ h3 [ class "d-inline-block" ] [ text <| "Datan elinkaari " ++ String.fromInt (idx + 1) ]
+    [ h3 [ class "d-inline-block" ] [ text <| "Datan elinkaari" ]
     , button
-        [ onClick <| OnModifyDmp <| RemoveDmpDataLifeCycle idx
+        [ onClick <| OnModifyDmp <| RemoveDmpDataLifeCycle
         , disabled d
         , class "btn btn-danger btn-remove"
         ]
@@ -1146,22 +1146,22 @@ dataLifeCycleEditorView idx elem d = div []
         [ checked elem.dataLifeCycleArchivingServicesData
         , type_ "checkbox"
         , disabled d
-        , onCheck <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleArchivingServicesData
+        , onCheck <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleArchivingServicesData
         ] []
     , inputFieldView "Datan varmuuskopiointi: " (Just "Kuvaile, kuinka aineistoa varmuuskopioidaan.")
       <| input
         [ value elem.dataLifeCycleBackupData
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleBackupData
+        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleBackupData
         ] []
-    , inputFieldView "Datan poisto: " (Just "Millä tavoin aineisto poistetaan?")
-      <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionData
+    , inputFieldView "Datan poisto: " (Just "Poistetaanko aineisto tietyn päivämäärän jälkeen?")
+      <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleDeletionData
     , inputFieldView "Datan poistamispäivä: " (Just "Jos ainesto poistetaan, ilmoita tähän poistamisen päivämäärä.")
       <| input
         [ type_ "date"
         , value <| withDefault "" (Maybe.map unwrapDay elem.dataLifeCycleDeletionWhenData)
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle idx << ModifyDataLifeCycleDeletionWhenData << Maybe.map Day << parseMaybe
+        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleDeletionWhenData << Maybe.map Day << parseMaybe
         ] []
     ]
   ]
@@ -1227,7 +1227,7 @@ datasetEditorView idx elem d = div []
       , button
         [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetKeyword
         , disabled d
-        , class "btn btn-danger"
+        , class "btn"
         ]
         [ text "+ Lisää avainsana" ]
       ]
@@ -1479,15 +1479,16 @@ dmpEditorView dmp d mode session =
         [ text "+ Lisää osallistuja" ]
       ]
     , section []
-      [ div []
-        <| Array.toList <| Array.indexedMap (\idx elem -> dataLifeCycleEditorView idx elem d) dmp.dmpDataLifeCycles
-      , button
-        [ onClick <| OnModifyDmp AddDmpDataLifeCycle
-        , disabled d
-        , class "btn"
-        ]
-        [ text "+ Lisää 'datan elinkaari' -osio" ]
-        ]
+      [ div [] <| withDefault [] (Maybe.map (\x -> [dataLifeCycleEditorView x d]) dmp.dmpDataLifeCycle)
+      , case dmp.dmpDataLifeCycle of
+        Nothing -> button
+          [ onClick <| OnModifyDmp AddDmpDataLifeCycle
+          , disabled d
+          , class "btn"
+          ]
+          [ text "+ Lisää 'datan elinkaari' -osio" ]
+        Just _ -> text ""
+      ]
     , section []
       [ div []
         <| Array.toList <| Array.indexedMap (\idx elem -> datasetEditorView idx elem d) dmp.dmpDatasets

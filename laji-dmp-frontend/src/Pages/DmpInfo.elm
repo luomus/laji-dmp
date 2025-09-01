@@ -94,17 +94,14 @@ contributorView idx c = div []
 contributorsView : Array Contributor -> Html Msg
 contributorsView c = div [] <| Array.toList <| Array.indexedMap contributorView c
 
-dataLifeCycleView : Int -> DataLifeCycle -> Html Msg
-dataLifeCycleView idx d = div []
-  [ h3 [] [ text <| "Datan elinkaari " ++ String.fromInt (idx + 1) ]
-  , fieldView "Arkistointi: " <| boolToString d.dataLifeCycleArchivingServicesData
+dataLifeCycleView : DataLifeCycle -> Html Msg
+dataLifeCycleView d = div []
+  [ h3 [] [ text <| "Datan elinkaari" ]
+  , fieldView "Arkistointi: " <| showBool d.dataLifeCycleArchivingServicesData
   , fieldView "Datan varmuuskopiointi: " <| d.dataLifeCycleBackupData
   , fieldView "Datan poistaminen: " <| showDeletionDataType d.dataLifeCycleDeletionData
   , maybeFieldView "Datan poistamispäivä: " <| Maybe.map showDay d.dataLifeCycleDeletionWhenData
   ]
-
-dataLifeCyclesView : Array DataLifeCycle -> Html Msg
-dataLifeCyclesView c = div [] <| Array.toList <| Array.indexedMap dataLifeCycleView c
 
 datasetIdView : DatasetId -> Html Msg
 datasetIdView d = div []
@@ -244,7 +241,7 @@ dmpView dmp = div []
   , dmpIdView dmp.dmpDmpId
   , contactView dmp.dmpContact
   , section [] [ contributorsView dmp.dmpContributors ]
-  , section [] [ dataLifeCyclesView dmp.dmpDataLifeCycles ]
+  , Maybe.withDefault (text "") <| Maybe.map (\dlc -> section [] [ dataLifeCycleView dlc ]) dmp.dmpDataLifeCycle
   , section [] [ datasetsView dmp.dmpDatasets ]
   , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
   , section [] [ projectsView dmp.dmpProjects ]
