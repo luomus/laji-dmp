@@ -916,7 +916,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Aineiston uudelleenkäyttö: " Nothing
+    [ inputFieldView "Dokumentaation avoimuus: " (Just "Onko dokumentaatio kaikille avoimesti saatavilla?")
       <| maybeBoolSelect metadata.metadataAccessDocumentation d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
