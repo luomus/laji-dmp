@@ -1217,7 +1217,8 @@ datasetEditorView idx elem d = div []
         ] []
     , inputFieldView "Aineiston tuotantoajankohta: " (Just "Ilmoita aineiston tuotantoajankohta, eli päivämäärä milloin sen tuottaminen valmistuu tai on valmistunut.")
       <| input
-        [ value <| withDefault "" <| Maybe.map unwrapDay elem.datasetIssued
+        [ type_ "date"
+        , value <| withDefault "" (Maybe.map unwrapDay elem.datasetIssued)
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetIssued << Maybe.map Day << parseMaybe
         ] []
