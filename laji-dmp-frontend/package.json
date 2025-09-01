@@ -6,7 +6,7 @@
     "start": "vite",
     "build": "vite build",
     "build:staging": "vite build --mode staging",
-    "build:prduction": "vite build",
+    "build:production": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
