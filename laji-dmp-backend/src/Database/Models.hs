@@ -4,6 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Database.Models where
 
@@ -20,6 +21,30 @@ import qualified Data.Text as T
 import Data.Aeson.Types (parseJSON)
 import Data.Swagger (ToSchema)
 import Data.Int (Int64)
+import Data.Swagger.Schema (ToSchema(declareNamedSchema))
+import Data.Data (Proxy(..))
+
+newtype NonEmptyText = NonEmptyText Text
+  deriving Show
+
+instance FromJSON NonEmptyText where
+  parseJSON = withText "NonEmptyText" $ \t ->
+    if T.null t
+      then fail "NonEmptyText must not be empty"
+      else pure (NonEmptyText t)
+
+instance ToJSON NonEmptyText where
+  toJSON (NonEmptyText t) = String t
+
+instance ToSchema NonEmptyText where
+  declareNamedSchema _ = declareNamedSchema (Proxy @Text)
+
+instance ToField NonEmptyText where
+  toField (NonEmptyText t) = toField t
+
+instance FromField NonEmptyText where
+  fromField f mbs = do
+    fromField f mbs
 
 data DataAccessType
   = DataAccessTypeOpen
@@ -259,8 +284,8 @@ instance ToField SensitiveDataType where
   toField SensitiveDataTypeUnknown = toField ("unknown" :: Text)
 
 data Contact = Contact
-  { contactMbox :: Text
-  , contactName :: Text
+  { contactMbox :: NonEmptyText
+  , contactName :: NonEmptyText
   , contactOrganization :: Maybe Text
   , contactContactId :: ContactId
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
@@ -272,7 +297,7 @@ data ContactId = ContactId
 
 data Contributor = Contributor
   { contributorMbox :: Maybe Text
-  , contributorName :: Text
+  , contributorName :: NonEmptyText
   , contributorOrganization :: Maybe Text
   , contributorRole :: RoleType
   , contributorContributorId :: ContributorId
@@ -285,7 +310,7 @@ data ContributorId = ContributorId
 
 data DataLifeCycle = DataLifeCycle
   { dataLifeCycleArchivingServicesData :: Bool
-  , dataLifeCycleBackupData :: Text
+  , dataLifeCycleBackupData :: NonEmptyText
   , dataLifeCycleDeletionData :: DeletionDataType
   , dataLifeCycleDeletionWhenData :: Maybe Day
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
@@ -300,7 +325,7 @@ data Dataset = Dataset
   , datasetPersonalData :: PersonalDataType
   , datasetSensitiveData :: SensitiveDataType
   , datasetReuseDataset :: Maybe Bool
-  , datasetTitle :: Text
+  , datasetTitle :: NonEmptyText
   , datasetType :: Maybe Text
   , datasetDatasetId :: DatasetId
   , datasetDistributions :: [Distribution]
@@ -320,7 +345,7 @@ data Distribution = Distribution
   , distributionDescription :: Maybe Text
   , distributionDownloadUri :: Maybe Text
   , distributionFormat :: Maybe Text
-  , distributionTitle :: Text
+  , distributionTitle :: NonEmptyText
   , distributionLicenses :: [License]
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
@@ -331,8 +356,8 @@ data Dmp = Dmp
   , dmpLanguage :: LanguageType
   , dmpModified :: Maybe UTCTime
   , dmpNextReviewDmp :: Maybe Day
-  , dmpOrgId :: Text
-  , dmpTitle :: Text
+  , dmpOrgId :: NonEmptyText
+  , dmpTitle :: NonEmptyText
   , dmpTypeDmp :: DmpType
   , dmpContact :: Contact
   , dmpDmpId :: DmpId
@@ -355,7 +380,7 @@ data EthicalIssue = EthicalIssue
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data License = License
-  { licenseRef :: Text
+  { licenseRef :: NonEmptyText
   , licenseStartDate :: Day
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
@@ -377,10 +402,10 @@ data MetadataId = MetadataId
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data Project = Project
-  { projectDescription :: Text
+  { projectDescription :: NonEmptyText
   , projectEndDate :: Maybe Day
   , projectStartDate :: Day
-  , projectTitle :: Text
+  , projectTitle :: NonEmptyText
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data RightsRelatedToData = RightsRelatedToData
@@ -388,7 +413,7 @@ data RightsRelatedToData = RightsRelatedToData
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data SecurityAndPrivacy = SecurityAndPrivacy
-  { securityDescription :: Text
-  , securityTitle :: Text
+  { securityDescription :: NonEmptyText
+  , securityTitle :: NonEmptyText
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 

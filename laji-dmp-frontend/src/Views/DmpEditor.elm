@@ -43,8 +43,9 @@ import Http
 import Html exposing (section)
 import Html exposing (textarea)
 import Html exposing (p)
+import DmpApi exposing (ErrorResponse)
 
-type ModelStatus = Editing | Submitting | SubmitError Http.Error | NotLoggedInError
+type ModelStatus = Editing | Submitting | SubmitError ErrorResponse | NotLoggedInError
 
 type EditorMode = New | Edit String
 
@@ -194,7 +195,7 @@ type ModifyDmpMsg
 
 type Msg
   = OnSubmit
-  | GotDmpApiResponse (Result Http.Error String)
+  | GotDmpApiResponse (Result ErrorResponse String)
   | OnModifyDmp ModifyDmpMsg
 
 defaultContributor : Contributor
@@ -802,7 +803,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
           << ModifyDistributionLicense licenseIdx
           << ModifyLicenseRef
         ] []
-    , inputFieldView "Lisenssin käyttöönottopäivä: " Nothing
+    , inputFieldView "Lisenssin käyttöönottopäivä*: " Nothing
       <| input
         [ type_ "date"
         , value <| unwrapDay license.licenseStartDate
@@ -858,7 +859,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionFormat << parseMaybe
         ] []
-    , inputFieldView "Otsikko: " Nothing
+    , inputFieldView "Otsikko*: " Nothing
       <| input
         [ value distribution.distributionTitle
         , disabled d
@@ -1022,7 +1023,7 @@ securityEditorView datasetIdx securityIdx security d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Tietoturvakäytäntöjen kuvaus: " Nothing
+    [ inputFieldView "Tietoturvakäytäntöjen kuvaus*: " Nothing
       <| input
         [ value <| security.securityDescription
         , disabled d
@@ -1031,7 +1032,7 @@ securityEditorView datasetIdx securityIdx security d = div []
           << ModifyDatasetSecurity securityIdx
           << ModifySecurityDescription
         ] []
-    , inputFieldView "Otsikko: " Nothing
+    , inputFieldView "Otsikko*: " Nothing
       <| input
         [ value <| security.securityTitle
         , disabled d
@@ -1059,13 +1060,13 @@ contactIdEditorView c d = div []
 contactEditorView : Contact -> Bool -> Html Msg
 contactEditorView c d = div []
   [ h3 [] [ text "Kontakti" ]
-  , inputFieldView "Sähköpostiosoite: " (Just "Ilmoita kontaktihenkilön tai organisaation sähköpostiosoite.")
+  , inputFieldView "Sähköpostiosoite*: " (Just "Ilmoita kontaktihenkilön tai organisaation sähköpostiosoite.")
     <| input
       [ value c.contactMbox
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
       ] []
-  , inputFieldView "Nimi: " (Just "Ilmoita kontaktihenkilön nimi.")
+  , inputFieldView "Nimi*: " (Just "Ilmoita kontaktihenkilön nimi.")
     <| input
       [ value c.contactName
       , disabled d
@@ -1111,7 +1112,7 @@ contributorEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
         ] []
-    , inputFieldView "Nimi: " (Just "Ilmoita aineistonhallintasuunnitelmaan osallistuvan tahon nimi.")
+    , inputFieldView "Nimi*: " (Just "Ilmoita aineistonhallintasuunnitelmaan osallistuvan tahon nimi.")
       <| input
         [ value elem.contributorName
         , disabled d
@@ -1148,7 +1149,7 @@ dataLifeCycleEditorView elem d = div []
         , disabled d
         , onCheck <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleArchivingServicesData
         ] []
-    , inputFieldView "Datan varmuuskopiointi: " (Just "Kuvaile, kuinka aineistoa varmuuskopioidaan.")
+    , inputFieldView "Datan varmuuskopiointi*: " (Just "Kuvaile, kuinka aineistoa varmuuskopioidaan.")
       <| input
         [ value elem.dataLifeCycleBackupData
         , disabled d
@@ -1240,7 +1241,7 @@ datasetEditorView idx elem d = div []
       <| sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData
     , inputFieldView "Aineiston uudelleenkäyttö: " Nothing
       <| maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
-    , inputFieldView "Otsikko: " Nothing
+    , inputFieldView "Otsikko*: " Nothing
       <| input
         [ value elem.datasetTitle
         , disabled d
@@ -1354,7 +1355,7 @@ projectEditorView idx project d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Kuvaus: " Nothing
+    [ inputFieldView "Kuvaus*: " Nothing
       <| textarea
         [ value project.projectDescription
         , disabled d
@@ -1374,7 +1375,7 @@ projectEditorView idx project d = div []
           << Maybe.map Day
           << parseMaybe
         ] []
-    , inputFieldView "Projektin alkamispäivä: " Nothing
+    , inputFieldView "Projektin alkamispäivä*: " Nothing
       <| input
         [ type_ "date"
         , value <| unwrapDay project.projectStartDate
@@ -1384,7 +1385,7 @@ projectEditorView idx project d = div []
           << ModifyProjectStartDate
           << Day
         ] []
-    , inputFieldView "Otsikko: " Nothing
+    , inputFieldView "Otsikko*: " Nothing
       <| input
         [ value project.projectTitle
         , disabled d
@@ -1427,7 +1428,7 @@ dmpEditorView dmp d mode session =
         case session of
           User.LoggedIn personToken person ->
             if Array.length person.organisation > 1 then
-              [ label [ for "dmp-editor-org" ] [ text "Organisaatio" ]
+              [ label [ for "dmp-editor-org" ] [ text "Organisaatio*: " ]
               , select
                 [ id "dmp-editor-org"
                 , value <| case Array.get 0 person.organisation of
@@ -1440,7 +1441,7 @@ dmpEditorView dmp d mode session =
               ]
             else [ label [] [ text <| "Organisaatio: " ++ Maybe.withDefault "-" (Array.get 0 person.organisation) ] ]
           _ -> [ text "Kirjaudu sisään, jotta voit käsitellä DMP:itä." ]
-    , inputFieldView "Otsikko: " Nothing
+    , inputFieldView "Otsikko*: " Nothing
       <| input
         [ value dmp.dmpTitle
         , disabled d
@@ -1536,7 +1537,7 @@ editorFormView model =
         [ text "Tallenna" ]
       ]
   , div [] <| case model.status of
-    SubmitError e -> [ text <| "Virhe DMP:tä tallennettaessa: " ++ httpErrorToString e ]
+    SubmitError e -> [ text <| "Virhe DMP:tä tallennettaessa: " ++ errorResponseToString e ]
     NotLoggedInError -> [ text <| "Virhe DMP:tä tallennettaessa: Kirjautuminen puuttuu!" ]
     _ -> []
   ]

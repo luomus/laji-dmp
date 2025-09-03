@@ -24,6 +24,7 @@ import qualified Data.Text as T
 import Database.PostgreSQL.Simple.Types (PGArray(PGArray, fromPGArray))
 import qualified Data.Maybe
 import Data.Maybe (listToMaybe)
+import Database.Models (NonEmptyText(..))
 
 groupQueryResultBy :: Ord b => [t] -> (t -> b) -> [[t]]
 groupQueryResultBy dmps by = groupBy (\a b -> by a == by b) (sortOn by dmps)
@@ -294,7 +295,7 @@ parseDmp rows =
           (Just $ RowTypes.unTextTimestamp modified)
           nextReview
           orgId
-          title
+          (NonEmptyText title)
           typ
           (head contacts)
           (head dmpIds)
