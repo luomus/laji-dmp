@@ -25,7 +25,7 @@ import Data.Swagger.Schema (ToSchema(declareNamedSchema))
 import Data.Data (Proxy(..))
 
 newtype NonEmptyText = NonEmptyText Text
-  deriving Show
+  deriving (Show, Eq)
 
 instance FromJSON NonEmptyText where
   parseJSON = withText "NonEmptyText" $ \t ->

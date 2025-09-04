@@ -39,6 +39,7 @@ import qualified Database.Models
 import qualified Data.ByteString.Lazy.Char8
 import Text.Read (readMaybe)
 import Database.PostgreSQL.Simple.Migration (runMigration, defaultOptions, MigrationCommand(MigrationDirectory, MigrationInitialization))
+import Data.Coerce (coerce)
 
 data AppState = AppState
   { appDbConnection :: Connection
@@ -77,7 +78,7 @@ handlerDmpIndex (AppState { appDbConnection = conn }) = do
 
 handlerDmpPost :: AppState -> Text -> Models.Dmp -> Handler NoContent
 handlerDmpPost state personToken dmp = do
-  userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) state
+  userHasRights <- liftIO $ checkUserRights personToken (coerce $ Models.dmpOrgId dmp) state
   if userHasRights
     then do
       liftIO $ Queries.insertDataManagementPlan (appDbConnection state) dmp
@@ -108,7 +109,7 @@ handlerDmpPut state personToken dmpId dmp =
         Right oldPlan ->
           return $ Models.dmpOrgId (head oldPlan) == Models.dmpOrgId dmp
         Left err -> throwError err500 { errBody = encodeUtf8 $ Text.Lazy.pack err }
-    userHasRights <- liftIO $ checkUserRights personToken (Models.dmpOrgId dmp) state
+    userHasRights <- liftIO $ checkUserRights personToken (coerce $ Models.dmpOrgId dmp) state
     if idMatch
       then if orgMatch
         then if userHasRights
@@ -128,7 +129,7 @@ handlerDmpDelete state personToken dmpId = do
   case dmpsResult of
     Left err -> throwError err404 { errBody = Data.ByteString.Lazy.Char8.pack $ "Could not find DMP: " ++ err }
     Right dmps -> do
-      userHasRights <- liftIO $ checkUserRights personToken (Database.Models.dmpOrgId $ head dmps) state
+      userHasRights <- liftIO $ checkUserRights personToken (coerce $ Database.Models.dmpOrgId $ head dmps) state
       if userHasRights
         then do
           liftIO $ Queries.deleteDataManagementPlan (appDbConnection state) dmpId
