@@ -34,11 +34,13 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.ByteString (ByteString)
 import Data.Text.Lazy.Encoding (encodeUtf8)
+import Data.List.Split (splitOn)
 import qualified Data.Text.Lazy as Text.Lazy
 import qualified Database.Models
 import qualified Data.ByteString.Lazy.Char8
 import Text.Read (readMaybe)
 import Database.PostgreSQL.Simple.Migration (runMigration, defaultOptions, MigrationCommand(MigrationDirectory, MigrationInitialization))
+import qualified Data.String as DS
 
 data AppState = AppState
   { appDbConnection :: Connection
@@ -167,17 +169,17 @@ apiServer appState =
 server :: AppState -> Server APIWithSwagger
 server appState = swaggerSchemaUIServer apiSwagger :<|> apiServer appState
 
-customCorsPolicy :: CorsResourcePolicy
-customCorsPolicy = simpleCorsResourcePolicy
-  { corsOrigins = Just (["http://localhost:8000", "chrome-extension://dabkfpeebkikmgdianbkchblbdibbfhl"], True)
+customCorsPolicy :: [Origin] -> CorsResourcePolicy
+customCorsPolicy origins = simpleCorsResourcePolicy
+  { corsOrigins = Just (origins, True)
   , corsRequestHeaders = ["Content-Type", "Authorization"]
   , corsMethods = ["GET", "POST", "OPTIONS", "PUT", "DELETE"]
   , corsRequireOrigin = False
   , corsIgnoreFailures = False
   }
 
-app :: AppState -> Application
-app appState = cors (const $ Just customCorsPolicy) $ serve (Proxy :: Proxy APIWithSwagger) (server appState)
+app :: AppState -> [Origin] -> Application
+app appState origins = cors (const $ Just $ customCorsPolicy origins) $ serve (Proxy :: Proxy APIWithSwagger) (server appState)
 
 lookupEnvInt :: String -> Int -> IO Int
 lookupEnvInt name def = do
@@ -188,6 +190,13 @@ lookupEnvInt name def = do
       Nothing -> do
         print ("Environment variable " ++ name ++ " is not a valid Int.")
         return def
+    Nothing -> return def
+
+lookupEnvHosts :: String -> [Origin] -> IO [Origin]
+lookupEnvHosts name def = do
+  maybeStr <- lookupEnv name
+  case maybeStr of
+    Just str -> return (map DS.fromString (splitOn "," str))
     Nothing -> return def
 
 lookupDbConnectInfo :: IO ConnectInfo
@@ -201,6 +210,8 @@ lookupDbConnectInfo = do
 
 main :: IO ()
 main = do
+  origins <- lookupEnvHosts "ALLOWED_HOSTS" ["http://localhost:8000", "chrome-extension://dabkfpeebkikmgdianbkchblbdibbfhl"]
+  print (show origins :: String)
   connectInfo <- lookupDbConnectInfo
   conn <- connect connectInfo
   hostPort <- lookupEnvInt "LAJI_DMP_PORT" 4000
@@ -212,5 +223,5 @@ main = do
   httpConfig <- createHttpConfig lajiApiConfig
   let appState = AppState { appDbConnection = conn, appPersonCache = personCache, appHttpConfig = httpConfig, appLajiApiConfig = lajiApiConfig }
   print ("Hosting on port " ++ show hostPort :: String)
-  run hostPort (app appState)
+  run hostPort (app appState origins)
 

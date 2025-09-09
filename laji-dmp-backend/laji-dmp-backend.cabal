@@ -95,6 +95,7 @@ executable laji-dmp-backend
                       stm,
                       time,
                       raw-strings-qq >= 1.1,
+                      split
 
     -- Directories containing source files.
     hs-source-dirs:   src
