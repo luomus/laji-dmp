@@ -7,8 +7,8 @@ import Html exposing (button)
 import Html exposing (text)
 import Html.Events exposing (onClick)
 import Views.DmpEditor exposing (ModelStatus(..))
+import Http
 import DmpApi exposing (deleteDmp)
-import Http exposing (Error)
 import Views.Dialog exposing (dialog)
 import DmpApi exposing (getDmp)
 import Models exposing (Dmp)
@@ -17,6 +17,7 @@ import User
 import Config exposing (Config)
 import Utils exposing (httpErrorToString)
 import User exposing (LoginSession(..))
+import DmpApi exposing (ErrorResponse)
 
 type EditorState
   = EditorModel Views.DmpEditor.Model
@@ -33,7 +34,7 @@ type Msg
   | OnDelete
   | OnConfirmDelete
   | OnCancelDelete
-  | GotDmpDeleteResponse (Result Error String)
+  | GotDmpDeleteResponse (Result ErrorResponse String)
   | GotDmpGetResponse (Result Http.Error Dmp)
 
 deleteDialogId : String

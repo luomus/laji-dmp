@@ -488,6 +488,31 @@ encodeSecurity t = E.object
   , ( "securityTitle", E.string t.securityTitle)
   ]
 
+--
+
+type alias BadStatusResponse =
+  { meta: Http.Metadata
+  , body: String
+  }
+
+type ErrorResponse = BadUrl String | BadStatus BadStatusResponse | Timeout | NetworkError | BadBody String
+
+expectStringWithErrorBody : (Result ErrorResponse String -> msg) -> Http.Expect msg
+expectStringWithErrorBody toMsg =
+  Http.expectStringResponse toMsg <|
+    \res ->
+      case res of
+        Http.GoodStatus_ meta body ->
+          Ok body
+        Http.BadStatus_ meta body ->
+          Err <| BadStatus { meta = meta, body = body }
+        Http.BadUrl_ url ->
+          Err <| BadUrl url
+        Http.Timeout_ ->
+          Err Timeout
+        Http.NetworkError_ ->
+          Err NetworkError
+
 -- Queries
 
 getDmpList : Config -> (Result Http.Error (Array.Array Dmp) -> msg) -> Cmd msg
@@ -504,38 +529,38 @@ getDmp cfg id msg =
     , expect = Http.expectJson msg dmpDecoder
     }
 
-newDmp : Config -> Dmp -> String -> (Result Http.Error String -> msg) -> Cmd msg
+newDmp : Config -> Dmp -> String -> (Result ErrorResponse String -> msg) -> Cmd msg
 newDmp cfg dmp personToken msg =
   Http.request
     { method = "POST"
     , headers = []
     , url = UB.crossOrigin cfg.dmpApiBase ["dmp"] [ UB.string "personToken" personToken ]
     , body = Http.jsonBody <| encodeDmp dmp
-    , expect = Http.expectString msg
+    , expect = expectStringWithErrorBody msg
     , timeout = Nothing
     , tracker = Nothing
     }
 
-editDmp : Config -> String -> Dmp -> String -> (Result Http.Error String -> msg) -> Cmd msg
+editDmp : Config -> String -> Dmp -> String -> (Result ErrorResponse String -> msg) -> Cmd msg
 editDmp cfg id dmp personToken msg =
   Http.request
     { method = "PUT"
     , headers = []
     , url = UB.crossOrigin cfg.dmpApiBase ["dmp", id] [ UB.string "personToken" personToken ]
     , body = Http.jsonBody <| encodeDmp dmp
-    , expect = Http.expectString msg
+    , expect = expectStringWithErrorBody msg
     , timeout = Nothing
     , tracker = Nothing
     }
 
-deleteDmp : Config -> String -> String -> (Result Http.Error String -> msg) -> Cmd msg
+deleteDmp : Config -> String -> String -> (Result ErrorResponse String -> msg) -> Cmd msg
 deleteDmp cfg id personToken msg =
   Http.request
     { method = "DELETE"
     , headers = []
     , url = UB.crossOrigin cfg.dmpApiBase ["dmp", id] [ UB.string "personToken" personToken ]
     , body = Http.jsonBody <| E.null
-    , expect = Http.expectString msg
+    , expect = expectStringWithErrorBody msg
     , timeout = Nothing
     , tracker = Nothing
     }

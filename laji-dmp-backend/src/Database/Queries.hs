@@ -24,6 +24,7 @@ import qualified Data.Text as T
 import Database.PostgreSQL.Simple.Types (PGArray(PGArray, fromPGArray))
 import qualified Data.Maybe
 import Data.Maybe (listToMaybe)
+import Database.Models (NonEmptyText(..))
 
 groupQueryResultBy :: Ord b => [t] -> (t -> b) -> [[t]]
 groupQueryResultBy dmps by = groupBy (\a b -> by a == by b) (sortOn by dmps)
@@ -86,7 +87,7 @@ parseContact row@RowTypes.DmpJoinRow {
   RowTypes.contactMbox = Just a,
   RowTypes.contactName = Just b,
   RowTypes.contactOrganization = c
-  } = Models.Contact a b c <$> parseContactId row
+  } = Models.Contact (NonEmptyText a) (NonEmptyText b) c <$> parseContactId row
 parseContact row = Left $ "Could not parse Contact: " ++ show row
 
 parseContacts :: [RowTypes.DmpJoinRow] -> Either String [Models.Contact]
@@ -115,7 +116,7 @@ parseContributor row@RowTypes.DmpJoinRow
   , RowTypes.contributorName = Just name
   , RowTypes.contributorOrganization = org
   , RowTypes.contributorRole = Just role
-  } = Models.Contributor mbox name org role <$> parseContributorId row
+  } = Models.Contributor mbox (NonEmptyText name) org role <$> parseContributorId row
 parseContributor row =
   Left $ "Could not parse Contributor: " ++ show row
 
@@ -128,7 +129,7 @@ parseDataLifeCycle RowTypes.DmpJoinRow {
   RowTypes.dataLifeCycleBackupData = Just b,
   RowTypes.dataLifeCycleDeletionData = Just c,
   RowTypes.dataLifeCycleDeletionWhenData = d
-  } = Right $ Models.DataLifeCycle a b c d
+  } = Right $ Models.DataLifeCycle a (NonEmptyText b) c d
 parseDataLifeCycle row = Left $ "Could not parse DateLifeCycle: " ++ show row
 
 parseDataLifeCycles :: [RowTypes.DmpJoinRow] -> Either String [Models.DataLifeCycle]
@@ -138,7 +139,7 @@ parseLicense :: RowTypes.DmpJoinRow -> Either String Models.License
 parseLicense RowTypes.DmpJoinRow
   { RowTypes.licensesLicenseRef = Just a
   , RowTypes.licensesStartDate = Just b
-  } = Right $ Models.License a b
+  } = Right $ Models.License (NonEmptyText a) b
 parseLicense row =
   Left $ "Could not parse License: " ++ show row
 
@@ -154,7 +155,7 @@ parseDistribution rows = case head rows of
     , RowTypes.distributionDownloadUri = d
     , RowTypes.distributionFormat = e
     , RowTypes.distributionTitle = Just f
-    } -> Models.Distribution a b c d e f <$> parseLicenses rows
+    } -> Models.Distribution a b c d e (NonEmptyText f) <$> parseLicenses rows
   row -> Left $ "Could not parse Distribution: " ++ show row
 
 parseDistributions :: [RowTypes.DmpJoinRow] -> Either String [Models.Distribution]
@@ -196,7 +197,7 @@ parseSecurityAndPrivacy :: RowTypes.DmpJoinRow -> Either String Models.SecurityA
 parseSecurityAndPrivacy RowTypes.DmpJoinRow
   { RowTypes.securityAndPrivacyDescription = Just a
   , RowTypes.securityAndPrivacyTitle = Just b
-  } = Right $ Models.SecurityAndPrivacy a b
+  } = Right $ Models.SecurityAndPrivacy (NonEmptyText a) (NonEmptyText b)
 parseSecurityAndPrivacy row =
   Left $ "Could not parse SecurityAndPrivacy: " ++ show row
 
@@ -231,7 +232,7 @@ parseDataset rows =
         metadatas <- parseMetadatas rows
         let rights = parseRightsRelatedToDataArr rows
         security <- parseSecurityAndPrivacyArr rows
-        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i j k datasetId distributions metadatas rights security
+        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) k datasetId distributions metadatas rights security
     parseRow row =
       Left $ "Could not parse Dataset: " ++ show row
   in parseRow $ head rows
@@ -258,7 +259,7 @@ parseProject rows = case head rows of
     , RowTypes.projectEndDate = b
     , RowTypes.projectStartDate = Just c
     , RowTypes.projectTitle = Just d
-    } -> Right $ Models.Project a b c d
+    } -> Right $ Models.Project (NonEmptyText a) b c (NonEmptyText d)
   row -> Left $ "Could not parse Project: " ++ show row
 
 parseProjects :: [RowTypes.DmpJoinRow] -> Either String [Models.Project]
@@ -293,8 +294,8 @@ parseDmp rows =
           lang
           (Just $ RowTypes.unTextTimestamp modified)
           nextReview
-          orgId
-          title
+          (NonEmptyText orgId)
+          (NonEmptyText title)
           typ
           (head contacts)
           (head dmpIds)
