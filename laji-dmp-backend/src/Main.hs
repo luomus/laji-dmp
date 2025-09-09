@@ -211,14 +211,13 @@ lookupDbConnectInfo = do
 
 main :: IO ()
 main = do
-  origins <- lookupEnvHosts "ALLOWED_HOSTS" ["http://localhost:8000", "chrome-extension://dabkfpeebkikmgdianbkchblbdibbfhl"]
-  print (show origins :: String)
   connectInfo <- lookupDbConnectInfo
   conn <- connect connectInfo
   hostPort <- lookupEnvInt "LAJI_DMP_PORT" 4000
   _ <- runMigration conn defaultOptions MigrationInitialization
   _ <- runMigration conn defaultOptions $ MigrationDirectory "./migrations"
 
+  origins <- lookupEnvHosts "ALLOWED_HOSTS" ["http://localhost:8000", "chrome-extension://dabkfpeebkikmgdianbkchblbdibbfhl"]
   personCache <- newTVarIO HM.empty
   lajiApiConfig <- lookupLajiApiConfig
   httpConfig <- createHttpConfig lajiApiConfig
