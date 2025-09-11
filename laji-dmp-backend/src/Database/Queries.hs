@@ -294,7 +294,7 @@ parseDmp rows =
           lang
           (Just $ RowTypes.unTextTimestamp modified)
           nextReview
-          (NonEmptyText orgId)
+          orgId
           (NonEmptyText title)
           typ
           (head contacts)

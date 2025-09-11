@@ -25,6 +25,10 @@
   --danger-1: hsl(var(--danger-1-unwrapped));
   --danger-2-unwrapped: 0deg, 60%, 96%;
   --danger-2: hsl(var(--danger-2-unwrapped));
+  --danger-3-unwrapped: 0deg, 66%, 85%;
+  --danger-3: hsl(var(--danger-3-unwrapped));
+  --danger-4-unwrapped: 0deg, 74%, 70%;
+  --danger-4: hsl(var(--danger-4-unwrapped));
   --danger-5-unwrapped: 0deg, 80%, 50%;
   --danger-5: hsl(var(--danger-5-unwrapped));
   --danger-6-unwrapped: 0deg, 80%, 35%;

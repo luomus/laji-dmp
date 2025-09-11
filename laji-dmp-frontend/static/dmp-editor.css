@@ -76,3 +76,16 @@
   margin-left: 8px;
 }
 
+.dmp-editor-status {
+  margin: 16px 0px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: var(--danger-2);
+  border: 1px solid var(--danger-4);
+  color: var(--danger-8);
+}
+
+.dmp-editor-status h6 {
+  color: var(--danger-6);
+}
+
