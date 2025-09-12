@@ -3,6 +3,10 @@ module Utils exposing (..)
 import Models exposing (..)
 import Http
 import DmpApi exposing (ErrorResponse)
+import DmpApi exposing (ServerDecodeError)
+import Array
+import DmpApi exposing (BadStatusResponse)
+import DmpApi exposing (decodeServerDecodeError)
 
 showUtcTime : UTCTime -> String
 showUtcTime (UTCTime str) = str
@@ -253,19 +257,11 @@ parseMaybe s = case s of
 
 httpErrorToString : Http.Error -> String
 httpErrorToString err = case err of
-  Http.BadUrl str -> "Bad URL: " ++ str
-  Http.Timeout -> "Timeout"
-  Http.NetworkError -> "Network error"
-  Http.BadStatus int -> "Bad status: " ++ String.fromInt int
-  Http.BadBody str -> "Bad body: " ++ str
-
-errorResponseToString : ErrorResponse -> String
-errorResponseToString err = case err of
-  DmpApi.BadUrl str -> "Bad URL: " ++ str
-  DmpApi.Timeout -> "Timeout"
-  DmpApi.NetworkError -> "Network error"
-  DmpApi.BadStatus res -> "Bad status " ++ String.fromInt res.meta.statusCode ++ ": " ++ res.body
-  DmpApi.BadBody str -> "Bad body: " ++ str
+  Http.BadUrl str -> "Virheellinen URL: " ++ str
+  Http.Timeout -> "Aikakatkaisu"
+  Http.NetworkError -> "Verkkovirhe"
+  Http.BadStatus int -> "Virhe " ++ String.fromInt int
+  Http.BadBody str -> "Virhe: " ++ str
 
 boolToString : Bool -> String
 boolToString b = if b then "True" else "False"

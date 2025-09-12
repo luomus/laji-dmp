@@ -61,7 +61,7 @@ executable laji-dmp-backend
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules: LajiApi, Database.Models, Database.RowTypes, Database.Queries
+    other-modules: LajiApi, Errors, Database.Models, Database.RowTypes, Database.Queries
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -82,6 +82,7 @@ executable laji-dmp-backend
                       postgresql-simple >= 0.6.2,
                       postgresql-migration,
                       http-types,
+                      http-media,
                       unordered-containers,
                       http-client,
                       http-client-tls,

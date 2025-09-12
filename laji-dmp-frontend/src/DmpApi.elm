@@ -488,6 +488,23 @@ encodeSecurity t = E.object
   , ( "securityTitle", E.string t.securityTitle)
   ]
 
+type alias ServerDecodeError =
+  { code: String
+  , path: Array.Array String
+  , message: String
+  }
+
+serverDecodeErrorDecoder : Json.Decode.Decoder ServerDecodeError
+serverDecodeErrorDecoder = Json.Decode.succeed ServerDecodeError
+  |> DP.required "code" D.string
+  |> DP.required "path" (D.array D.string)
+  |> DP.required "message" D.string
+
+decodeServerDecodeError : String -> Result String ServerDecodeError
+decodeServerDecodeError err = case D.decodeString serverDecodeErrorDecoder err of
+  Ok a -> Ok a
+  Err _ -> Err err
+
 --
 
 type alias BadStatusResponse =

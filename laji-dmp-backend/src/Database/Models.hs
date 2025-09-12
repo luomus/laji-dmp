@@ -18,7 +18,7 @@ import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Time (Day, UTCTime)
 import qualified Data.Text as T
-import Data.Aeson.Types (parseJSON)
+import Data.Aeson.Types (parseJSON, prependFailure)
 import Data.Swagger (ToSchema)
 import Data.Int (Int64)
 import Data.Swagger.Schema (ToSchema(declareNamedSchema))
@@ -30,7 +30,7 @@ newtype NonEmptyText = NonEmptyText Text
 instance FromJSON NonEmptyText where
   parseJSON = withText "NonEmptyText" $ \t ->
     if T.null t
-      then fail "NonEmptyText must not be empty"
+      then fail "EMPTY_TEXT"
       else pure (NonEmptyText t)
 
 instance ToJSON NonEmptyText where
@@ -356,7 +356,7 @@ data Dmp = Dmp
   , dmpLanguage :: LanguageType
   , dmpModified :: Maybe UTCTime
   , dmpNextReviewDmp :: Maybe Day
-  , dmpOrgId :: NonEmptyText
+  , dmpOrgId :: Text
   , dmpTitle :: NonEmptyText
   , dmpTypeDmp :: DmpType
   , dmpContact :: Contact

@@ -11,7 +11,7 @@ import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors
 import Network.HTTP.Types (status404)
 import Control.Monad.IO.Class (liftIO)
-import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple hiding ((:.))
 import Servant
 import qualified Data.HashMap.Strict as HM
 
@@ -37,11 +37,12 @@ import Data.Text.Lazy.Encoding (encodeUtf8)
 import Data.List.Split (splitOn)
 import qualified Data.Text.Lazy as Text.Lazy
 import qualified Database.Models
-import qualified Data.ByteString.Lazy.Char8
+import qualified Data.ByteString.Lazy.Char8 as LBS8
 import Text.Read (readMaybe)
 import Database.PostgreSQL.Simple.Migration (runMigration, defaultOptions, MigrationCommand(MigrationDirectory, MigrationInitialization))
 import qualified Data.String as DS
 import Data.Coerce (coerce)
+import Errors
 
 data AppState = AppState
   { appDbConnection :: Connection
@@ -129,7 +130,7 @@ handlerDmpDelete :: AppState -> Text -> Int -> Handler NoContent
 handlerDmpDelete state personToken dmpId = do
   dmpsResult <- liftIO $ Queries.getDataManagementPlan (appDbConnection state) dmpId
   case dmpsResult of
-    Left err -> throwError err404 { errBody = Data.ByteString.Lazy.Char8.pack $ "Could not find DMP: " ++ err }
+    Left err -> throwError err404 { errBody = LBS8.pack $ "Could not find DMP: " ++ err }
     Right dmps -> do
       userHasRights <- liftIO $ checkUserRights personToken (coerce $ Database.Models.dmpOrgId $ head dmps) state
       if userHasRights
@@ -145,9 +146,9 @@ handlerNotFound _ respond = respond $ responseLBS status404 [("Content-Type", "t
 type API =
   "dmp" :>
     (     Get '[JSON] [Models.Dmp]
-    :<|>  QueryParam' '[Required] "personToken" Text :> ReqBody '[JSON] Models.Dmp :> Post '[JSON] NoContent
+    :<|>  QueryParam' '[Required] "personToken" Text :> ReqBody '[JSONErr] Models.Dmp :> Post '[JSON] NoContent
     :<|>  Capture "id" Int :> Get '[JSON] Models.Dmp
-    :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> ReqBody '[JSON] Models.Dmp :> Put '[JSON] NoContent
+    :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> ReqBody '[JSONErr] Models.Dmp :> Put '[JSON] NoContent
     :<|>  QueryParam' '[Required] "personToken" Text :> Capture "id" Int :> Delete '[JSON] NoContent
     )
   :<|> Raw
@@ -179,8 +180,17 @@ customCorsPolicy origins = simpleCorsResourcePolicy
   , corsIgnoreFailures = False
   }
 
+jsonBodyErr :: ErrorFormatter
+jsonBodyErr _ _ errStr =
+  err400 { errHeaders = [("Content-Type","application/json; charset=utf-8")]
+         , errBody    = LBS8.pack errStr
+         }
+
+formatters :: ErrorFormatters
+formatters = defaultErrorFormatters { bodyParserErrorFormatter = jsonBodyErr }
+
 app :: AppState -> [Origin] -> Application
-app appState origins = cors (const $ Just $ customCorsPolicy origins) $ serve (Proxy :: Proxy APIWithSwagger) (server appState)
+app appState origins = cors (const $ Just $ customCorsPolicy origins) $ serveWithContext (Proxy :: Proxy APIWithSwagger) (formatters :. EmptyContext) (server appState)
 
 lookupEnvInt :: String -> Int -> IO Int
 lookupEnvInt name def = do

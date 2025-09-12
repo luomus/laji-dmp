@@ -44,6 +44,7 @@ import Html exposing (section)
 import Html exposing (textarea)
 import Html exposing (p)
 import DmpApi exposing (ErrorResponse)
+import Views.Errors exposing (errorResponseView)
 
 type ModelStatus = Editing | Submitting | SubmitError ErrorResponse | NotLoggedInError
 
@@ -1536,10 +1537,10 @@ editorFormView model =
         ]
         [ text "Tallenna" ]
       ]
-  , div [] <| case model.status of
-    SubmitError e -> [ text <| "Virhe DMP:tä tallennettaessa: " ++ errorResponseToString e ]
-    NotLoggedInError -> [ text <| "Virhe DMP:tä tallennettaessa: Kirjautuminen puuttuu!" ]
-    _ -> []
+  , case model.status of
+    SubmitError e -> div [ class "dmp-editor-status" ] [ errorResponseView e ]
+    NotLoggedInError -> div [ class "dmp-editor-status" ] [ text <| "Virhe DMP:tä tallennettaessa: Kirjautuminen puuttuu!" ]
+    _ -> text ""
   ]
 
 view : Model -> Html Msg
