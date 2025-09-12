@@ -62,6 +62,7 @@ type alias Flags =
   { maybeLogin : Maybe String
   , dmpApiBase : String
   , lajiApiBase : String
+  , authUrl : String
   }
 
 decodeFlags : Json.Decode.Value -> Result Json.Decode.Error Flags
@@ -72,18 +73,19 @@ decodeFlags flags =
       |> Json.Decode.Pipeline.optional "login" (Json.Decode.nullable Json.Decode.string) Nothing
       |> Json.Decode.Pipeline.required "dmpApiBase" Json.Decode.string
       |> Json.Decode.Pipeline.required "lajiApiBase" Json.Decode.string
+      |> Json.Decode.Pipeline.required "authUrl" Json.Decode.string
   in Json.Decode.decodeValue decoder flags
 
 parseFlags : Json.Decode.Value -> Flags
 parseFlags flags = case decodeFlags flags of
-  Err err -> Flags Nothing "http://localhost:4000" "https://dev.laji.fi/api/"
+  Err err -> Flags Nothing "http://localhost:4000" "https://dev.laji.fi/api/" "https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next="
   Ok f -> f
 
 init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flagsJson url key =
   let
     flags = parseFlags flagsJson
-    cfg = Config flags.dmpApiBase flags.lajiApiBase
+    cfg = Config flags.dmpApiBase flags.lajiApiBase flags.authUrl
     route = fromUrl url
   in
     case flags.maybeLogin of
@@ -198,7 +200,7 @@ view model =
     viewPage toMsg subView =
       { title = subView.title, body =
         [ Html.div [Html.Attributes.class "main"]
-          [ Views.Navigation.navigation model.loginSession model.currentRoute OnDeleteToken
+          [ Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
           , Html.map (\msg -> toMsg msg) subView.body
           ]
         ]

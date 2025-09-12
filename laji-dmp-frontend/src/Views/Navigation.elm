@@ -20,16 +20,17 @@ import Routes exposing (Route(..))
 import Routes exposing (DmpSubRoute(..))
 import Routes exposing (DmpElementSubRoute(..))
 import Html exposing (span)
+import Config exposing (Config)
 
-loginView : LoginSession -> (String -> msg) -> Html msg
-loginView loginSession deleteMsg =
+loginView : Config -> LoginSession -> (String -> msg) -> Html msg
+loginView cfg loginSession deleteMsg =
   div [class "login-container"]
     [ case loginSession of
       LoggedIn token person -> div [class "logged-in"]
         [ text <| person.fullName ++ " (" ++ person.id ++ ")"
         , Html.button [ class "btn", Html.Events.onClick <| deleteMsg token] [Html.text "Kirjaudu ulos"]
         ]
-      NotLoggedIn -> a [ class "btn", href "https://fmnh-ws-test.it.helsinki.fi/laji-auth/login?target=KE.1661&redirectMethod=GET&locale=fi&next=" ] [ text "Kirjaudu" ]
+      NotLoggedIn -> a [ class "btn", href cfg.authUrl ] [ text "Kirjaudu" ]
       LoadingPerson token -> Html.text "Kirjaudutaan..."
       DeletingToken token -> Html.text "Kirjaudutaan ulos..."
     ]
@@ -60,8 +61,8 @@ urlFromPath path =
   , fragment = Nothing
   }
 
-navigation : LoginSession -> Maybe Route -> (String -> msg) -> Html msg
-navigation loginSession maybeCurrentRoute deleteMsg = 
+navigation : Config -> LoginSession -> Maybe Route -> (String -> msg) -> Html msg
+navigation cfg loginSession maybeCurrentRoute deleteMsg = 
   let
     getLinkAttribs : String -> List (Html.Attribute msg)
     getLinkAttribs path =
@@ -84,7 +85,7 @@ navigation loginSession maybeCurrentRoute deleteMsg =
           [ li [] [a (getLinkAttribs "/") [text "Etusivu"]]
           , li [] [a (getLinkAttribs "/dmp") [text "DMP luettelo"]]
           ]
-        , loginView loginSession deleteMsg
+        , loginView cfg loginSession deleteMsg
         ]
       , case maybeCurrentRoute of
         Nothing -> div [] []
