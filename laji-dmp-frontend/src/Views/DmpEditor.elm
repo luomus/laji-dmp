@@ -355,6 +355,11 @@ updateAt index fn arr =
     Nothing ->
       arr
 
+pushAndPrefill : a -> Array.Array a -> Array.Array a
+pushAndPrefill def arr = case Array.get (Array.length arr - 1) arr of
+  Just elem -> Array.push elem arr
+  Nothing -> Array.push def arr
+
 updateContactId : ModifyContactIdMsg -> ContactId -> ContactId
 updateContactId msg val = case msg of
   ModifyContactIdIdentifier v -> { val | contactIdIdentifier = v }
@@ -412,7 +417,7 @@ updateDistribution msg val = case msg of
   ModifyDistributionTitle v -> { val | distributionTitle = v }
 
   ModifyDistributionLicense idx v -> { val | distributionLicenses = updateAt idx (updateLicense v) val.distributionLicenses }
-  AddDistributionLicense -> { val | distributionLicenses = Array.push defaultLicense val.distributionLicenses }
+  AddDistributionLicense -> { val | distributionLicenses = pushAndPrefill defaultLicense val.distributionLicenses }
   RemoveDistributionLicense idx -> { val | distributionLicenses = removeAt idx val.distributionLicenses }
 
 updateMetadataId : ModifyMetadataIdMsg -> MetadataId -> MetadataId
@@ -464,19 +469,19 @@ updateDataset msg val = case msg of
   RemoveDatasetKeyword idx -> { val | datasetKeywords = Maybe.map (removeAt idx) val.datasetKeywords }
 
   ModifyDatasetDistribution idx v -> { val | datasetDistributions = updateAt idx (updateDistribution v) val.datasetDistributions }
-  AddDatasetDistribution -> { val | datasetDistributions = Array.push defaultDistribution val.datasetDistributions }
+  AddDatasetDistribution -> { val | datasetDistributions = pushAndPrefill defaultDistribution val.datasetDistributions }
   RemoveDatasetDistribution idx -> { val | datasetDistributions = removeAt idx val.datasetDistributions }
 
   ModifyDatasetMetadata idx v -> { val | datasetMetadata = updateAt idx (updateMetadata v) val.datasetMetadata }
-  AddDatasetMetadata -> { val | datasetMetadata = Array.push defaultMetadata val.datasetMetadata }
+  AddDatasetMetadata -> { val | datasetMetadata = pushAndPrefill defaultMetadata val.datasetMetadata }
   RemoveDatasetMetadata idx -> { val | datasetMetadata = removeAt idx val.datasetMetadata }
 
   ModifyDatasetRights idx v -> { val | datasetRightsRelatedToData = updateAt idx (updateRights v) val.datasetRightsRelatedToData }
-  AddDatasetRights -> { val | datasetRightsRelatedToData = Array.push defaultRights val.datasetRightsRelatedToData }
+  AddDatasetRights -> { val | datasetRightsRelatedToData = pushAndPrefill defaultRights val.datasetRightsRelatedToData }
   RemoveDatasetRights idx -> { val | datasetRightsRelatedToData = removeAt idx val.datasetRightsRelatedToData }
 
   ModifyDatasetSecurity idx v -> { val | datasetSecurityAndPrivacy = updateAt idx (updateSecurity v) val.datasetSecurityAndPrivacy }
-  AddDatasetSecurity -> { val | datasetSecurityAndPrivacy = Array.push defaultSecurity val.datasetSecurityAndPrivacy }
+  AddDatasetSecurity -> { val | datasetSecurityAndPrivacy = pushAndPrefill defaultSecurity val.datasetSecurityAndPrivacy }
   RemoveDatasetSecurity idx -> { val | datasetSecurityAndPrivacy = removeAt idx val.datasetSecurityAndPrivacy }
 
 updateEthicalIssue : ModifyEthicalIssueMsg -> EthicalIssue -> EthicalIssue
@@ -504,7 +509,7 @@ updateDmp msg dmp = case msg of
   ModifyDmpDmpId v -> { dmp | dmpDmpId = updateDmpId v dmp.dmpDmpId }
 
   ModifyDmpContributor idx v -> { dmp | dmpContributors = updateAt idx (updateContributor v) dmp.dmpContributors }
-  AddDmpContributor -> { dmp | dmpContributors = Array.push defaultContributor dmp.dmpContributors }
+  AddDmpContributor -> { dmp | dmpContributors = pushAndPrefill defaultContributor dmp.dmpContributors }
   RemoveDmpContributor idx -> { dmp | dmpContributors = removeAt idx dmp.dmpContributors }
 
   ModifyDmpDataLifeCycle v -> { dmp | dmpDataLifeCycle = Maybe.map (updateDataLifeCycle v) dmp.dmpDataLifeCycle }
@@ -512,15 +517,15 @@ updateDmp msg dmp = case msg of
   RemoveDmpDataLifeCycle -> { dmp | dmpDataLifeCycle = Nothing }
 
   ModifyDmpDataset idx v -> { dmp | dmpDatasets = updateAt idx (updateDataset v) dmp.dmpDatasets }
-  AddDmpDataset -> { dmp | dmpDatasets = Array.push defaultDataset dmp.dmpDatasets }
+  AddDmpDataset -> { dmp | dmpDatasets = pushAndPrefill defaultDataset dmp.dmpDatasets }
   RemoveDmpDataset idx -> { dmp | dmpDatasets = removeAt idx dmp.dmpDatasets }
 
   ModifyDmpEthicalIssue idx v -> { dmp | dmpEthicalIssues = updateAt idx (updateEthicalIssue v) dmp.dmpEthicalIssues }
-  AddDmpEthicalIssue -> { dmp | dmpEthicalIssues = Array.push defaultEthicalIssue dmp.dmpEthicalIssues }
+  AddDmpEthicalIssue -> { dmp | dmpEthicalIssues = pushAndPrefill defaultEthicalIssue dmp.dmpEthicalIssues }
   RemoveDmpEthicalIssue idx -> { dmp | dmpEthicalIssues = removeAt idx dmp.dmpEthicalIssues }
 
   ModifyDmpProject idx v -> { dmp | dmpProjects = updateAt idx (updateProject v) dmp.dmpProjects }
-  AddDmpProject -> { dmp | dmpProjects = Array.push defaultProject dmp.dmpProjects }
+  AddDmpProject -> { dmp | dmpProjects = pushAndPrefill defaultProject dmp.dmpProjects }
   RemoveDmpProject idx -> { dmp | dmpProjects = removeAt idx dmp.dmpProjects }
 
 update : Config -> Msg -> Model -> (Model, Cmd Msg)
