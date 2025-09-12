@@ -84,6 +84,7 @@ navigation cfg loginSession maybeCurrentRoute deleteMsg =
         [ ul []
           [ li [] [a (getLinkAttribs "/") [text "Etusivu"]]
           , li [] [a (getLinkAttribs "/dmp") [text "DMP luettelo"]]
+          , li [] [a [class "nav-link", href <| cfg.dmpApiBase ++ "/swagger-ui"] [text "API ↗︎"]]
           ]
         , loginView cfg loginSession deleteMsg
         ]

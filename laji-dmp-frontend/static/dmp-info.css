@@ -10,3 +10,6 @@
   color: var(--neutral-8);
   font-size: 18px;
 }
+.dmp-info .btn {
+  margin-bottom: 16px;
+}

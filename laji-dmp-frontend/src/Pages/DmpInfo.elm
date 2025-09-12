@@ -247,11 +247,11 @@ dmpView dmp = div []
   , section [] [ projectsView dmp.dmpProjects ]
   ]
 
-view : Model -> { title : String, body : Html Msg }
-view model =
+view : Config -> Model -> { title : String, body : Html Msg }
+view cfg model =
   { title = "DMP:n tiedot"
   , body =
-    div [] <| case model.dmp of
+    div [ class "dmp-info" ] <| case model.dmp of
       HasDmp dmp ->
         case dmp.dmpId of
           Just id ->
@@ -262,6 +262,7 @@ view model =
                   then [ a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit", class "btn"] [text "Muokkaa"] ]
                   else []
               _ -> []
+            , div [] [a [class "btn", href <| cfg.dmpApiBase ++ "/dmp/" ++ String.fromInt id] [text "Lataa JSON ↗︎"]]
             , dmpView dmp
             ]
           Nothing -> [text "Virhe: DMP:n tunniste puuttuu"]

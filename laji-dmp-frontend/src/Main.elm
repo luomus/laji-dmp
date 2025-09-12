@@ -211,7 +211,7 @@ view model =
       ErrorModel e -> viewPage GotFrontMsg <| { title = "Error", body = text <| "Error: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
       DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel
-      DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view subModel
+      DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel
       DmpEditModel subModel -> viewPage GotDmpEditMsg <| Pages.DmpEdit.view subModel
       DmpNewModel subModel -> viewPage GotDmpNewMsg <| Pages.DmpNew.view subModel
 
