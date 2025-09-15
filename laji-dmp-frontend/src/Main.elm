@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (Html, div, text)
+import Html exposing (text)
 import Url
 import Json.Encode
 import Json.Decode
@@ -16,11 +16,16 @@ import Pages.DmpNew
 import Http
 import User exposing (LoginSession(..))
 import Views.Navigation
-import Html.Events
 import Html.Attributes
 import Json.Decode.Pipeline
 import Config exposing (Config)
 import Utils exposing (httpErrorToString)
+import Dict exposing (Dict)
+import Organization exposing (Organization)
+import Organization exposing (PagedResponse)
+import Platform.Cmd as Cmd
+import Organization exposing (updateOrganizationsDict)
+import Organization exposing (OrgLookup)
 
 port updateLocalStorage : Json.Encode.Value -> Cmd msg
 port toggleDialog : String -> Cmd msg
@@ -31,6 +36,7 @@ type alias Model =
   , routeModel: RouteModel
   , currentRoute: Maybe Route
   , config: Config
+  , organizations: OrgLookup
   }
 
 type RouteModel
@@ -51,12 +57,9 @@ type Msg
   | GotDmpEditMsg Pages.DmpEdit.Msg
   | GotDmpNewMsg Pages.DmpNew.Msg
   | GotPerson String (Result Http.Error User.PersonResponse)
+  | GotOrganizations (Result Http.Error (PagedResponse Organization))
   | OnDeleteToken String
   | DeletedToken (Result Http.Error String)
-
-unwrapMaybeRoute route = case route of
-  Just r -> r
-  Nothing -> FrontRoute
 
 type alias Flags =
   { maybeLogin : Maybe String
@@ -89,21 +92,26 @@ init flagsJson url key =
     route = fromUrl url
   in
     case flags.maybeLogin of
-      Nothing -> changeRouteTo route
-        { key = key
-        , routeModel = NoModel
-        , loginSession = NotLoggedIn
-        , currentRoute = route
-        , config = cfg
-        }
+      Nothing -> Tuple.mapSecond
+        (\c -> Cmd.batch [ c, Organization.getOrganizations cfg GotOrganizations ])
+        ( changeRouteTo route
+          { key = key
+          , routeModel = NoModel
+          , loginSession = NotLoggedIn
+          , currentRoute = route
+          , config = cfg
+          , organizations = Dict.empty
+          }
+        )
       Just token -> Tuple.mapSecond
-        (\c -> Cmd.batch [ c, User.getPerson cfg token <| GotPerson token ])
+        (\c -> Cmd.batch [ c, User.getPerson cfg token <| GotPerson token, Organization.getOrganizations cfg GotOrganizations ])
         ( changeRouteTo (fromUrl url)
           { key = key
           , routeModel = NoModel
           , loginSession = LoadingPerson token
           , currentRoute = route
           , config = cfg
+          , organizations = Dict.empty
           }
         )
 
@@ -188,6 +196,11 @@ update msg model =
             in ( { model | loginSession = session, routeModel = updateSession session model.routeModel }, updateLocalStorage <| User.encodeLogin session)
           Err e ->
             ({ model | routeModel = ErrorModel <| String.append "Unable to delete person token: " <| httpErrorToString e }, Cmd.none)
+      (GotOrganizations res, _) ->
+        case res of
+          Ok pagedResponse -> ({ model | organizations = updateOrganizationsDict pagedResponse model.organizations }, Cmd.none)
+          Err e ->
+            ({ model | routeModel = ErrorModel <| String.append "Unable to get organization names: " <| httpErrorToString e }, Cmd.none)
       (_, _) -> (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
@@ -210,10 +223,10 @@ view model =
       NoModel -> { title = "", body = [] }
       ErrorModel e -> viewPage GotFrontMsg <| { title = "Error", body = text <| "Error: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
-      DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel
-      DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel
-      DmpEditModel subModel -> viewPage GotDmpEditMsg <| Pages.DmpEdit.view subModel
-      DmpNewModel subModel -> viewPage GotDmpNewMsg <| Pages.DmpNew.view subModel
+      DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel model.organizations
+      DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel model.organizations
+      DmpEditModel subModel -> viewPage GotDmpEditMsg <| Pages.DmpEdit.view subModel model.organizations
+      DmpNewModel subModel -> viewPage GotDmpNewMsg <| Pages.DmpNew.view subModel model.organizations
 
 main : Program Json.Decode.Value Model Msg
 main =
@@ -225,3 +238,4 @@ main =
     , onUrlChange = UrlChanged
     , onUrlRequest = LinkClicked
     }
+

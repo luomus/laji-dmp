@@ -45,6 +45,7 @@ import Html exposing (textarea)
 import Html exposing (p)
 import DmpApi exposing (ErrorResponse)
 import Views.Errors exposing (errorResponseView)
+import Organization exposing (OrgLookup)
 
 type ModelStatus = Editing | Submitting | SubmitError ErrorResponse | NotLoggedInError
 
@@ -1420,8 +1421,8 @@ inputFieldView lab maybeDesc inp =
       Nothing -> text ""
     ]
 
-dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> Html Msg
-dmpEditorView dmp d mode session =
+dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> OrgLookup -> Html Msg
+dmpEditorView dmp d mode session orgs =
   let
     orgToOption org = option [ value org, selected <| dmp.dmpOrgId == org ] [ text org ]
   in div [ class "dmp-editor" ]
@@ -1429,7 +1430,7 @@ dmpEditorView dmp d mode session =
     , displayFieldView "Luotu: " (Maybe.map showUtcTime dmp.dmpCreated)
     , displayFieldView "Muokattu: " (Maybe.map showUtcTime dmp.dmpModified)
     , div [ class "form-field" ] <| case mode of
-      Edit _ -> [ label [] [ text <| "Organisaatio: " ++ dmp.dmpOrgId ] ]
+      Edit _ -> [ label [] [ text <| "Organisaatio: " ++ showOrgName dmp orgs ] ]
       New ->
         case session of
           User.LoggedIn personToken person ->
@@ -1530,11 +1531,11 @@ dmpEditorView dmp d mode session =
     , hr [] []
     ]
 
-editorFormView : Model -> Html Msg
-editorFormView model = 
+editorFormView : Model -> OrgLookup -> Html Msg
+editorFormView model orgs = 
   div [ class "dmp-editor-wrapper" ]
   [ div []
-      [ dmpEditorView model.dmp (model.status == Submitting) model.mode model.session
+      [ dmpEditorView model.dmp (model.status == Submitting) model.mode model.session orgs
       , button
         [ onClick OnSubmit
         , disabled (model.status == Submitting)
@@ -1548,6 +1549,6 @@ editorFormView model =
     _ -> text ""
   ]
 
-view : Model -> Html Msg
-view model = editorFormView model
+view : Model -> OrgLookup -> Html Msg
+view = editorFormView
 

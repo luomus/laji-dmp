@@ -23,6 +23,10 @@ import User exposing (LoginSession)
 import DmpApi exposing (getDmpList)
 import Models exposing (Dmp)
 import Config exposing (Config)
+import Dict exposing (Dict)
+import Organization exposing (Organization)
+import Utils exposing (showOrgName)
+import Organization exposing (OrgLookup)
 
 type DmpListState = Loading | Error String | DmpList (Array.Array Dmp)
 
@@ -45,21 +49,21 @@ update msg model =
         Err e ->
           ({ model | dmpList = Error "Failed to load DMP list response" }, Cmd.none )
 
-dmpElementView : Dmp -> Html msg
-dmpElementView elem =
+dmpElementView : Dmp -> OrgLookup -> Html msg
+dmpElementView elem orgs =
   case elem.dmpId of
     Just id -> a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
       [ h5 [] [ text <| elem.dmpTitle ]
-      , div [] [ text <| "Organisaatio: " ++ elem.dmpOrgId ]
+      , div [] [ text <| "Organisaatio: " ++ showOrgName elem orgs ]
       , div [] [ text <| String.fromInt (Array.length elem.dmpDatasets) ++ " aineistoa" ]
       ]
     Nothing -> li [] [text "Virhe: DMP:n tunniste puuttuu"]
 
-dmpTableView : Array.Array Dmp -> Html Msg
-dmpTableView dmpList = div [] (Array.toList <| Array.map dmpElementView dmpList)
+dmpTableView : Array.Array Dmp -> OrgLookup -> Html Msg
+dmpTableView dmpList orgs = div [] (Array.toList <| Array.map (\a -> dmpElementView a orgs) dmpList)
 
-view : Model -> { title : String, body : Html Msg }
-view model =
+view : Model -> OrgLookup -> { title : String, body : Html Msg }
+view model orgs =
   { title = "DMP luettelo"
   , body = div [class "dmp-index"]
     [ div [] <| case model.dmpList of
@@ -67,7 +71,7 @@ view model =
       Loading -> [ text "Ladataan DMP luetteloa..." ]
       DmpList dmpList -> 
         [
-          dmpTableView dmpList
+          dmpTableView dmpList orgs
         ]
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->

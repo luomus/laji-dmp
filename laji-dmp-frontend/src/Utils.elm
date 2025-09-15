@@ -7,6 +7,10 @@ import DmpApi exposing (ServerDecodeError)
 import Array
 import DmpApi exposing (BadStatusResponse)
 import DmpApi exposing (decodeServerDecodeError)
+import Dict
+import Organization exposing (Organization)
+import Dict exposing (Dict)
+import Organization
 
 showUtcTime : UTCTime -> String
 showUtcTime (UTCTime str) = str
@@ -275,4 +279,9 @@ showBool : Bool -> String
 showBool b = case b of
   True -> "Kyllä"
   False -> "Ei"
+
+showOrgName : Dmp -> Organization.OrgLookup -> String
+showOrgName dmp orgs = case Dict.get dmp.dmpOrgId orgs of
+  Just org -> String.join " - " <| List.filterMap identity [org.organizationLevel1, org.organizationLevel2, org.organizationLevel3, org.organizationLevel4]
+  Nothing -> dmp.dmpOrgId
 

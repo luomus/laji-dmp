@@ -18,6 +18,7 @@ import Config exposing (Config)
 import Utils exposing (httpErrorToString)
 import User exposing (LoginSession(..))
 import DmpApi exposing (ErrorResponse)
+import Organization exposing (OrgLookup)
 
 type EditorState
   = EditorModel Views.DmpEditor.Model
@@ -85,14 +86,14 @@ update cfg msg model = case (msg, model.state) of
         ({ model | state = Error <| "Error loading DMP response: " ++ httpErrorToString e }, Cmd.none)
   (_, _) -> ({ model | state = Error "Error loading DMP" }, Cmd.none)
 
-view : Model -> { title : String, body : Html Msg }
-view model =
+view : Model -> OrgLookup -> { title : String, body : Html Msg }
+view model orgs =
   { title = "DMP:n muokkaus"
   , body = case model.session of
     LoggedIn token person ->
       Html.div [] <| case model.state of
       EditorModel subModel ->
-        [ Html.map EditorMsg <| Views.DmpEditor.view subModel
+        [ Html.map EditorMsg <| Views.DmpEditor.view subModel orgs
         , button [ onClick OnDelete, class "btn btn-danger" ] [text "Poista DMP"]
         , dialog deleteDialogId []
           [ text "Haluatko varmasti poistaa DMP:n?"

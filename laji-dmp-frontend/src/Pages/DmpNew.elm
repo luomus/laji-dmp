@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Views.DmpEditor exposing (EditorMode(..))
 import User
 import Config exposing (Config)
+import Organization exposing (OrgLookup)
 
 type alias Model = Views.DmpEditor.Model
 
@@ -16,8 +17,8 @@ init key = Views.DmpEditor.init key New
 update : Config -> Msg -> Model -> (Model, Cmd Msg)
 update = Views.DmpEditor.update
 
-view : Model -> { title : String, body : Html Msg }
-view model =
+view : Model -> OrgLookup -> { title : String, body : Html Msg }
+view model orgs =
   { title = "Uusi DMP"
-  , body = Views.DmpEditor.view model
+  , body = Views.DmpEditor.view model orgs
   }

@@ -19,6 +19,7 @@ import Config exposing (Config)
 import Html exposing (b)
 import Html exposing (section)
 import Array exposing (Array)
+import Organization exposing (OrgLookup)
 
 type DmpState = Error String | Loading | HasDmp Dmp
 
@@ -228,10 +229,10 @@ fieldView : String -> String -> Html Msg
 fieldView label value = 
   div [ class "info-field" ] [ div [ class "field-label" ] [ text label ], div [ class "field-value" ] [ text value ] ]
 
-dmpView : Dmp -> Html Msg
-dmpView dmp = div []
+dmpView : Dmp -> OrgLookup -> Html Msg
+dmpView dmp orgs = div []
   [ fieldView "Otsikko: " dmp.dmpTitle
-  , fieldView "Organisaatio: " dmp.dmpOrgId
+  , fieldView "Organisaatio: " <| showOrgName dmp orgs
   , maybeFieldView "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated
   , maybeFieldView "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified
   , maybeFieldView "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp
@@ -247,8 +248,8 @@ dmpView dmp = div []
   , section [] [ projectsView dmp.dmpProjects ]
   ]
 
-view : Config -> Model -> { title : String, body : Html Msg }
-view cfg model =
+view : Config -> Model -> OrgLookup -> { title : String, body : Html Msg }
+view cfg model orgs =
   { title = "DMP:n tiedot"
   , body =
     div [ class "dmp-info" ] <| case model.dmp of
@@ -263,7 +264,7 @@ view cfg model =
                   else []
               _ -> []
             , div [] [a [class "btn", href <| cfg.dmpApiBase ++ "/dmp/" ++ String.fromInt id] [text "Lataa JSON ↗︎"]]
-            , dmpView dmp
+            , dmpView dmp orgs
             ]
           Nothing -> [text "Virhe: DMP:n tunniste puuttuu"]
       Loading -> [text "Ladataan DMP:tä..."]
