@@ -8,6 +8,7 @@ import Json.Decode exposing (array)
 import Http
 import Json.Encode
 import Config exposing (Config)
+import Json.Decode.Pipeline exposing (optional)
 
 type PersonRole = Admin | SomethingElse
 
@@ -56,7 +57,7 @@ personDecoder =
     |> required "id" string
     |> required "fullName" string
     |> required "role" (array roleDecoder)
-    |> required "organisation" (array string)
+    |> optional "organisation" (array string) Array.empty
 
 getPerson : Config -> String -> (Result Http.Error PersonResponse -> msg) -> Cmd msg
 getPerson cfg token msg =

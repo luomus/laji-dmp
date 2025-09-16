@@ -75,7 +75,9 @@ view model orgs =
         ]
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->
-        [ a [href "/dmp/new", class "btn btn-primary"] [text "+ Uusi DMP"] ]
+        if Array.isEmpty personResponse.organisation
+          then [ text "Huomio: luodaksesi uuden DMP:n käyttäjätunnuksesi tulee kuulua johonkin organisaatioon." ]
+          else [ a [href "/dmp/new", class "btn btn-primary"] [text "+ Uusi DMP"] ]
       _ -> []
     ]
   }
