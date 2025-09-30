@@ -762,7 +762,7 @@ maybeBoolSelect curr d toMsg =
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
   [ h3 [] [ text "DMP:n tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä kontaktille tunnisteen (esim. DOI).")
+  , inputFieldView "Tunniste: " (Just "Jos DMP:lle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
     <| input
       [ value <| withDefault "" dmpId.dmpIdIdentifier
       , disabled d
@@ -775,7 +775,7 @@ dmpIdEditorView dmpId d = div []
 datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
 datasetIdEditorView idx id d = div []
   [ h4 [] [ text "Aineiston tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä aineistolle tunnisteen (esim. DOI).")
+  , inputFieldView "Tunniste: " (Just "Jos aineistolle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
     <| input
       [ value <| withDefault "" id.datasetIdIdentifier
       , disabled d
@@ -851,7 +851,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionAccessUrl << parseMaybe
         ] []
-    , inputFieldView "Saatavuus: " (Just "Onko aineisto julkisesti saatavilla avoimesti tai pyydettäessä?")
+    , inputFieldView "Avoimuus: " (Just "Onko aineisto julkisesti saatavilla avoimesti tai pyydettäessä?")
       <| maybeDataAccessTypeSelect distribution.distributionDataAccess d <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionDataAccess
     , inputFieldView "Kuvaus: " Nothing
       <| textarea
@@ -890,8 +890,8 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
 
 metadataIdEditorView : Int -> Int -> MetadataId -> Bool -> Html Msg
 metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
-  [ h5 [] [ text "Metadatan tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Kopioi linkki metatiedon standardin kuvaukseen, tai muu tunniste.")
+  [ h5 [] [ text "Metadatan standardin tunniste" ]
+  , inputFieldView "Tunniste: " (Just "Lisää tähän linkki tai muu tunniste metadatan standardiin.")
     <| input
       [ value <| withDefault "" metadataId.metadataIdIdentifier
       , disabled d
@@ -902,7 +902,7 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
         << ModifyMetadataIdIdentifier
         << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "Valitse listasta metatiedon tunnisteen tyyppi. Valitse 'Ei tiedossa', jos et halua lisätä tunnistetta.")
+  , inputFieldView "Tyyppi: " (Just "Valitse listasta metadatan standardin tunnisteen tyyppi. Valitse 'Ei tiedossa', jos et halua lisätä tunnistetta.")
     <| metadataIdTypeSelect metadataId.metadataIdType d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
@@ -924,7 +924,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Metadatan osoite: " Nothing
+    [ inputFieldView "Metadatan osoite: " (Just "Linkki metadataan.")
         <| input
         [ value <| withDefault "" metadata.metadataLocation
         , disabled d
@@ -955,12 +955,12 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
         << ModifyMetadataOpen
-    , inputFieldView "Metadata perustuu tietomalliin: " (Just "Perustuuko metadata johonkin datamalliin?")
+    , inputFieldView "Metadata perustuu tietomalliin: " (Just "Perustuuko metadata johonkin tietomalliin?")
       <| maybeBoolSelect metadata.metadataSchema d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
         << ModifyMetadataSchema
-    , inputFieldView "Datamalli: " Nothing
+    , inputFieldView "Tietomalli: " Nothing
       <| input
         [ value <| withDefault "" metadata.metadataDataModel
         , disabled d
@@ -1030,7 +1030,7 @@ securityEditorView datasetIdx securityIdx security d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Otsikko*: " Nothing
+    [ inputFieldView "Tietoturvakäytännön nimi*: " (Just "Esimerkkivastaus: Henkilötietojen anonymisointi")
       <| input
         [ value <| security.securityTitle
         , disabled d
@@ -1039,7 +1039,7 @@ securityEditorView datasetIdx securityIdx security d = div []
           << ModifyDatasetSecurity securityIdx
           << ModifySecurityTitle
         ] []
-    , inputFieldView "Tietoturvakäytäntöjen kuvaus*: " Nothing
+    , inputFieldView "Tietoturvakäytännön kuvaus*: " (Just "Kuvaile nimettyä tietoturvakäytäntöä, jolla sensitiivistä dataa suojataan. Esimerkkivastaus: Nimet, osoitteet ja puhelinnumerot korvataan aineistoon pseudonyymeillä. Tallennuspäivät korvataan päivämääräväleillä.")
       <| input
         [ value <| security.securityDescription
         , disabled d
@@ -1054,7 +1054,7 @@ securityEditorView datasetIdx securityIdx security d = div []
 contactIdEditorView : ContactId -> Bool -> Html Msg
 contactIdEditorView c d = div []
   [ h4 [] [ text "Kontaktin tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä kontaktille tunnisteen (esim. ORCID).")
+  , inputFieldView "Tunniste: " (Just "Jos kontaktilla on pysyväistunniste (esim. ORCID), lisää se tähän.")
     <| input
       [ value <| withDefault "" c.contactIdIdentifier
       , disabled d
@@ -1067,7 +1067,7 @@ contactIdEditorView c d = div []
 contactEditorView : Contact -> Bool -> Html Msg
 contactEditorView c d = div []
   [ h3 [] [ text "Kontakti" ]
-  , inputFieldView "Nimi*: " (Just "Ilmoita kontaktihenkilön nimi.")
+  , inputFieldView "Nimi*: " (Just "Ilmoita kontaktihenkilön tai organisaation nimi.")
     <| input
       [ value c.contactName
       , disabled d
@@ -1091,7 +1091,7 @@ contactEditorView c d = div []
 contributorIdEditorView : Int -> ContributorId -> Bool -> Html Msg
 contributorIdEditorView idx c d = div []
   [ h4 [] [ text "Osallistujan tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Voit halutessasi lisätä osallistujalle tunnisteen (esim. ORCID).")
+  , inputFieldView "Tunniste: " (Just "Jos osallistujalla on pysyväistunniste (esim. ORCID), lisää se tähän.")
     <| input
       [ value <| withDefault "" c.contributorIdIdentifier
       , disabled d
