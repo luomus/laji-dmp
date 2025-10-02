@@ -139,7 +139,7 @@ showPersonIdType t = case t of
   PersonIdTypeOrcid -> "Orcid"
   PersonIdTypeIsni -> "Isni"
   PersonIdTypeOpenid -> "OpenId"
-  PersonIdTypeOther -> "Other"
+  PersonIdTypeOther -> "Muu"
   PersonIdTypeNone -> "Ei tiedossa"
   
 deletionDataTypeFromStr : String -> DeletionDataType
@@ -244,8 +244,8 @@ showEthicalIssuesType p = case p of
 
 showDataAccessType : DataAccessType -> String
 showDataAccessType d = case d of
-  DataAccessTypeOpen -> "Avoin"
-  DataAccessTypeShared -> "Jaettavissa"
+  DataAccessTypeOpen -> "Kaikille avoin"
+  DataAccessTypeShared -> "Saatavilla pyydettäessä"
   DataAccessTypeClosed -> "Suljettu"
 
 showMetadataIdType : MetadataIdType -> String
