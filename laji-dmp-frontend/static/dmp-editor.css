@@ -43,14 +43,25 @@
   display: inline-block;
 }
 
-.sub-form {
+.dmp-editor .sub-form {
   padding-top: 4px;
   padding-bottom: 4px;
-  margin-left: 8px;
   padding-left: 16px;
-  border-left: 1px dashed var(--neutral-5);
-  margin-top: 16px;
-  margin-bottom: 16px;
+  border-left: 1px dashed var(--primary-5);
+  margin: 16px 8px;
+  box-shadow: 0px 1px 3px 0px var(--neutral-4);
+}
+
+.dmp-editor .sub-form {
+  background-color: hsl(175deg, 4%, 92%);
+}
+
+.dmp-editor .sub-form .sub-form {
+  background-color: hsl(175deg, 6%, 94%);
+}
+
+.dmp-editor .sub-form .sub-form .sub-form {
+  background-color: hsl(175deg, 8%, 96%);
 }
 
 .dmp-editor .form-field {

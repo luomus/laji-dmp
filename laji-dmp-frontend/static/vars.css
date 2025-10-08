@@ -1,12 +1,12 @@
 :root {
   --neutral-1: hsl(175deg, 10%, 98%);
   --neutral-2: hsl(175deg, 6%, 94%);
-  --neutral-3: hsl(175deg, 4%, 92%);
-  --neutral-4: hsl(175deg, 2%, 86%);
-  --neutral-5: hsl(175deg, 1%, 60%);
-  --neutral-6: hsl(175deg, 2%, 35%);
-  --neutral-7: hsl(175deg, 4%, 20%);
-  --neutral-8: hsl(175deg, 6%, 10%);
+  --neutral-3: hsl(175deg, 4%, 90%);
+  --neutral-4: hsl(175deg, 2%, 80%);
+  --neutral-5: hsl(175deg, 1%, 50%);
+  --neutral-6: hsl(175deg, 2%, 30%);
+  --neutral-7: hsl(175deg, 4%, 18%);
+  --neutral-8: hsl(175deg, 6%, 8%);
   --neutral-9: hsl(175deg, 10%, 2%);
 
   --primary-1: hsl(175deg, 80%, 98%);
