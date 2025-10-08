@@ -55,7 +55,13 @@
 
 .dmp-editor .form-field {
   margin-top: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 32px;
+}
+
+.dmp-editor .form-field h6 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--neutral-7);
 }
 
 .dmp-editor .form-field p {
@@ -64,7 +70,6 @@
 
 .dmp-editor .form-field label {
   display: block;
-  color: var(--neutral-7);
 }
 
 .btn.btn-danger.btn-remove {

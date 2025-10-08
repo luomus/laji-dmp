@@ -1413,12 +1413,12 @@ inputFieldView : String -> Maybe String -> Html Msg -> Html Msg
 inputFieldView lab maybeDesc inp =
   div [ class "form-field" ]
     [ label []
-      [ text lab
+      [ h6 [] [ text lab ]
+      , case maybeDesc of
+        Just desc -> Html.p [] [ text desc ]
+        Nothing -> text ""
       , inp
       ]
-    , case maybeDesc of
-      Just desc -> Html.p [] [ text desc ]
-      Nothing -> text ""
     ]
 
 dmpEditorView : Dmp -> Bool -> EditorMode -> User.LoginSession -> OrgLookup -> Html Msg
