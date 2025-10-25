@@ -50,6 +50,8 @@ data DataAccessType
   = DataAccessTypeOpen
   | DataAccessTypeShared
   | DataAccessTypeClosed
+  | DataAccessTypeClassified
+  | DataAccessTypeEmbargoed
   deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 instance FromField DataAccessType where
@@ -63,24 +65,6 @@ instance ToField DataAccessType where
   toField DataAccessTypeOpen = toField ("open" :: Text)
   toField DataAccessTypeShared = toField ("shared" :: Text)
   toField DataAccessTypeClosed = toField ("closed" :: Text)
-
-data DeletionDataType
-  = DeletionDataTypeYes
-  | DeletionDataTypeNo
-  | DeletionDataTypeUnknown
-  deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
-
-instance FromField DeletionDataType where
-  fromField f mbs = case fmap decodeUtf8 mbs of
-    Just "yes" -> return DeletionDataTypeYes
-    Just "no" -> return DeletionDataTypeNo
-    Just "unknown" -> return DeletionDataTypeUnknown
-    _ -> returnError ConversionFailed f $ "Invalid value for DeletionDataType: " ++ show mbs
-
-instance ToField DeletionDataType where
-  toField DeletionDataTypeYes = toField ("yes" :: Text)
-  toField DeletionDataTypeNo = toField ("no" :: Text)
-  toField DeletionDataTypeUnknown = toField ("unknown" :: Text)
 
 data DmpType
   = DmpTypeStudent
@@ -158,17 +142,20 @@ data LanguageType
   = LanguageTypeFi
   | LanguageTypeSv
   | LanguageTypeEn
+  | LanguageTypeOther
   deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 languageTypeToText :: LanguageType -> Text
 languageTypeToText LanguageTypeFi = "fi"
 languageTypeToText LanguageTypeSv = "sv"
 languageTypeToText LanguageTypeEn = "en"
+languageTypeToText LanguageTypeOther = "other"
 
 languageTypeFromText :: Text -> Either String LanguageType
 languageTypeFromText "fi" = Right LanguageTypeFi
 languageTypeFromText "sv" = Right LanguageTypeSv
 languageTypeFromText "en" = Right LanguageTypeEn
+languageTypeFromText "other" = Right LanguageTypeOther
 languageTypeFromText other = Left $ "Invalid LanguageType: " ++ T.unpack other
 
 instance FromField LanguageType where
@@ -242,27 +229,27 @@ instance ToField PersonalDataType where
   toField PersonalDataTypeUnknown = toField ("unknown" :: Text)
 
 data RoleType
-  = RoleTypeWorkPackageLeader
-  | RoleTypeDataController
-  | RoleTypePrincipleInvestigator
-  | RoleTypeAuthorOfDataSet
+  = RoleTypeProjectDataController
+  | RoleTypeDataOwner
+  | RoleTypeOrganizationDataController
+  | RoleTypeDatasetAuthor
   | RoleTypeOther
   deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 instance FromField RoleType where
   fromField f mbs = case fmap decodeUtf8 mbs of
-    Just "work_package_leader" -> return RoleTypeWorkPackageLeader
-    Just "data_controller" -> return RoleTypeDataController
-    Just "principle_investigator" -> return RoleTypePrincipleInvestigator
-    Just "author_of_dataset" -> return RoleTypeAuthorOfDataSet
+    Just "project_data_controller" -> return RoleTypeProjectDataController
+    Just "data_owner" -> return RoleTypeDataOwner
+    Just "organization_data_controller" -> return RoleTypeOrganizationDataController
+    Just "dataset_author" -> return RoleTypeDatasetAuthor
     Just "other" -> return RoleTypeOther
     _ -> returnError ConversionFailed f $ "Invalid value for RoleType: " ++ show mbs
 
 instance ToField RoleType where
-  toField RoleTypeWorkPackageLeader = toField ("work_package_leader" :: Text)
-  toField RoleTypeDataController = toField ("data_controller" :: Text)
-  toField RoleTypePrincipleInvestigator = toField ("principle_investigator" :: Text)
-  toField RoleTypeAuthorOfDataSet = toField ("author_of_dataset" :: Text)
+  toField RoleTypeProjectDataController = toField ("project_data_controller" :: Text)
+  toField RoleTypeDataOwner = toField ("data_owner" :: Text)
+  toField RoleTypeOrganizationDataController = toField ("organization_data_controller" :: Text)
+  toField RoleTypeDatasetAuthor = toField ("dataset_author" :: Text)
   toField RoleTypeOther = toField ("other" :: Text)
 
 data SensitiveDataType
@@ -311,8 +298,8 @@ data ContributorId = ContributorId
 data DataLifeCycle = DataLifeCycle
   { dataLifeCycleArchivingServicesData :: Bool
   , dataLifeCycleBackupData :: NonEmptyText
-  , dataLifeCycleDeletionData :: DeletionDataType
   , dataLifeCycleDeletionWhenData :: Maybe Day
+  , dataLifeCycleUpdateFrequency :: NonEmptyText
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data Dataset = Dataset
@@ -321,17 +308,18 @@ data Dataset = Dataset
   , datasetDescription :: Maybe Text
   , datasetIssued :: Maybe Day
   , datasetKeywords :: Maybe [Text]
-  , datasetLanguage :: Maybe LanguageType
+  , datasetLanguage :: LanguageType
   , datasetPersonalData :: PersonalDataType
   , datasetSensitiveData :: SensitiveDataType
   , datasetReuseDataset :: Maybe Bool
   , datasetTitle :: NonEmptyText
   , datasetType :: Maybe Text
+  , datasetVocabulary :: Maybe [Text]
   , datasetDatasetId :: DatasetId
   , datasetDistributions :: [Distribution]
   , datasetMetadata :: [Metadata]
-  , datasetRightsRelatedToData :: [RightsRelatedToData]
   , datasetSecurityAndPrivacy :: [SecurityAndPrivacy]
+  , datasetDataLifeCycle :: Maybe DataLifeCycle
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data DatasetId = DatasetId
@@ -362,7 +350,6 @@ data Dmp = Dmp
   , dmpContact :: Contact
   , dmpDmpId :: DmpId
   , dmpContributors :: [Contributor]
-  , dmpDataLifeCycle :: Maybe DataLifeCycle
   , dmpDatasets :: [Dataset]
   , dmpEthicalIssues :: [EthicalIssue]
   , dmpProjects :: [Project]
@@ -385,14 +372,11 @@ data License = License
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data Metadata = Metadata
-  { metadataAccessDocumentation :: Maybe Bool
-  , metadataDataModel :: Maybe Text
-  , metadataDescription :: Maybe Text
+  { metadataDescription :: Maybe Text
   , metadataLanguage :: LanguageType
-  , metadataLocationDocumentation :: Maybe Text
   , metadataOpen :: Maybe Bool
   , metadataLocation :: Maybe Text
-  , metadataSchema :: Maybe Bool
+  , metadataStandards :: Maybe [Text]
   , metadataMetadataId :: MetadataId
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
@@ -406,10 +390,6 @@ data Project = Project
   , projectEndDate :: Maybe Day
   , projectStartDate :: Day
   , projectTitle :: NonEmptyText
-  } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
-
-data RightsRelatedToData = RightsRelatedToData
-  { rightsOwnershipDataRight :: Maybe Text
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data SecurityAndPrivacy = SecurityAndPrivacy

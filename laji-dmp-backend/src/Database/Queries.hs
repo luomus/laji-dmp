@@ -25,6 +25,8 @@ import Database.PostgreSQL.Simple.Types (PGArray(PGArray, fromPGArray))
 import qualified Data.Maybe
 import Data.Maybe (listToMaybe)
 import Database.Models (NonEmptyText(..))
+import qualified Database.Models as Models
+import qualified Database.Models as Models
 
 groupQueryResultBy :: Ord b => [t] -> (t -> b) -> [[t]]
 groupQueryResultBy dmps by = groupBy (\a b -> by a == by b) (sortOn by dmps)
@@ -59,9 +61,6 @@ groupByDistribution = groupByField RowTypes.distributionId
 
 groupByMetadata :: [RowTypes.DmpJoinRow] -> [[RowTypes.DmpJoinRow]]
 groupByMetadata = groupByField RowTypes.metadataId
-
-groupByRights :: [RowTypes.DmpJoinRow] -> [[RowTypes.DmpJoinRow]]
-groupByRights = groupByField RowTypes.rightsRelatedToDataId
 
 groupBySecurityAndPrivacy :: [RowTypes.DmpJoinRow] -> [[RowTypes.DmpJoinRow]]
 groupBySecurityAndPrivacy = groupByField RowTypes.securityAndPrivacyId
@@ -127,9 +126,9 @@ parseDataLifeCycle :: RowTypes.DmpJoinRow -> Either String Models.DataLifeCycle
 parseDataLifeCycle RowTypes.DmpJoinRow {
   RowTypes.dataLifeCycleArchivingServicesData = Just a,
   RowTypes.dataLifeCycleBackupData = Just b,
-  RowTypes.dataLifeCycleDeletionData = Just c,
-  RowTypes.dataLifeCycleDeletionWhenData = d
-  } = Right $ Models.DataLifeCycle a (NonEmptyText b) c d
+  RowTypes.dataLifeCycleDeletionWhenData = c,
+  RowTypes.dataLifeCycleUpdateFrequency = Just d
+  } = Right $ Models.DataLifeCycle a (NonEmptyText b) c (NonEmptyText d)
 parseDataLifeCycle row = Left $ "Could not parse DateLifeCycle: " ++ show row
 
 parseDataLifeCycles :: [RowTypes.DmpJoinRow] -> Either String [Models.DataLifeCycle]
@@ -170,28 +169,16 @@ parseMetadataId row = Left $ "Could not parse MetadataId: " ++ show row
 
 parseMetadata :: RowTypes.DmpJoinRow -> Either String Models.Metadata
 parseMetadata row@RowTypes.DmpJoinRow
-  { RowTypes.metadataAccessDocumentation = a
-  , RowTypes.metadataDataModel = b
-  , RowTypes.metadataDescription = c
-  , RowTypes.metadataLanguage = Just d
-  , RowTypes.metadataLocationDocumentation = e
-  , RowTypes.metadataMetadataOpen = f
-  , RowTypes.metadataMetadataLocation = g
-  , RowTypes.metadataSchema = h
-  } = Models.Metadata a b c d e f g h <$> parseMetadataId row
+  { RowTypes.metadataLanguage = Just b
+  , RowTypes.metadataMetadataOpen = c
+  , RowTypes.metadataMetadataLocation = d
+  , RowTypes.metadataStandards = e
+  } = Models.Metadata b c d (fmap fromPGArray e) <$> parseMetadataId row
 parseMetadata row =
   Left $ "Could not parse Metadata: " ++ show row
 
 parseMetadatas :: [RowTypes.DmpJoinRow] -> Either String [Models.Metadata]
 parseMetadatas arr = mapM (parseMetadata . head) (groupByMetadata arr)
-
-parseRightsRelatedToData :: RowTypes.DmpJoinRow -> Models.RightsRelatedToData
-parseRightsRelatedToData RowTypes.DmpJoinRow
-  { RowTypes.rightsRelatedToDataOwnershipDataRight = a
-  } = Models.RightsRelatedToData a
-
-parseRightsRelatedToDataArr :: [RowTypes.DmpJoinRow] -> [Models.RightsRelatedToData]
-parseRightsRelatedToDataArr arr = parseRightsRelatedToData . head <$> groupByRights arr
 
 parseSecurityAndPrivacy :: RowTypes.DmpJoinRow -> Either String Models.SecurityAndPrivacy
 parseSecurityAndPrivacy RowTypes.DmpJoinRow
@@ -220,19 +207,21 @@ parseDataset rows =
       , RowTypes.datasetDescription = c
       , RowTypes.datasetIssued = d
       , RowTypes.datasetKeywords = e
-      , RowTypes.datasetLanguage = f
+      , RowTypes.datasetLanguage = Just f
       , RowTypes.datasetPersonalData = Just g
       , RowTypes.datasetSensitiveData = Just h
       , RowTypes.datasetReuseDataset = i
       , RowTypes.datasetTitle = Just j
       , RowTypes.datasetType = k
+      , RowTypes.datasetVocabulary = l
       } = do
         datasetId <- parseDatasetId row
         distributions <- parseDistributions rows
         metadatas <- parseMetadatas rows
-        let rights = parseRightsRelatedToDataArr rows
         security <- parseSecurityAndPrivacyArr rows
-        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) k datasetId distributions metadatas rights security
+        dataLifeCycles <- parseDataLifeCycles rows
+        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) k (fmap fromPGArray l) datasetId distributions metadatas security (listToMaybe dataLifeCycles)
+
     parseRow row =
       Left $ "Could not parse Dataset: " ++ show row
   in parseRow $ head rows
@@ -283,7 +272,6 @@ parseDmp rows =
         contacts <- parseContacts rows
         dmpIds <- parseDmpIds rows
         contributors <- parseContributors rows
-        dataLifeCycles <- parseDataLifeCycles rows
         datasets <- parseDatasets rows
         ethicalIssues <- parseEthicalIssues rows
         projects <- parseProjects rows
@@ -300,7 +288,6 @@ parseDmp rows =
           (head contacts)
           (head dmpIds)
           contributors
-          (listToMaybe dataLifeCycles)
           datasets
           ethicalIssues
           projects
@@ -344,8 +331,8 @@ SELECT
   data_life_cycles.id AS data_life_cycle_id,
   data_life_cycles.archiving_services_data AS data_life_cycle_archiving_services_data,
   data_life_cycles.backup_data AS data_life_cycle_backup_data,
-  data_life_cycles.deletion_data AS data_life_cycle_deletion_data,
   data_life_cycles.deletion_when_data AS data_life_cycle_deletion_when_data,
+  data_life_cycles.update_frequency AS data_life_cycle_update_frequency,
 
   datasets.id AS dataset_id,
   datasets.data_quality_assurance AS datasets_data_quality_assurance,
@@ -359,6 +346,7 @@ SELECT
   datasets.reuse_dataset AS datasets_reuse_dataset,
   datasets.title AS datasets_title,
   datasets.type AS datasets_type,
+  datasets.vocabulary AS datasets_vocabulary,
 
   dataset_ids.id AS dataset_ids_id,
   dataset_ids.identifier AS dataset_ids_identifier,
@@ -386,14 +374,10 @@ SELECT
   licenses.start_date AS licenses_start_date,
 
   metadata.id AS metadata_id,
-  metadata.access_documentation AS metadata_access_documentation,
-  metadata.data_model AS metadata_data_model,
-  metadata.description AS metadata_description,
   metadata.language AS metadata_language,
-  metadata.location_documentation AS metadata_location_documentation,
   metadata.metadata_open AS metadata_metadata_open,
   metadata.metadata_location AS metadata_metadata_location,
-  metadata.schema AS metadata_schema,
+  metadata.standards AS metadata_standards,
 
   metadata_ids.id AS metadata_ids_id,
   metadata_ids.identifier AS metadata_ids_identifier,
@@ -405,9 +389,6 @@ SELECT
   projects.start_date AS project_start_date,
   projects.title AS project_title,
 
-  rights_related_to_data.id AS rights_related_to_data_id,
-  rights_related_to_data.ownership_data_right AS rights_related_to_data_ownership_data_right,
-
   security_and_privacy.id AS security_and_privacy_id,
   security_and_privacy.description AS security_and_privacy_description,
   security_and_privacy.title AS security_and_privacy_title
@@ -417,8 +398,8 @@ LEFT JOIN contacts ON dmps.id = contacts.dmp_id
 LEFT JOIN contact_ids ON contacts.id = contact_ids.contact_id
 LEFT JOIN contributors ON dmps.id = contributors.dmp_id
 LEFT JOIN contributor_ids ON contributors.id = contributor_ids.contributor_id
-LEFT JOIN data_life_cycles ON dmps.id = data_life_cycles.dmp_id
 LEFT JOIN datasets ON dmps.id = datasets.dmp_id
+LEFT JOIN data_life_cycles ON datasets.id = data_life_cycles.dataset_id
 LEFT JOIN dataset_ids ON datasets.id = dataset_ids.dataset_id
 LEFT JOIN distributions ON datasets.id = distributions.dataset_id
 LEFT JOIN dmp_ids ON dmps.id = dmp_ids.dmp_id
@@ -427,7 +408,6 @@ LEFT JOIN licenses ON distributions.id = licenses.distribution_id
 LEFT JOIN metadata ON datasets.id = metadata.dataset_id
 LEFT JOIN metadata_ids ON metadata.id = metadata_ids.metadata_id
 LEFT JOIN projects ON dmps.id = projects.dmp_id
-LEFT JOIN rights_related_to_data ON datasets.id = rights_related_to_data.dataset_id
 LEFT JOIN security_and_privacy ON datasets.id = security_and_privacy.dataset_id;
 |]
 
@@ -466,8 +446,8 @@ SELECT
   data_life_cycles.id AS data_life_cycle_id,
   data_life_cycles.archiving_services_data AS data_life_cycle_archiving_services_data,
   data_life_cycles.backup_data AS data_life_cycle_backup_data,
-  data_life_cycles.deletion_data AS data_life_cycle_deletion_data,
   data_life_cycles.deletion_when_data AS data_life_cycle_deletion_when_data,
+  data_life_cycles.update_frequency AS data_life_cycle_update_frequency,
 
   datasets.id AS dataset_id,
   datasets.data_quality_assurance AS datasets_data_quality_assurance,
@@ -481,6 +461,7 @@ SELECT
   datasets.reuse_dataset AS datasets_reuse_dataset,
   datasets.title AS datasets_title,
   datasets.type AS datasets_type,
+  datasets.vocabulary AS datasets_vocabulary,
 
   dataset_ids.id AS dataset_ids_id,
   dataset_ids.identifier AS dataset_ids_identifier,
@@ -508,14 +489,10 @@ SELECT
   licenses.start_date AS licenses_start_date,
 
   metadata.id AS metadata_id,
-  metadata.access_documentation AS metadata_access_documentation,
-  metadata.data_model AS metadata_data_model,
-  metadata.description AS metadata_description,
   metadata.language AS metadata_language,
-  metadata.location_documentation AS metadata_location_documentation,
   metadata.metadata_open AS metadata_metadata_open,
   metadata.metadata_location AS metadata_metadata_location,
-  metadata.schema AS metadata_schema,
+  metadata.standards AS metadata_standards,
 
   metadata_ids.id AS metadata_ids_id,
   metadata_ids.identifier AS metadata_ids_identifier,
@@ -527,9 +504,6 @@ SELECT
   projects.start_date AS project_start_date,
   projects.title AS project_title,
 
-  rights_related_to_data.id AS rights_related_to_data_id,
-  rights_related_to_data.ownership_data_right AS rights_related_to_data_ownership_data_right,
-
   security_and_privacy.id AS security_and_privacy_id,
   security_and_privacy.description AS security_and_privacy_description,
   security_and_privacy.title AS security_and_privacy_title
@@ -539,8 +513,8 @@ LEFT JOIN contacts ON dmps.id = contacts.dmp_id
 LEFT JOIN contact_ids ON contacts.id = contact_ids.contact_id
 LEFT JOIN contributors ON dmps.id = contributors.dmp_id
 LEFT JOIN contributor_ids ON contributors.id = contributor_ids.contributor_id
-LEFT JOIN data_life_cycles ON dmps.id = data_life_cycles.dmp_id
 LEFT JOIN datasets ON dmps.id = datasets.dmp_id
+LEFT JOIN data_life_cycles ON datasets.id = data_life_cycles.dataset_id
 LEFT JOIN dataset_ids ON datasets.id = dataset_ids.dataset_id
 LEFT JOIN distributions ON datasets.id = distributions.dataset_id
 LEFT JOIN dmp_ids ON dmps.id = dmp_ids.dmp_id
@@ -549,7 +523,6 @@ LEFT JOIN licenses ON distributions.id = licenses.distribution_id
 LEFT JOIN metadata ON datasets.id = metadata.dataset_id
 LEFT JOIN metadata_ids ON metadata.id = metadata_ids.metadata_id
 LEFT JOIN projects ON dmps.id = projects.dmp_id
-LEFT JOIN rights_related_to_data ON datasets.id = rights_related_to_data.dataset_id
 LEFT JOIN security_and_privacy ON datasets.id = security_and_privacy.dataset_id
 WHERE dmps.id = ?;
 |]
@@ -607,13 +580,13 @@ INSERT INTO contributors (dmp_id, mbox, name, organization, role) VALUES (?, ?, 
 insertDataLifeCycle :: Connection -> Models.DataLifeCycle -> Int -> IO Int
 insertDataLifeCycle conn self parentId = do
   [Only i] <- query conn [r|
-INSERT INTO data_life_cycles (dmp_id, archiving_services_data, backup_data, deletion_data, deletion_when_data) VALUES (?, ?, ?, ?, ?) RETURNING id;
+INSERT INTO data_life_cycles (dataset_id, archiving_services_data, backup_data, deletion_when_data, update_frequency) VALUES (?, ?, ?, ?, ?) RETURNING id;
   |]
     ( parentId
     , Models.dataLifeCycleArchivingServicesData self
     , Models.dataLifeCycleBackupData self
-    , Models.dataLifeCycleDeletionData self
     , Models.dataLifeCycleDeletionWhenData self
+    , Models.dataLifeCycleUpdateFrequency self
     )
   return i
 
@@ -633,8 +606,8 @@ insertDataset conn self parentId = do
   [Only i] <- query conn [r|
 INSERT INTO datasets (
   dmp_id, data_quality_assurance, data_sharing_issues, description, issued, keywords,
-  language, personal_data, sensitive_data, reuse_dataset, title, type
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
+  language, personal_data, sensitive_data, reuse_dataset, title, type, vocabulary
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
   |]
     ( parentId
     , Models.datasetDataQualityAssurance self
@@ -648,11 +621,12 @@ INSERT INTO datasets (
     , Models.datasetReuseDataset self
     , Models.datasetTitle self
     , Models.datasetType self
+    , PGArray <$> Models.datasetVocabulary self
     )
   forM_ (Models.datasetDistributions self) (\a -> insertDistribution conn a i)
   forM_ (Models.datasetMetadata self) (\a -> insertMetadata conn a i)
-  forM_ (Models.datasetRightsRelatedToData self) (\a -> insertRightsRelatedToData conn a i)
   forM_ (Models.datasetSecurityAndPrivacy self) (\a -> insertSecurityAndPrivacy conn a i)
+  forM_ (Models.datasetDataLifeCycle self) (\a -> insertDataLifeCycle conn a i)
   _ <- insertDatasetId conn (Models.datasetDatasetId self) i
   return i
 
@@ -710,19 +684,15 @@ insertMetadata :: Connection -> Models.Metadata -> Int -> IO Int
 insertMetadata conn self parentId = do
   [Only i] <- query conn [r|
 INSERT INTO metadata (
-  dataset_id, access_documentation, data_model, description, language, location_documentation,
-  metadata_open, metadata_location, schema
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
+  dataset_id, language,
+  metadata_open, metadata_location, standards
+) VALUES (?, ?, ?, ?, ?) RETURNING id;
   |]
     ( parentId
-    , Models.metadataAccessDocumentation self
-    , Models.metadataDataModel self
-    , Models.metadataDescription self
     , Models.metadataLanguage self
-    , Models.metadataLocationDocumentation self
     , Models.metadataOpen self
     , Models.metadataLocation self
-    , Models.metadataSchema self
+    , PGArray <$> Models.metadataStandards self
     )
   _ <- insertMetadataId conn (Models.metadataMetadataId self) i
   return i
@@ -748,16 +718,6 @@ INSERT INTO projects (dmp_id, description, end_date, start_date, title) VALUES (
     , Models.projectEndDate self
     , Models.projectStartDate self
     , Models.projectTitle self
-    )
-  return i
-
-insertRightsRelatedToData :: Connection -> Models.RightsRelatedToData -> Int -> IO Int
-insertRightsRelatedToData conn self parentId = do
-  [Only i] <- query conn [r|
-INSERT INTO rights_related_to_data (dataset_id, ownership_data_right) VALUES (?, ?) RETURNING id;
-  |]
-    ( parentId
-    , Models.rightsOwnershipDataRight self
     )
   return i
 
@@ -790,7 +750,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
     , Models.dmpTypeDmp self
     )
   forM_ (Models.dmpContributors self) (\a -> insertContributor conn a i)
-  forM_ (Models.dmpDataLifeCycle self) (\a -> insertDataLifeCycle conn a i)
   forM_ (Models.dmpDatasets self) (\a -> insertDataset conn a i)
   forM_ (Models.dmpEthicalIssues self) (\a -> insertEthicalIssue conn a i)
   forM_ (Models.dmpProjects self) (\a -> insertProject conn a i)
@@ -818,7 +777,7 @@ DELETE FROM contributors WHERE dmp_id = ?;
 deleteDataLifeCycles :: Connection -> Int -> IO ()
 deleteDataLifeCycles conn parentId =
   void $ execute conn [r|
-DELETE FROM data_life_cycles WHERE dmp_id = ?;
+DELETE FROM data_life_cycles WHERE dataset_id = ?;
   |] [parentId]
 
 deleteDatasets :: Connection -> Int -> IO ()
@@ -875,8 +834,6 @@ WHERE id = ?;
   _ <- insertDmpId conn (Models.dmpDmpId self) i
   _ <- deleteContributors conn i
   forM_ (Models.dmpContributors self) (\a -> insertContributor conn a i)
-  _ <- deleteDataLifeCycles conn i
-  forM_ (Models.dmpDataLifeCycle self) (\a -> insertDataLifeCycle conn a i)
   _ <- deleteDatasets conn i
   forM_ (Models.dmpDatasets self) (\a -> insertDataset conn a i)
   _ <- deleteEthicalIssues conn i

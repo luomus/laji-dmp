@@ -56,8 +56,8 @@ data DmpJoinRow = DmpJoinRow
     dataLifeCycleId :: Maybe Int,
     dataLifeCycleArchivingServicesData :: Maybe Bool,
     dataLifeCycleBackupData :: Maybe Text,
-    dataLifeCycleDeletionData :: Maybe Models.DeletionDataType,
     dataLifeCycleDeletionWhenData :: Maybe Day,
+    dataLifeCycleUpdateFrequency :: Maybe Text,
 
     datasetId :: Maybe Int,
     datasetDataQualityAssurance :: Maybe Text,
@@ -71,6 +71,7 @@ data DmpJoinRow = DmpJoinRow
     datasetReuseDataset :: Maybe Bool,
     datasetTitle :: Maybe Text,
     datasetType :: Maybe Text,
+    datasetVocabulary :: Maybe (PGArray Text),
 
     datasetIdsId :: Maybe Int,
     datasetIdsIdentifier :: Maybe Text,
@@ -98,14 +99,10 @@ data DmpJoinRow = DmpJoinRow
     licensesStartDate :: Maybe Day,
 
     metadataId :: Maybe Int,
-    metadataAccessDocumentation :: Maybe Bool,
-    metadataDataModel :: Maybe Text,
-    metadataDescription :: Maybe Text,
     metadataLanguage :: Maybe Models.LanguageType,
-    metadataLocationDocumentation :: Maybe Text,
     metadataMetadataOpen :: Maybe Bool,
     metadataMetadataLocation :: Maybe Text,
-    metadataSchema :: Maybe Bool,
+    metadataStandards :: Maybe (PGArray Text),
 
     metadataIdsId :: Maybe Int,
     metadataIdsIdentifier :: Maybe Text,
@@ -116,9 +113,6 @@ data DmpJoinRow = DmpJoinRow
     projectEndDate :: Maybe Day,
     projectStartDate :: Maybe Day,
     projectTitle :: Maybe Text,
-
-    rightsRelatedToDataId :: Maybe Int,
-    rightsRelatedToDataOwnershipDataRight :: Maybe Text,
 
     securityAndPrivacyId :: Maybe Int,
     securityAndPrivacyDescription :: Maybe Text,

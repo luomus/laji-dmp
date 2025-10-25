@@ -25,14 +25,9 @@ import LajiApi
 import System.Environment (lookupEnv)
 import qualified Data.Maybe
 import Data.Functor ((<&>))
-import Data.Text (Text, unpack, pack)
+import Data.Text (Text, unpack)
 import Control.Concurrent.STM
 import Network.HTTP.Req (HttpConfig)
-import Data.Time (UTCTime(UTCTime))
-import Database.PostgreSQL.Simple.FromField (Oid (Oid))
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as LBS
-import Data.ByteString (ByteString)
 import Data.Text.Lazy.Encoding (encodeUtf8)
 import Data.List.Split (splitOn)
 import qualified Data.Text.Lazy as Text.Lazy
