@@ -372,8 +372,7 @@ data License = License
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
 
 data Metadata = Metadata
-  { metadataDescription :: Maybe Text
-  , metadataLanguage :: LanguageType
+  { metadataLanguage :: LanguageType
   , metadataOpen :: Maybe Bool
   , metadataLocation :: Maybe Text
   , metadataStandards :: Maybe [Text]

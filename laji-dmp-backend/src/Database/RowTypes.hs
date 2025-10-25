@@ -23,8 +23,7 @@ instance FromField TextTimestamp where
       Nothing -> returnError ConversionFailed f "Could not parse text timestamp"
 
 data DmpJoinRow = DmpJoinRow
-  {
-    dmpCreated :: TextTimestamp,
+  { dmpCreated :: TextTimestamp,
     dmpDescription :: Maybe Text,
     dmpId :: Int,
     dmpLanguage :: Models.LanguageType,
@@ -99,6 +98,7 @@ data DmpJoinRow = DmpJoinRow
     licensesStartDate :: Maybe Day,
 
     metadataId :: Maybe Int,
+    metadataDescription :: Maybe Text,
     metadataLanguage :: Maybe Models.LanguageType,
     metadataMetadataOpen :: Maybe Bool,
     metadataMetadataLocation :: Maybe Text,
@@ -121,5 +121,5 @@ data DmpJoinRow = DmpJoinRow
 
 instance FromRow DmpJoinRow where
   fromRow = DmpJoinRow <$>
-    field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+    field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 

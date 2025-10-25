@@ -12,21 +12,15 @@ module Database.Queries where
 import qualified Database.RowTypes as RowTypes
 import qualified Database.Models as Models
 import Text.RawString.QQ (r)
-import Database.PostgreSQL.Simple (Connection, query_, Only (Only), query, execute, execute_)
+import Database.PostgreSQL.Simple (Connection, query_, Only (Only), query, execute)
 import Data.List (groupBy, sortOn)
 import Control.Monad (void, forM_)
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Time (getCurrentTime)
 import Database.PostgreSQL.Simple.FromField ()
-import Data.Time.Clock (UTCTime)
-import Database.PostgreSQL.Simple (FromRow(..), query)
-import Database.PostgreSQL.Simple.FromField ()
-import qualified Data.Text as T
 import Database.PostgreSQL.Simple.Types (PGArray(PGArray, fromPGArray))
 import qualified Data.Maybe
 import Data.Maybe (listToMaybe)
 import Database.Models (NonEmptyText(..))
-import qualified Database.Models as Models
-import qualified Database.Models as Models
 
 groupQueryResultBy :: Ord b => [t] -> (t -> b) -> [[t]]
 groupQueryResultBy dmps by = groupBy (\a b -> by a == by b) (sortOn by dmps)
