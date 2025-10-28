@@ -79,7 +79,7 @@ navigation cfg loginSession maybeCurrentRoute deleteMsg =
         Nothing -> []
   in
     nav [ class "main-nav" ]
-      [ h1 [class "nav-title"] [text "Laji-DMP"]
+      [ h1 [class "nav-title"] [text "Luonto-DMP"]
       , div [class "navbar"]
         [ ul []
           [ li [] [a (getLinkAttribs "/") [text "Etusivu"]]
