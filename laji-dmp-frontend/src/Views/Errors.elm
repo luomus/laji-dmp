@@ -60,8 +60,8 @@ localizeDmpConstructor str =
     -- DataLifeCycle
     "dataLifeCycleArchivingServicesData" -> "Arkistointi"
     "dataLifeCycleBackupData" -> "Varmuuskopiointi"
-    "dataLifeCycleDeletionData" -> "Datan poisto"
     "dataLifeCycleDeletionWhenData" -> "Datan poistamispäivä"
+    "dataLifeCycleUpdateFrequency" -> "Päivityksen tiheys"
 
     -- Dataset
     "datasetDataQualityAssurance" -> "Laadunvarmistuksen kuvaus"
@@ -75,11 +75,13 @@ localizeDmpConstructor str =
     "datasetReuseDataset" -> "Aineiston uudelleenkäyttö"
     "datasetTitle" -> "Otsikko"
     "datasetType" -> "Tyyppi"
+    "datasetVocabulary" -> "Sanastot"
     "datasetDatasetId" -> "Aineiston tunniste"
     "datasetDistributions" -> "Julkaisut"
     "datasetMetadata" -> "Metadata"
     "datasetRightsRelatedToData" -> "Datan oikeudet"
     "datasetSecurityAndPrivacy" -> "Tietoturva"
+    "datasetDataLifeCycle" -> "Datan elinkaari"
 
     -- DatasetId
     "datasetIdIdentifier" -> "Tunniste"
@@ -104,15 +106,11 @@ localizeDmpConstructor str =
     "licenseStartDate" -> "Lisenssin käyttöönottopäivä"
 
     -- Metadata
-    "metadataAccessDocumentation" -> "Dokumentaation avoimuus"
-    "metadataDataModel" -> "Datamalli"
-    "metadataDescription" -> "Kuvaus"
     "metadataLanguage" -> "Kieli"
-    "metadataLocationDocumentation" -> "Dokumentaation sijainti"
     "metadataOpen" -> "Metadatan avoimuus"
     "metadataLocation" -> "Metadatan osoite"
-    "metadataSchema" -> "Metadata perustuu tietomalliin"
     "metadataMetadataId" -> "Metadatan tunniste"
+    "metadataStandards" -> "Metadatan standardit"
 
     -- MetadataId
     "metadataIdIdentifier" -> "Tunniste"
@@ -123,9 +121,6 @@ localizeDmpConstructor str =
     "projectEndDate" -> "Loppumispäivä"
     "projectStartDate" -> "Alkamispäivä"
     "projectTitle" -> "Otsikko"
-
-    -- RightsRelatedToData
-    "rightsOwnershipDataRight" -> "Datan omistaja"
 
     -- SecurityAndPrivacy
     "securityDescription" -> "Kuvaus"

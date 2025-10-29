@@ -100,8 +100,8 @@ dataLifeCycleView d = div []
   [ h3 [] [ text <| "Datan elinkaari" ]
   , fieldView "Arkistointi: " <| showBool d.dataLifeCycleArchivingServicesData
   , fieldView "Datan varmuuskopiointi: " <| d.dataLifeCycleBackupData
-  , fieldView "Datan poistaminen: " <| showDeletionDataType d.dataLifeCycleDeletionData
   , maybeFieldView "Datan poistamispäivä: " <| Maybe.map showDay d.dataLifeCycleDeletionWhenData
+  , fieldView "Päivityksen tiheys: " <| d.dataLifeCycleUpdateFrequency
   ]
 
 datasetIdView : DatasetId -> Html Msg
@@ -145,28 +145,15 @@ metadataIdView m = div []
 metadataView : Int -> Metadata -> Html Msg
 metadataView idx m = div []
   [ h4 [] [ text <| "Metadata " ++ String.fromInt (idx + 1) ]
-  , maybeFieldView "Dokumentaation avoimuus: " <| Maybe.map boolToString m.metadataAccessDocumentation
-  , maybeFieldView "Datamalli: " m.metadataDataModel
-  , maybeFieldView "Kuvaus: " m.metadataDescription
   , fieldView "Kieli: " <| showLanguage m.metadataLanguage
-  , maybeFieldView "Dokumentaation sijainti: " m.metadataLocationDocumentation
   , maybeFieldView "Metadatan avoimuus: " <| Maybe.map boolToString m.metadataOpen
   , maybeFieldView "Metadatan osoite: " m.metadataLocation
-  , maybeFieldView "Metadata perustuu tietomalliin: " <| Maybe.map boolToString m.metadataSchema
+  , maybeFieldView "Metadatan standardit: " <| Maybe.map (Array.toList >> String.join ",") m.metadataStandards
   , metadataIdView m.metadataMetadataId
   ]
 
 metadatasView : Array Metadata -> Html Msg
 metadatasView c = div [] <| Array.toList <| Array.indexedMap metadataView c
-
-rightsView : Int -> RightsRelatedToData -> Html Msg
-rightsView idx r = div []
-  [ h4 [] [ text <| "Datan oikeudet " ++ String.fromInt (idx + 1) ]
-  , maybeFieldView "Datan omistaja: " r.rightsOwnershipDataRight
-  ]
-
-rightsArrView : Array RightsRelatedToData -> Html Msg
-rightsArrView c = div [] <| Array.toList <| Array.indexedMap rightsView c
 
 securityView : Int -> SecurityAndPrivacy -> Html Msg
 securityView idx s = div []
@@ -186,17 +173,18 @@ datasetView idx d = div []
   , maybeFieldView "Aineiston kuvaus: " d.datasetDescription
   , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
   , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
-  , maybeFieldView "Kieli: " <| Maybe.map showLanguage d.datasetLanguage
+  , fieldView "Kieli: " <| showLanguage d.datasetLanguage
   , fieldView "Henkilötiedot: " <| showPersonalDataType d.datasetPersonalData
   , fieldView "Sensitiivinen data: " <| showSensitiveDataType d.datasetSensitiveData
   , maybeFieldView "Aineston uudelleenkäyttö: " <| Maybe.map boolToString d.datasetReuseDataset
   , fieldView "Otsikko: " <| d.datasetTitle
   , maybeFieldView "Tyyppi: " d.datasetType
+  , maybeFieldView "Sanastot: " <| Maybe.map (Array.toList >> String.join ",") d.datasetVocabulary
   , datasetIdView d.datasetDatasetId
   , section [] [ distributionsView d.datasetDistributions ]
   , section [] [ metadatasView d.datasetMetadata ]
-  , section [] [ rightsArrView d.datasetRightsRelatedToData ]
   , section [] [ securityArrView d.datasetSecurityAndPrivacy ]
+  , Maybe.withDefault (text "") <| Maybe.map (\dlc -> section [] [ dataLifeCycleView dlc ]) d.datasetDataLifeCycle
   ]
 
 datasetsView : Array Dataset -> Html Msg
@@ -242,7 +230,6 @@ dmpView dmp orgs = div []
   , dmpIdView dmp.dmpDmpId
   , contactView dmp.dmpContact
   , section [] [ contributorsView dmp.dmpContributors ]
-  , Maybe.withDefault (text "") <| Maybe.map (\dlc -> section [] [ dataLifeCycleView dlc ]) dmp.dmpDataLifeCycle
   , section [] [ datasetsView dmp.dmpDatasets ]
   , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
   , section [] [ projectsView dmp.dmpProjects ]

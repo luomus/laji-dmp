@@ -16,11 +16,8 @@ type DataAccessType
   = DataAccessTypeOpen 
   | DataAccessTypeShared
   | DataAccessTypeClosed
-
-type DeletionDataType
-  = DeletionDataTypeYes
-  | DeletionDataTypeNo
-  | DeletionDataTypeUnknown
+  | DataAccessTypeClassified
+  | DataAccessTypeEmbargoed
 
 type DmpType
   = DmpTypeStudent
@@ -47,6 +44,7 @@ type LanguageType
   = LanguageTypeFi
   | LanguageTypeSv
   | LanguageTypeEn
+  | LanguageTypeOther
 
 type MetadataIdType
   = MetadataIdTypeUrl
@@ -66,10 +64,10 @@ type PersonalDataType
   | PersonalDataTypeUnknown
 
 type RoleType
-  = RoleTypeWorkPackageLeader
-  | RoleTypeDataController
-  | RoleTypePrincipleInvestigator
-  | RoleTypeAuthorOfDataSet
+  = RoleTypeProjectDataController
+  | RoleTypeDataOwner
+  | RoleTypeOrganizationDataController
+  | RoleTypeDatasetAuthor
   | RoleTypeOther
 
 type SensitiveDataType
@@ -105,8 +103,8 @@ type alias ContributorId =
 type alias DataLifeCycle =
   { dataLifeCycleArchivingServicesData: Bool
   , dataLifeCycleBackupData: String
-  , dataLifeCycleDeletionData: DeletionDataType
   , dataLifeCycleDeletionWhenData: Maybe Day
+  , dataLifeCycleUpdateFrequency: String
   }
 
 type alias Dataset =
@@ -115,17 +113,18 @@ type alias Dataset =
   , datasetDescription: Maybe String
   , datasetIssued: Maybe Day
   , datasetKeywords: Maybe (Array.Array String)
-  , datasetLanguage: Maybe LanguageType
+  , datasetLanguage: LanguageType
   , datasetPersonalData: PersonalDataType
   , datasetSensitiveData: SensitiveDataType
   , datasetReuseDataset: Maybe Bool
   , datasetTitle: String
   , datasetType: Maybe String
+  , datasetVocabulary: Maybe (Array.Array String)
   , datasetDatasetId: DatasetId
   , datasetDistributions: Array.Array Distribution
   , datasetMetadata: Array.Array Metadata
-  , datasetRightsRelatedToData: Array.Array RightsRelatedToData
   , datasetSecurityAndPrivacy: Array.Array SecurityAndPrivacy
+  , datasetDataLifeCycle: Maybe DataLifeCycle
   }
 
 type alias DatasetId =
@@ -156,7 +155,6 @@ type alias Dmp =
   , dmpContact: Contact
   , dmpDmpId: DmpId
   , dmpContributors: Array.Array Contributor
-  , dmpDataLifeCycle: Maybe DataLifeCycle
   , dmpDatasets: Array.Array Dataset
   , dmpEthicalIssues: Array.Array EthicalIssue
   , dmpProjects: Array.Array Project
@@ -179,14 +177,10 @@ type alias License =
   }
 
 type alias Metadata =
-  { metadataAccessDocumentation: Maybe Bool
-  , metadataDataModel: Maybe String
-  , metadataDescription: Maybe String
-  , metadataLanguage: LanguageType
-  , metadataLocationDocumentation: Maybe String
+  { metadataLanguage: LanguageType
   , metadataOpen: Maybe Bool
   , metadataLocation: Maybe String
-  , metadataSchema: Maybe Bool
+  , metadataStandards: Maybe (Array.Array String)
   , metadataMetadataId: MetadataId
   }
 
@@ -200,10 +194,6 @@ type alias Project =
   , projectEndDate: Maybe Day
   , projectStartDate: Day
   , projectTitle: String
-  }
-
-type alias RightsRelatedToData =
-  { rightsOwnershipDataRight: Maybe String
   }
 
 type alias SecurityAndPrivacy =

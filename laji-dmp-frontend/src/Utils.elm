@@ -22,19 +22,22 @@ langFromStr : String -> LanguageType
 langFromStr s = case s of
   "LanguageTypeEn" -> LanguageTypeEn
   "LanguageTypeSv" -> LanguageTypeSv
-  _ -> LanguageTypeFi
+  "LanguageTypeFi" -> LanguageTypeFi
+  _ -> LanguageTypeOther
 
 langToStr : LanguageType -> String
 langToStr l = case l of
   LanguageTypeEn -> "LanguageTypeEn"
   LanguageTypeSv -> "LanguageTypeSv"
-  _ -> "LanguageTypeFi"
+  LanguageTypeFi -> "LanguageTypeFi"
+  _ -> "LanguageTypeOther"
 
 showLanguage : LanguageType -> String
 showLanguage lang = case lang of
   LanguageTypeFi -> "Suomi"
   LanguageTypeEn -> "Englanti"
   LanguageTypeSv -> "Ruotsi"
+  LanguageTypeOther -> "Muu"
 
 dmpTypeFromStr : String -> DmpType
 dmpTypeFromStr s = case s of
@@ -94,27 +97,27 @@ showDocumentIdType a = case a of
 
 roleTypeFromStr : String -> RoleType
 roleTypeFromStr s = case s of
-  "RoleTypeWorkPackageLeader"     -> RoleTypeWorkPackageLeader
-  "RoleTypeDataController"        -> RoleTypeDataController
-  "RoleTypePrincipleInvestigator" -> RoleTypePrincipleInvestigator
-  "RoleTypeAuthorOfDataSet"       -> RoleTypeAuthorOfDataSet
-  _                               -> RoleTypeOther
+  "RoleTypeProjectDataController" -> RoleTypeProjectDataController
+  "RoleTypeDataOwner" -> RoleTypeDataOwner
+  "RoleTypeOrganizationDataController" -> RoleTypeOrganizationDataController
+  "RoleTypeDatasetAuthor" -> RoleTypeDatasetAuthor
+  _ -> RoleTypeOther
 
 roleTypeToStr : RoleType -> String
 roleTypeToStr v =
   case v of
-    RoleTypeWorkPackageLeader     -> "RoleTypeWorkPackageLeader"
-    RoleTypeDataController        -> "RoleTypeDataController"
-    RoleTypePrincipleInvestigator -> "RoleTypePrincipleInvestigator"
-    RoleTypeAuthorOfDataSet       -> "RoleTypeAuthorOfDataSet"
-    RoleTypeOther                 -> "RoleTypeOther"
+    RoleTypeProjectDataController -> "RoleTypeProjectDataController"
+    RoleTypeDataOwner -> "RoleTypeDataOwner"
+    RoleTypeOrganizationDataController -> "RoleTypeOrganizationDataController"
+    RoleTypeDatasetAuthor -> "RoleTypeDatasetAuthor"
+    RoleTypeOther -> "RoleTypeOther"
 
 showRoleType : RoleType -> String
 showRoleType role = case role of
-  RoleTypeWorkPackageLeader -> "Työpaketin johtaja"
-  RoleTypeDataController -> "Datan hallinnoija"
-  RoleTypePrincipleInvestigator -> "Pääasiallinen tutkija"
-  RoleTypeAuthorOfDataSet -> "Aineiston tekijä"
+  RoleTypeProjectDataController -> "Projektin datan hallinnoija"
+  RoleTypeDataOwner -> "Datan omistaja"
+  RoleTypeOrganizationDataController -> "Organisaation datan hallinoija"
+  RoleTypeDatasetAuthor -> "Aineiston tekijä"
   RoleTypeOther -> "Muu"
 
 personIdTypeFromStr : String -> PersonIdType
@@ -142,19 +145,6 @@ showPersonIdType t = case t of
   PersonIdTypeOther -> "Muu"
   PersonIdTypeNone -> "Ei tiedossa"
   
-deletionDataTypeFromStr : String -> DeletionDataType
-deletionDataTypeFromStr s = case s of
-  "DeletionDataTypeYes"     -> DeletionDataTypeYes
-  "DeletionDataTypeNo"      -> DeletionDataTypeNo
-  _                         -> DeletionDataTypeUnknown
-
-deletionDataTypeToStr : DeletionDataType -> String
-deletionDataTypeToStr v =
-  case v of
-    DeletionDataTypeYes     -> "DeletionDataTypeYes"
-    DeletionDataTypeNo      -> "DeletionDataTypeNo"
-    DeletionDataTypeUnknown -> "DeletionDataTypeUnknown"
-
 personalDataTypeFromStr : String -> PersonalDataType
 personalDataTypeFromStr s = case s of
   "PersonalDataTypeYes"     -> PersonalDataTypeYes
@@ -197,12 +187,16 @@ dataAccessTypeFromStr : String -> DataAccessType
 dataAccessTypeFromStr s = case s of
   "DataAccessTypeShared"     -> DataAccessTypeShared
   "DataAccessTypeClosed"     -> DataAccessTypeClosed
+  "DataAccessTypeClassified"     -> DataAccessTypeClassified
+  "DataAccessTypeEmbargoed"     -> DataAccessTypeEmbargoed
   _                          -> DataAccessTypeOpen
 
 dataAccessTypeToStr : DataAccessType -> String
 dataAccessTypeToStr s = case s of
   DataAccessTypeShared     -> "DataAccessTypeShared"
   DataAccessTypeClosed     -> "DataAccessTypeClosed"
+  DataAccessTypeClassified     -> "DataAccessTypeClassified"
+  DataAccessTypeEmbargoed     -> "DataAccessTypeEmbargoed"
   _                        -> "DataAccessTypeOpen"
 
 metadataIdTypeFromStr : String -> MetadataIdType
@@ -217,12 +211,6 @@ metadataIdTypeToStr v =
     MetadataIdTypeUrl -> "MetadataIdTypeUrl"
     MetadataIdTypeOther -> "MetadataIdTypeOther"
     MetadataIdTypeNone -> "MetadataIdTypeNone"
-
-showDeletionDataType : DeletionDataType -> String
-showDeletionDataType d = case d of
-  DeletionDataTypeYes -> "Kyllä"
-  DeletionDataTypeNo -> "Ei"
-  DeletionDataTypeUnknown -> "Ei tiedossa"
 
 showPersonalDataType : PersonalDataType -> String
 showPersonalDataType p = case p of
@@ -247,6 +235,8 @@ showDataAccessType d = case d of
   DataAccessTypeOpen -> "Kaikille avoin"
   DataAccessTypeShared -> "Saatavilla pyydettäessä"
   DataAccessTypeClosed -> "Suljettu"
+  DataAccessTypeClassified -> "Salattu"
+  DataAccessTypeEmbargoed -> "Estetty"
 
 showMetadataIdType : MetadataIdType -> String
 showMetadataIdType m = case m of

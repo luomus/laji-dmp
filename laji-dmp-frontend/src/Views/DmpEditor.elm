@@ -87,8 +87,8 @@ type ModifyContributorMsg
 type ModifyDataLifeCycleMsg
   = ModifyDataLifeCycleArchivingServicesData Bool
   | ModifyDataLifeCycleBackupData String
-  | ModifyDataLifeCycleDeletionData DeletionDataType
   | ModifyDataLifeCycleDeletionWhenData (Maybe Day)
+  | ModifyDataLifeCycleUpdateFrequency String
 
 type ModifyDatasetIdMsg
   = ModifyDatasetIdIdentifier (Maybe String)
@@ -110,22 +110,17 @@ type ModifyDistributionMsg
   | RemoveDistributionLicense Int
 
 type ModifyMetadataMsg
-    = ModifyMetadataAccessDocumentation (Maybe Bool)
-    | ModifyMetadataDataModel (Maybe String)
-    | ModifyMetadataDescription (Maybe String)
-    | ModifyMetadataLanguage LanguageType
-    | ModifyMetadataLocationDocumentation (Maybe String)
-    | ModifyMetadataOpen (Maybe Bool)
-    | ModifyMetadataLocation (Maybe String)
-    | ModifyMetadataSchema (Maybe Bool)
-    | ModifyMetadataMetadataId ModifyMetadataIdMsg
+  = ModifyMetadataLanguage LanguageType
+  | ModifyMetadataOpen (Maybe Bool)
+  | ModifyMetadataLocation (Maybe String)
+  | ModifyMetadataStandards Int String
+  | AddMetadataStandard
+  | RemoveMetadataStandard Int
+  | ModifyMetadataMetadataId ModifyMetadataIdMsg
 
 type ModifyMetadataIdMsg
     = ModifyMetadataIdIdentifier (Maybe String)
     | ModifyMetadataIdType MetadataIdType
-
-type ModifyRightsMsg
-    = ModifyRightsOwnershipDataRight (Maybe String)
 
 type ModifySecurityMsg
     = ModifySecurityDescription String
@@ -139,12 +134,15 @@ type ModifyDatasetMsg
   | ModifyDatasetKeywords Int String
   | AddDatasetKeyword
   | RemoveDatasetKeyword Int
-  | ModifyDatasetLanguage (Maybe LanguageType)
+  | ModifyDatasetLanguage LanguageType
   | ModifyDatasetPersonalData PersonalDataType
   | ModifyDatasetSensitiveData SensitiveDataType
   | ModifyDatasetReuseDataset (Maybe Bool)
   | ModifyDatasetTitle String
   | ModifyDatasetType (Maybe String)
+  | ModifyDatasetVocabulary Int String
+  | AddDatasetVocabulary
+  | RemoveDatasetVocabulary Int
   | ModifyDatasetDatasetId ModifyDatasetIdMsg
   | ModifyDatasetDistribution Int ModifyDistributionMsg
   | AddDatasetDistribution
@@ -152,12 +150,12 @@ type ModifyDatasetMsg
   | ModifyDatasetMetadata Int ModifyMetadataMsg
   | AddDatasetMetadata
   | RemoveDatasetMetadata Int
-  | ModifyDatasetRights Int ModifyRightsMsg
-  | AddDatasetRights
-  | RemoveDatasetRights Int
   | ModifyDatasetSecurity Int ModifySecurityMsg
   | AddDatasetSecurity
   | RemoveDatasetSecurity Int
+  | ModifyDatasetDataLifeCycle ModifyDataLifeCycleMsg
+  | AddDatasetDataLifeCycle
+  | RemoveDatasetDataLifeCycle
 
 type ModifyEthicalIssueMsg
     = ModifyEthicalIssueDescription (Maybe String)
@@ -182,9 +180,6 @@ type ModifyDmpMsg
   | ModifyDmpContributor Int ModifyContributorMsg
   | AddDmpContributor
   | RemoveDmpContributor Int
-  | ModifyDmpDataLifeCycle ModifyDataLifeCycleMsg
-  | AddDmpDataLifeCycle
-  | RemoveDmpDataLifeCycle
   | ModifyDmpDataset Int ModifyDatasetMsg
   | AddDmpDataset
   | RemoveDmpDataset Int
@@ -205,7 +200,7 @@ defaultContributor =
   { contributorMbox = Nothing
   , contributorName = ""
   , contributorOrganization = Nothing
-  , contributorRole = RoleTypeDataController
+  , contributorRole = RoleTypeProjectDataController
   , contributorContributorId =
     { contributorIdIdentifier = Nothing
     , contributorIdType = PersonIdTypeNone
@@ -231,20 +226,11 @@ defaultDistribution =
 
 defaultMetadata : Metadata
 defaultMetadata =
-  { metadataAccessDocumentation = Nothing
-  , metadataDataModel = Nothing
-  , metadataDescription = Nothing
-  , metadataLanguage = LanguageTypeFi
-  , metadataLocationDocumentation = Nothing
+  { metadataLanguage = LanguageTypeFi
   , metadataOpen = Nothing
   , metadataLocation = Nothing
-  , metadataSchema = Nothing
+  , metadataStandards = Nothing
   , metadataMetadataId = { metadataIdIdentifier = Nothing, metadataIdType = MetadataIdTypeNone }
-  }
-
-defaultRights : RightsRelatedToData
-defaultRights =
-  { rightsOwnershipDataRight = Nothing
   }
 
 defaultSecurity : SecurityAndPrivacy
@@ -260,25 +246,26 @@ defaultDataset =
   , datasetDescription = Nothing
   , datasetIssued = Nothing
   , datasetKeywords = Nothing
-  , datasetLanguage = Nothing
+  , datasetLanguage = LanguageTypeFi
   , datasetPersonalData = PersonalDataTypeUnknown
   , datasetSensitiveData = SensitiveDataTypeUnknown
   , datasetReuseDataset = Nothing
   , datasetTitle = ""
   , datasetType = Nothing
+  , datasetVocabulary = Nothing
   , datasetDatasetId = { datasetIdIdentifier = Nothing, datasetIdType = DocumentIdTypeNone }
   , datasetDistributions = Array.empty
   , datasetMetadata = Array.empty
-  , datasetRightsRelatedToData = Array.empty
   , datasetSecurityAndPrivacy = Array.empty
+  , datasetDataLifeCycle = Nothing
   }
 
 defaultDataLifeCycle : DataLifeCycle
 defaultDataLifeCycle =
   { dataLifeCycleArchivingServicesData = True
   , dataLifeCycleBackupData = ""
-  , dataLifeCycleDeletionData = DeletionDataTypeUnknown
   , dataLifeCycleDeletionWhenData = Nothing
+  , dataLifeCycleUpdateFrequency = ""
   }
 
 defaultEthicalIssue : EthicalIssue
@@ -315,7 +302,6 @@ defaultDmp org =
     }
   , dmpDmpId = { dmpIdType = DocumentIdTypeNone, dmpIdIdentifier = Nothing }
   , dmpContributors = Array.empty
-  , dmpDataLifeCycle = Nothing
   , dmpDatasets = Array.empty
   , dmpEthicalIssues = Array.empty
   , dmpProjects = Array.empty
@@ -395,8 +381,8 @@ updateDataLifeCycle : ModifyDataLifeCycleMsg -> DataLifeCycle -> DataLifeCycle
 updateDataLifeCycle msg val = case msg of
   ModifyDataLifeCycleArchivingServicesData v -> { val | dataLifeCycleArchivingServicesData = v }
   ModifyDataLifeCycleBackupData v -> { val | dataLifeCycleBackupData = v }
-  ModifyDataLifeCycleDeletionData v -> { val | dataLifeCycleDeletionData = v }
   ModifyDataLifeCycleDeletionWhenData v -> { val | dataLifeCycleDeletionWhenData = v }
+  ModifyDataLifeCycleUpdateFrequency v -> { val | dataLifeCycleUpdateFrequency = v }
 
 updateDatasetId : ModifyDatasetIdMsg -> DatasetId -> DatasetId
 updateDatasetId msg val = case msg of
@@ -428,19 +414,19 @@ updateMetadataId msg val = case msg of
 
 updateMetadata : ModifyMetadataMsg -> Metadata -> Metadata
 updateMetadata msg val = case msg of
-  ModifyMetadataAccessDocumentation v -> { val | metadataAccessDocumentation = v }
-  ModifyMetadataDataModel v -> { val | metadataDataModel = v }
-  ModifyMetadataDescription v -> { val | metadataDescription = v }
   ModifyMetadataLanguage v -> { val | metadataLanguage = v }
-  ModifyMetadataLocationDocumentation v -> { val | metadataLocationDocumentation = v }
   ModifyMetadataOpen v -> { val | metadataOpen = v }
   ModifyMetadataLocation v -> { val | metadataLocation = v }
-  ModifyMetadataSchema v -> { val | metadataSchema = v }
-  ModifyMetadataMetadataId v -> { val | metadataMetadataId = updateMetadataId v val.metadataMetadataId }
 
-updateRights : ModifyRightsMsg -> RightsRelatedToData -> RightsRelatedToData
-updateRights msg val = case msg of
-  ModifyRightsOwnershipDataRight v -> { val | rightsOwnershipDataRight = v }
+  ModifyMetadataStandards idx v -> { val | metadataStandards = Maybe.map (updateAt idx (\_ -> v)) val.metadataStandards }
+  AddMetadataStandard ->
+    { val | metadataStandards = case val.metadataStandards of
+      Just k -> Just <| Array.push "" k
+      Nothing -> Just <| Array.fromList [""]
+    }
+  RemoveMetadataStandard idx -> { val | metadataStandards = Maybe.map (removeAt idx) val.metadataStandards }
+
+  ModifyMetadataMetadataId v -> { val | metadataMetadataId = updateMetadataId v val.metadataMetadataId }
 
 updateSecurity : ModifySecurityMsg -> SecurityAndPrivacy -> SecurityAndPrivacy
 updateSecurity msg val = case msg of
@@ -469,6 +455,18 @@ updateDataset msg val = case msg of
     }
   RemoveDatasetKeyword idx -> { val | datasetKeywords = Maybe.map (removeAt idx) val.datasetKeywords }
 
+  ModifyDatasetVocabulary idx v -> { val | datasetVocabulary = Maybe.map (updateAt idx (\_ -> v)) val.datasetVocabulary }
+  AddDatasetVocabulary ->
+    { val | datasetVocabulary = case val.datasetVocabulary of
+      Just k -> Just <| Array.push "" k
+      Nothing -> Just <| Array.fromList [""]
+    }
+  RemoveDatasetVocabulary idx -> { val | datasetVocabulary = Maybe.map (removeAt idx) val.datasetVocabulary }
+
+  ModifyDatasetDataLifeCycle v -> { val | datasetDataLifeCycle = Maybe.map (updateDataLifeCycle v) val.datasetDataLifeCycle }
+  AddDatasetDataLifeCycle -> { val | datasetDataLifeCycle = Just defaultDataLifeCycle }
+  RemoveDatasetDataLifeCycle -> { val | datasetDataLifeCycle = Nothing }
+
   ModifyDatasetDistribution idx v -> { val | datasetDistributions = updateAt idx (updateDistribution v) val.datasetDistributions }
   AddDatasetDistribution -> { val | datasetDistributions = pushAndPrefill defaultDistribution val.datasetDistributions }
   RemoveDatasetDistribution idx -> { val | datasetDistributions = removeAt idx val.datasetDistributions }
@@ -476,10 +474,6 @@ updateDataset msg val = case msg of
   ModifyDatasetMetadata idx v -> { val | datasetMetadata = updateAt idx (updateMetadata v) val.datasetMetadata }
   AddDatasetMetadata -> { val | datasetMetadata = pushAndPrefill defaultMetadata val.datasetMetadata }
   RemoveDatasetMetadata idx -> { val | datasetMetadata = removeAt idx val.datasetMetadata }
-
-  ModifyDatasetRights idx v -> { val | datasetRightsRelatedToData = updateAt idx (updateRights v) val.datasetRightsRelatedToData }
-  AddDatasetRights -> { val | datasetRightsRelatedToData = pushAndPrefill defaultRights val.datasetRightsRelatedToData }
-  RemoveDatasetRights idx -> { val | datasetRightsRelatedToData = removeAt idx val.datasetRightsRelatedToData }
 
   ModifyDatasetSecurity idx v -> { val | datasetSecurityAndPrivacy = updateAt idx (updateSecurity v) val.datasetSecurityAndPrivacy }
   AddDatasetSecurity -> { val | datasetSecurityAndPrivacy = pushAndPrefill defaultSecurity val.datasetSecurityAndPrivacy }
@@ -512,10 +506,6 @@ updateDmp msg dmp = case msg of
   ModifyDmpContributor idx v -> { dmp | dmpContributors = updateAt idx (updateContributor v) dmp.dmpContributors }
   AddDmpContributor -> { dmp | dmpContributors = pushAndPrefill defaultContributor dmp.dmpContributors }
   RemoveDmpContributor idx -> { dmp | dmpContributors = removeAt idx dmp.dmpContributors }
-
-  ModifyDmpDataLifeCycle v -> { dmp | dmpDataLifeCycle = Maybe.map (updateDataLifeCycle v) dmp.dmpDataLifeCycle }
-  AddDmpDataLifeCycle -> { dmp | dmpDataLifeCycle = Just defaultDataLifeCycle }
-  RemoveDmpDataLifeCycle -> { dmp | dmpDataLifeCycle = Nothing }
 
   ModifyDmpDataset idx v -> { dmp | dmpDatasets = updateAt idx (updateDataset v) dmp.dmpDatasets }
   AddDmpDataset -> { dmp | dmpDatasets = pushAndPrefill defaultDataset dmp.dmpDatasets }
@@ -578,7 +568,7 @@ languageSelect : LanguageType -> Bool -> (LanguageType -> a) -> Html a
 languageSelect curr d toMsg =
   enumSelect
     { current = curr
-    , options = [ LanguageTypeFi, LanguageTypeSv, LanguageTypeEn ]
+    , options = [ LanguageTypeFi, LanguageTypeSv, LanguageTypeEn, LanguageTypeOther ]
     , optionToString = langToStr
     , optionFromString = langFromStr
     , optionToLabel = showLanguage
@@ -649,22 +639,10 @@ roleTypeSelect : RoleType -> Bool -> (RoleType -> msg) -> Html msg
 roleTypeSelect curr d toMsg =
   enumSelect
     { current = curr
-    , options = [ RoleTypeWorkPackageLeader, RoleTypeDataController, RoleTypePrincipleInvestigator, RoleTypeAuthorOfDataSet, RoleTypeOther ]
+    , options = [ RoleTypeProjectDataController, RoleTypeDataOwner, RoleTypeOrganizationDataController, RoleTypeDatasetAuthor, RoleTypeOther ]
     , optionToString = roleTypeToStr
     , optionFromString = roleTypeFromStr
     , optionToLabel = showRoleType
-    , msg = toMsg
-    , disabled = d
-    }
-
-deletionDataTypeSelect : DeletionDataType -> Bool -> (DeletionDataType -> msg) -> Html msg
-deletionDataTypeSelect curr d toMsg =
-  enumSelect
-    { current = curr
-    , options = [ DeletionDataTypeUnknown, DeletionDataTypeYes, DeletionDataTypeNo ]
-    , optionToString = deletionDataTypeToStr
-    , optionFromString = deletionDataTypeFromStr
-    , optionToLabel = showDeletionDataType
     , msg = toMsg
     , disabled = d
     }
@@ -728,7 +706,7 @@ maybeDataAccessTypeSelect curr d toMsg =
   in
     enumSelect
       { current = curr
-      , options = [ Just DataAccessTypeOpen, Just DataAccessTypeShared, Just DataAccessTypeClosed, Nothing ]
+      , options = [ Just DataAccessTypeOpen, Just DataAccessTypeShared, Just DataAccessTypeClosed, Just DataAccessTypeClassified, Just DataAccessTypeEmbargoed, Nothing ]
       , optionToString = optionToString
       , optionFromString = optionFromString
       , optionToLabel = optionToLabel
@@ -910,6 +888,24 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
       << ModifyMetadataIdType
   ]
 
+standardEditorView : Int -> Int -> Int -> String -> Bool -> Html Msg
+standardEditorView datasetIdx metadataIdx standardIdx standard d = div [ class "form-field keyword-editor" ]
+  [ label []
+    [ text <| "Standardi " ++ String.fromInt standardIdx ++ ": "
+    , input
+      [ value standard
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetMetadata metadataIdx << ModifyMetadataStandards standardIdx
+      ] []
+    , button
+      [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx << ModifyDatasetMetadata metadataIdx <| RemoveMetadataStandard standardIdx
+      , disabled d
+      , class "btn btn-danger btn-remove"
+      ]
+      [ text "x" ]
+    ]
+  ]
+
 metadataEditorView : Int -> Int -> Metadata -> Bool -> Html Msg
 metadataEditorView datasetIdx metadataIdx metadata d = div []
   [ div []
@@ -934,17 +930,6 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
           << ModifyMetadataLocation
           << parseMaybe
         ] []
-    , inputFieldView "Kuvaus: " Nothing
-      <| textarea
-        [ value <| withDefault "" metadata.metadataDescription
-        , disabled d
-        , onInput <| OnModifyDmp
-          << ModifyDmpDataset datasetIdx
-          << ModifyDatasetMetadata metadataIdx
-          << ModifyMetadataDescription
-          << parseMaybe
-        , class "d-block"
-        ] []
     , inputFieldView "Kieli: " Nothing
       <| languageSelect metadata.metadataLanguage d <| OnModifyDmp
         << ModifyDmpDataset datasetIdx
@@ -955,64 +940,17 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
         << ModifyMetadataOpen
-    , inputFieldView "Metadatan skeema: " (Just "Noudattaako metadata jotakin skeemaa?")
-      <| maybeBoolSelect metadata.metadataSchema d <| OnModifyDmp
-        << ModifyDmpDataset datasetIdx
-        << ModifyDatasetMetadata metadataIdx
-        << ModifyMetadataSchema
-    , inputFieldView "Tietomalli: " Nothing
-      <| input
-        [ value <| withDefault "" metadata.metadataDataModel
+    , section []
+      [ div [] <| Array.toList
+        <| Array.indexedMap (\standardIdx standard -> standardEditorView datasetIdx metadataIdx standardIdx standard d) (Maybe.withDefault Array.empty metadata.metadataStandards)
+      , button
+        [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| ModifyDatasetMetadata metadataIdx <| AddMetadataStandard
         , disabled d
-        , onInput <| OnModifyDmp
-          << ModifyDmpDataset datasetIdx
-          << ModifyDatasetMetadata metadataIdx
-          << ModifyMetadataDataModel
-          << parseMaybe
-        ] []
-    , inputFieldView "Dokumentaation sijainti: " (Just "Verkkosivun osoite, jossa dokumentaatio sijaitsee.")
-      <| input
-        [ value <| withDefault "" metadata.metadataLocationDocumentation
-        , disabled d
-        , onInput <| OnModifyDmp
-          << ModifyDmpDataset datasetIdx
-          << ModifyDatasetMetadata metadataIdx
-          << ModifyMetadataLocationDocumentation
-          << parseMaybe
-        ] []
-    ,  inputFieldView "Dokumentaation avoimuus: " (Just "Onko dokumentaatio kaikille avoimesti saatavilla?")
-      <| maybeBoolSelect metadata.metadataAccessDocumentation d <| OnModifyDmp
-        << ModifyDmpDataset datasetIdx
-        << ModifyDatasetMetadata metadataIdx
-        << ModifyMetadataAccessDocumentation
-    , section [] [ metadataIdEditorView datasetIdx metadataIdx metadata.metadataMetadataId d ]
-    ]
-  ]
-
-rightsEditorView : Int -> Int -> RightsRelatedToData -> Bool -> Html Msg
-rightsEditorView datasetIdx rightsIdx rights d = div []
-  [ div []
-    [ h4 [ class "d-inline-block" ] [ text <| "Datan oikeudet " ++ String.fromInt (rightsIdx + 1) ]
-    , button
-      [ onClick <| OnModifyDmp
-        <| ModifyDmpDataset datasetIdx
-        <| RemoveDatasetRights rightsIdx
-      , disabled d
-      , class "btn btn-danger btn-remove"
+        , class "btn"
+        ]
+        [ text "+ Lisää standardi" ]
       ]
-      [ text "x" ]
-    ]
-  , div [ class "sub-form" ]
-    [ inputFieldView "Datan omistaja: " (Just "Kuka omistaa oikeudet aineiston dataan?")
-      <| input
-        [ value <| withDefault "" rights.rightsOwnershipDataRight
-        , disabled d
-        , onInput <| OnModifyDmp
-          << ModifyDmpDataset datasetIdx
-          << ModifyDatasetRights rightsIdx
-          << ModifyRightsOwnershipDataRight
-          << parseMaybe
-        ] []
+    , section [] [ metadataIdEditorView datasetIdx metadataIdx metadata.metadataMetadataId d ]
     ]
   ]
 
@@ -1137,12 +1075,12 @@ contributorEditorView idx elem d = div []
     ]
   ]
 
-dataLifeCycleEditorView : DataLifeCycle -> Bool -> Html Msg
-dataLifeCycleEditorView elem d = div []
+dataLifeCycleEditorView : Int -> DataLifeCycle -> Bool -> Html Msg
+dataLifeCycleEditorView datasetIdx elem d = div []
   [ div []
     [ h3 [ class "d-inline-block" ] [ text <| "Datan elinkaari" ]
     , button
-        [ onClick <| OnModifyDmp <| RemoveDmpDataLifeCycle
+        [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetDataLifeCycle
         , disabled d
         , class "btn btn-danger btn-remove"
         ]
@@ -1154,22 +1092,26 @@ dataLifeCycleEditorView elem d = div []
         [ checked elem.dataLifeCycleArchivingServicesData
         , type_ "checkbox"
         , disabled d
-        , onCheck <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleArchivingServicesData
+        , onCheck <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleArchivingServicesData
         ] []
     , inputFieldView "Datan varmuuskopiointi*: " (Just "Kuvaile, kuinka aineisto varmuuskopioidaan.")
       <| input
         [ value elem.dataLifeCycleBackupData
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleBackupData
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleBackupData
         ] []
-    , inputFieldView "Datan poisto: " (Just "Poistetaanko aineisto tietyn päivämäärän jälkeen?")
-      <| deletionDataTypeSelect elem.dataLifeCycleDeletionData d <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleDeletionData
     , inputFieldView "Datan poistamispäivä: " (Just "Jos aineistolle on määritelty poistamispäivä, ilmoita se tähän.")
       <| input
         [ type_ "date"
         , value <| withDefault "" (Maybe.map unwrapDay elem.dataLifeCycleDeletionWhenData)
         , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDataLifeCycle << ModifyDataLifeCycleDeletionWhenData << Maybe.map Day << parseMaybe
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleDeletionWhenData << Maybe.map Day << parseMaybe
+        ] []
+    , inputFieldView "Päivityksen tiheys*: " Nothing
+      <| input
+        [ value elem.dataLifeCycleUpdateFrequency
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleUpdateFrequency
         ] []
     ]
   ]
@@ -1185,6 +1127,24 @@ keywordEditorView datasetIdx keywordIdx keyword d = div [ class "form-field keyw
       ] []
     , button
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetKeyword keywordIdx
+      , disabled d
+      , class "btn btn-danger btn-remove"
+      ]
+      [ text "x" ]
+    ]
+  ]
+
+vocabularyEditorView : Int -> Int -> String -> Bool -> Html Msg
+vocabularyEditorView datasetIdx vocabularyIdx vocabulary d = div [ class "form-field keyword-editor" ]
+  [ label []
+    [ text <| "Sanasto " ++ String.fromInt vocabularyIdx ++ ": "
+    , input
+      [ value vocabulary
+      , disabled d
+      , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetVocabulary vocabularyIdx
+      ] []
+    , button
+      [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetVocabulary vocabularyIdx
       , disabled d
       , class "btn btn-danger btn-remove"
       ]
@@ -1224,7 +1184,7 @@ datasetEditorView idx elem d = div []
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetType << parseMaybe
         ] []
     , inputFieldView "Kieli: " Nothing
-      <| maybeLanguageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage
+      <| languageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage
     , section []
       [ div [] <| Array.toList
         <| Array.indexedMap (\keywordIdx keyword -> keywordEditorView idx keywordIdx keyword d) (Maybe.withDefault Array.empty elem.datasetKeywords)
@@ -1260,6 +1220,16 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataSharingIssues << parseMaybe
         ] []
+    , section []
+      [ div [] <| Array.toList
+        <| Array.indexedMap (\vocabularyIdx vocabulary -> vocabularyEditorView idx vocabularyIdx vocabulary d) (Maybe.withDefault Array.empty elem.datasetVocabulary)
+      , button
+        [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetVocabulary
+        , disabled d
+        , class "btn"
+        ]
+        [ text "+ Lisää sanasto" ]
+      ]
     , section [] [ datasetIdEditorView idx elem.datasetDatasetId d ]
     , section []
       [ div []
@@ -1287,18 +1257,6 @@ datasetEditorView idx elem d = div []
         ]
     , section []
       [ div []
-        <| Array.toList <| Array.indexedMap (\i e -> rightsEditorView idx i e d) elem.datasetRightsRelatedToData
-      , button
-        [ onClick <| OnModifyDmp
-          <| ModifyDmpDataset idx
-          <| AddDatasetRights
-        , disabled d
-        , class "btn"
-        ]
-        [ text "+ Lisää 'datan oikeudet' -osio" ]
-        ]
-    , section []
-      [ div []
         <| Array.toList <| Array.indexedMap (\i e -> securityEditorView idx i e d) elem.datasetSecurityAndPrivacy
       , button
         [ onClick <| OnModifyDmp
@@ -1309,6 +1267,17 @@ datasetEditorView idx elem d = div []
         ]
         [ text "+ Lisää tietoturva-osio" ]
         ]
+    , section []
+      [ div [] <| withDefault [] (Maybe.map (\x -> [dataLifeCycleEditorView idx x d]) elem.datasetDataLifeCycle)
+      , case elem.datasetDataLifeCycle of
+        Nothing -> button
+          [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetDataLifeCycle
+          , disabled d
+          , class "btn"
+          ]
+          [ text "+ Lisää 'datan elinkaari' -osio" ]
+        Just _ -> text ""
+      ]
     ]
   ]
 
@@ -1507,17 +1476,6 @@ dmpEditorView dmp d mode session orgs =
         ]
         [ text "+ Lisää aineisto" ]
         ]
-    , section []
-      [ div [] <| withDefault [] (Maybe.map (\x -> [dataLifeCycleEditorView x d]) dmp.dmpDataLifeCycle)
-      , case dmp.dmpDataLifeCycle of
-        Nothing -> button
-          [ onClick <| OnModifyDmp AddDmpDataLifeCycle
-          , disabled d
-          , class "btn"
-          ]
-          [ text "+ Lisää 'datan elinkaari' -osio" ]
-        Just _ -> text ""
-      ]
     , section []
       [ div []
         <| Array.toList <| Array.indexedMap (\idx elem -> ethicalIssueEditorView idx elem d) dmp.dmpEthicalIssues

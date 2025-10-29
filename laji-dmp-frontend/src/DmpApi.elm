@@ -33,6 +33,8 @@ dataAccessTypeDecoder = Json.Decode.map (
   \str -> case str of
     "DataAccessTypeOpen" -> DataAccessTypeOpen
     "DataAccessTypeShared" -> DataAccessTypeShared
+    "DataAccessTypeClassified" -> DataAccessTypeClassified
+    "DataAccessTypeEmbargoed" -> DataAccessTypeEmbargoed
     _ -> DataAccessTypeClosed
   ) D.string
 
@@ -42,20 +44,8 @@ encodeDataAccessType t = E.string
     DataAccessTypeOpen -> "DataAccessTypeOpen"
     DataAccessTypeShared -> "DataAccessTypeShared"
     DataAccessTypeClosed -> "DataAccessTypeClosed"
-
-deletionDataTypeDecoder : Json.Decode.Decoder DeletionDataType
-deletionDataTypeDecoder = Json.Decode.map
-  (\str -> case str of
-    "DeletionDataTypeYes" -> DeletionDataTypeYes
-    "DeletionDataTypeNo" -> DeletionDataTypeNo
-    _ -> DeletionDataTypeUnknown
-  ) D.string
-
-encodeDeletionDataType : DeletionDataType -> E.Value
-encodeDeletionDataType t = E.string <| case t of
-  DeletionDataTypeYes -> "DeletionDataTypeYes"
-  DeletionDataTypeNo -> "DeletionDataTypeNo"
-  DeletionDataTypeUnknown -> "DeletionDataTypeUnknown"
+    DataAccessTypeClassified -> "DataAccessTypeClassified"
+    DataAccessTypeEmbargoed -> "DataAccessTypeEmbargoed"
 
 dmpTypeDecoder : Json.Decode.Decoder DmpType
 dmpTypeDecoder = Json.Decode.map
@@ -116,7 +106,8 @@ languageTypeDecoder = Json.Decode.map
   (\str -> case str of
     "LanguageTypeFi" -> LanguageTypeFi
     "LanguageTypeSv" -> LanguageTypeSv
-    _ -> LanguageTypeEn
+    "LanguageTypeEn" -> LanguageTypeEn
+    _ -> LanguageTypeOther
   ) D.string
 
 encodeLanguageType : LanguageType -> E.Value
@@ -124,6 +115,7 @@ encodeLanguageType t = E.string <| case t of
   LanguageTypeFi -> "LanguageTypeFi"
   LanguageTypeSv -> "LanguageTypeSv"
   LanguageTypeEn -> "LanguageTypeEn"
+  LanguageTypeOther -> "LanguageTypeOther"
 
 metadataIdTypeDecoder : Json.Decode.Decoder MetadataIdType
 metadataIdTypeDecoder = Json.Decode.map
@@ -174,19 +166,19 @@ encodePersonalDataType t = E.string <| case t of
 roleTypeDecoder : Json.Decode.Decoder RoleType
 roleTypeDecoder = Json.Decode.map
   (\str -> case str of
-    "RoleTypeWorkPackageLeader" -> RoleTypeWorkPackageLeader
-    "RoleTypeDataController" -> RoleTypeDataController
-    "RoleTypePrincipleInvestigator" -> RoleTypePrincipleInvestigator
-    "RoleTypeAuthorOfDataSet" -> RoleTypeAuthorOfDataSet
+    "RoleTypeProjectDataController" -> RoleTypeProjectDataController
+    "RoleTypeDataOwner" -> RoleTypeDataOwner
+    "RoleTypeOrganizationDataController" -> RoleTypeOrganizationDataController
+    "RoleTypeDatasetAuthor" -> RoleTypeDatasetAuthor
     _ -> RoleTypeOther
   ) D.string
 
 encodeRoleType : RoleType -> E.Value
 encodeRoleType t = E.string <| case t of
-  RoleTypeWorkPackageLeader -> "RoleTypeWorkPackageLeader"
-  RoleTypeDataController -> "RoleTypeDataController"
-  RoleTypePrincipleInvestigator -> "RoleTypePrincipleInvestigator"
-  RoleTypeAuthorOfDataSet -> "RoleTypeAuthorOfDataSet"
+  RoleTypeProjectDataController -> "RoleTypeProjectDataController"
+  RoleTypeDataOwner -> "RoleTypeDataOwner"
+  RoleTypeOrganizationDataController -> "RoleTypeOrganizationDataController"
+  RoleTypeDatasetAuthor -> "RoleTypeDatasetAuthor"
   RoleTypeOther -> "RoleTypeOther"
 
 sensitiveDataTypeDecoder : Json.Decode.Decoder SensitiveDataType
@@ -261,15 +253,15 @@ dataLifeCycleDecoder : Json.Decode.Decoder DataLifeCycle
 dataLifeCycleDecoder = Json.Decode.succeed DataLifeCycle
   |> DP.required "dataLifeCycleArchivingServicesData" D.bool
   |> DP.required "dataLifeCycleBackupData" D.string
-  |> DP.required "dataLifeCycleDeletionData" deletionDataTypeDecoder
   |> DP.optional "dataLifeCycleDeletionWhenData" (D.nullable dayDecoder) Nothing
+  |> DP.required "dataLifeCycleUpdateFrequency" D.string
 
 encodeDataLifeCycle : DataLifeCycle -> E.Value
 encodeDataLifeCycle t = E.object
   [ ( "dataLifeCycleArchivingServicesData", E.bool t.dataLifeCycleArchivingServicesData)
   , ( "dataLifeCycleBackupData", E.string t.dataLifeCycleBackupData)
-  , ( "dataLifeCycleDeletionData", encodeDeletionDataType t.dataLifeCycleDeletionData)
   , ( "dataLifeCycleDeletionWhenData", encodeMaybe encodeDay t.dataLifeCycleDeletionWhenData)
+  , ( "dataLifeCycleUpdateFrequency", E.string t.dataLifeCycleUpdateFrequency)
   ]
 
 datasetDecoder : Json.Decode.Decoder Dataset
@@ -279,17 +271,18 @@ datasetDecoder = Json.Decode.succeed Dataset
   |> DP.optional "datasetDescription" (D.nullable D.string) Nothing
   |> DP.optional "datasetIssued" (D.nullable dayDecoder) Nothing
   |> DP.optional "datasetKeywords" (D.nullable (D.array D.string)) Nothing
-  |> DP.optional "datasetLanguage" (D.nullable languageTypeDecoder) Nothing
+  |> DP.required "datasetLanguage" languageTypeDecoder
   |> DP.required "datasetPersonalData" personalDataTypeDecoder
   |> DP.required "datasetSensitiveData" sensitiveDataTypeDecoder
   |> DP.optional "datasetReuseDataset" (D.nullable D.bool) Nothing
   |> DP.required "datasetTitle" D.string
   |> DP.optional "datasetType" (D.nullable D.string) Nothing
+  |> DP.optional "datasetVocabulary" (D.nullable (D.array D.string)) Nothing
   |> DP.required "datasetDatasetId" datasetIdDecoder
   |> DP.required "datasetDistributions" (D.array distributionDecoder)
   |> DP.required "datasetMetadata" (D.array metadataDecoder)
-  |> DP.required "datasetRightsRelatedToData" (D.array rightsDecoder)
   |> DP.required "datasetSecurityAndPrivacy" (D.array securityDecoder)
+  |> DP.optional "datasetDataLifeCycle" (D.nullable dataLifeCycleDecoder) Nothing
 
 encodeDataset : Dataset -> E.Value
 encodeDataset t = E.object
@@ -298,17 +291,18 @@ encodeDataset t = E.object
   , ( "datasetDescription", encodeMaybe E.string t.datasetDescription)
   , ( "datasetIssued", encodeMaybe encodeDay t.datasetIssued)
   , ( "datasetKeywords", encodeMaybe (E.array E.string) t.datasetKeywords)
-  , ( "datasetLanguage", encodeMaybe encodeLanguageType t.datasetLanguage)
+  , ( "datasetLanguage", encodeLanguageType t.datasetLanguage)
   , ( "datasetPersonalData", encodePersonalDataType t.datasetPersonalData)
   , ( "datasetSensitiveData", encodeSensitiveDataType t.datasetSensitiveData)
   , ( "datasetReuseDataset", encodeMaybe E.bool t.datasetReuseDataset)
   , ( "datasetTitle", E.string t.datasetTitle)
   , ( "datasetType", encodeMaybe E.string t.datasetType)
+  , ( "datasetVocabulary", encodeMaybe (E.array E.string) t.datasetVocabulary)
   , ( "datasetDatasetId", encodeDatasetId t.datasetDatasetId)
   , ( "datasetDistributions", E.array encodeDistribution t.datasetDistributions)
   , ( "datasetMetadata", E.array encodeMetadata t.datasetMetadata)
-  , ( "datasetRightsRelatedToData", E.array encodeRights t.datasetRightsRelatedToData)
   , ( "datasetSecurityAndPrivacy", E.array encodeSecurity t.datasetSecurityAndPrivacy)
+  , ( "datasetDataLifeCycle", encodeMaybe encodeDataLifeCycle t.datasetDataLifeCycle)
   ]
 
 datasetIdDecoder : Json.Decode.Decoder DatasetId
@@ -357,7 +351,6 @@ dmpDecoder = Json.Decode.succeed Dmp
   |> DP.required "dmpContact" contactDecoder
   |> DP.required "dmpDmpId" dmpIdDecoder
   |> DP.required "dmpContributors" (D.array contributorDecoder)
-  |> DP.optional "dmpDataLifeCycle" (D.nullable dataLifeCycleDecoder) Nothing
   |> DP.required "dmpDatasets" (D.array datasetDecoder)
   |> DP.required "dmpEthicalIssues" (D.array ethicalIssueDecoder)
   |> DP.required "dmpProjects" (D.array projectDecoder)
@@ -376,7 +369,6 @@ encodeDmp t = E.object
   , ( "dmpContact", encodeContact t.dmpContact)
   , ( "dmpDmpId", encodeDmpId t.dmpDmpId)
   , ( "dmpContributors", E.array encodeContributor t.dmpContributors)
-  , ( "dmpDataLifeCycle", encodeMaybe encodeDataLifeCycle t.dmpDataLifeCycle)
   , ( "dmpDatasets", E.array encodeDataset t.dmpDatasets)
   , ( "dmpEthicalIssues", E.array encodeEthicalIssue t.dmpEthicalIssues)
   , ( "dmpProjects", E.array encodeProject t.dmpProjects)
@@ -419,26 +411,18 @@ encodeLicense t = E.object
 
 metadataDecoder : Json.Decode.Decoder Metadata
 metadataDecoder = Json.Decode.succeed Metadata
-  |> DP.optional "metadataAccessDocumentation" (D.nullable D.bool) Nothing
-  |> DP.optional "metadataDataModel" (D.nullable D.string) Nothing
-  |> DP.optional "metadataDescription" (D.nullable D.string) Nothing
   |> DP.required "metadataLanguage" languageTypeDecoder
-  |> DP.optional "metadataLocationDocumentation" (D.nullable D.string) Nothing
   |> DP.optional "metadataOpen" (D.nullable D.bool) Nothing
   |> DP.optional "metadataLocation" (D.nullable D.string) Nothing
-  |> DP.optional "metadataSchema" (D.nullable D.bool) Nothing
+  |> DP.optional "metadataStandards" (D.nullable (D.array D.string)) Nothing
   |> DP.required "metadataMetadataId" metadataIdDecoder
 
 encodeMetadata : Metadata -> E.Value
 encodeMetadata t = E.object
-  [ ( "metadataAccessDocumentation", encodeMaybe E.bool t.metadataAccessDocumentation)
-  , ( "metadataDataModel", encodeMaybe E.string t.metadataDataModel)
-  , ( "metadataDescription", encodeMaybe E.string t.metadataDescription)
-  , ( "metadataLanguage", encodeLanguageType t.metadataLanguage)
-  , ( "metadataLocationDocumentation", encodeMaybe E.string t.metadataLocationDocumentation)
+  [ ( "metadataLanguage", encodeLanguageType t.metadataLanguage)
   , ( "metadataOpen", encodeMaybe E.bool t.metadataOpen)
   , ( "metadataLocation", encodeMaybe E.string t.metadataLocation)
-  , ( "metadataSchema", encodeMaybe E.bool t.metadataSchema)
+  , ( "metadataStandards", encodeMaybe (E.array E.string) t.metadataStandards)
   , ( "metadataMetadataId", encodeMetadataId t.metadataMetadataId)
   ]
 
@@ -466,15 +450,6 @@ encodeProject t = E.object
   , ( "projectEndDate", encodeMaybe encodeDay t.projectEndDate)
   , ( "projectStartDate", encodeDay t.projectStartDate)
   , ( "projectTitle", E.string t.projectTitle)
-  ]
-
-rightsDecoder : Json.Decode.Decoder RightsRelatedToData
-rightsDecoder = Json.Decode.succeed RightsRelatedToData
-  |> DP.optional "rightsOwnershipDataRight" (D.nullable D.string) Nothing
-
-encodeRights : RightsRelatedToData -> E.Value
-encodeRights t = E.object
-  [ ( "rightsOwnershipDataRight", encodeMaybe E.string t.rightsOwnershipDataRight)
   ]
 
 securityDecoder : Json.Decode.Decoder SecurityAndPrivacy
