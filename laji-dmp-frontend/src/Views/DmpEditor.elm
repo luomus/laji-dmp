@@ -800,7 +800,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Käytetty lisenssi: " (Just "Lisää linkki käytettyyn lisenssiin, esim: https://creativecommons.org/licenses/by/4.0/")
+    [ inputFieldView "Käytettävä lisenssi: " (Just "Lisää linkki käytettävään lisenssiin, esim: https://creativecommons.org/licenses/by/4.0/")
       <| input
         [ value license.licenseRef
         , disabled d
@@ -828,7 +828,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
 distributionEditorView : Int -> Int -> Distribution -> Bool -> Html Msg
 distributionEditorView datasetIdx distributionIdx distribution d = div []
   [ div []
-    [ h4 [ class "d-inline-block" ] [ text <| "Julkaisu " ++ String.fromInt (distributionIdx + 1) ]
+    [ h4 [ class "d-inline-block" ] [ text <| "Aineiston jakelu " ++ String.fromInt (distributionIdx + 1) ]
     , button
       [ onClick <| OnModifyDmp
         <| ModifyDmpDataset datasetIdx
@@ -845,7 +845,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionTitle
         ] []
-    , inputFieldView "Julkaisun osoite: " (Just "Verkkosivun osoite, jossa aineisto on julkaistu.")
+    , inputFieldView "Jakelun osoite: " (Just "Verkkosivun osoite, jossa aineisto on julkaistu.")
       <| input
         [ value <| withDefault "" distribution.distributionAccessUrl
         , disabled d
@@ -1235,14 +1235,14 @@ datasetEditorView idx elem d = div []
         ]
         [ text "+ Lisää avainsana" ]
       ]
-    , inputFieldView "Aineiston tuotantoajankohta: " (Just "Ilmoita aineiston tuotantoajankohta, eli päivämäärä milloin sen tuottaminen valmistuu tai on valmistunut.")
+    , inputFieldView "Aineiston tuotantoajankohta: " (Just "Ilmoita aineiston tuotantoajankohta, eli päivämäärä milloin sen tuottaminen valmistuu tai on valmistunut, ellei aineisto ole jatkuvasti ylläpidossa.")
       <| input
         [ type_ "date"
         , value <| withDefault "" (Maybe.map unwrapDay elem.datasetIssued)
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetIssued << Maybe.map Day << parseMaybe
         ] []
-    , inputFieldView "Aineiston uudelleenkäyttö: " (Just "Onko aineisto kerätty jo ennen projektia?")
+    , inputFieldView "Aineiston uudelleenkäyttö: " (Just "Onko aineisto tuotettu jo ennen projektia?")
       <| maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
     , inputFieldView "Henkilötiedot: " (Just "Sisältääkö aineisto henkilötietoja, esim. henkilöiden nimi, henkilötunnus, sähköposti, puhelinnumero?")
       <| personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData
@@ -1271,7 +1271,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , class "btn"
         ]
-        [ text "+ Lisää julkaisu" ]
+        [ text "+ Lisää aineiston jakelu" ]
         ]
     , section []
       [ div []
