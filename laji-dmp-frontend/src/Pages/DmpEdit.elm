@@ -103,6 +103,6 @@ view model orgs =
         ]
       Loading key id -> [text "Ladataan DMP:tä..."]
       Error err -> [text <| "Virhe: " ++ err]
-    LoadingPerson token -> Html.div [] [ text "Logging in..." ]
-    _ -> Html.div [] [ text "Error: not logged in!" ]
+    LoadingPerson token -> Html.div [] [ text "Kirjaudutaan sisään..." ]
+    _ -> Html.div [] [ text "Virhe: et ole kirjautunut sisään!" ]
   }
