@@ -105,3 +105,7 @@
   color: var(--danger-6);
 }
 
+.dmp-editor input[type="text"] {
+  width: 52ch;
+}
+
