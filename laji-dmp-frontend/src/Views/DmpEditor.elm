@@ -739,27 +739,25 @@ maybeBoolSelect curr d toMsg =
 
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
-  [ h3 [] [ text "DMP:n tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Jos DMP:lle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
+  [ inputFieldView "Tunniste: " (Just "Jos DMP:lle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
     <| input
       [ value <| withDefault "" dmpId.dmpIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos DMP:llä ei ole pysyväistunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos DMP:llä ei ole pysyväistunnistetta.")
     <| documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType
   ]
 
 datasetIdEditorView : Int -> DatasetId -> Bool -> Html Msg
 datasetIdEditorView idx id d = div []
-  [ h4 [] [ text "Aineiston tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Jos aineistolle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
+  [ inputFieldView "Tunniste: " (Just "Jos aineistolle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
     <| input
       [ value <| withDefault "" id.datasetIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos aineistolla ei ole pysyväistunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos aineistolla ei ole pysyväistunnistetta.")
     <| documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType
   ]
 
@@ -868,8 +866,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
 
 metadataIdEditorView : Int -> Int -> MetadataId -> Bool -> Html Msg
 metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
-  [ h5 [] [ text "Metadatan standardin tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Lisää tähän linkki tai muu tunniste metadatan standardiin.")
+  [ inputFieldView "Tunniste: " (Just "Lisää tähän linkki tai muu tunniste metadatan standardiin.")
     <| input
       [ value <| withDefault "" metadataId.metadataIdIdentifier
       , disabled d
@@ -880,7 +877,7 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
         << ModifyMetadataIdIdentifier
         << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "Valitse listasta metadatan standardin tunnisteen tyyppi. Valitse 'Ei tiedossa', jos et halua lisätä tunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta metadatan standardin tunnisteen tyyppi. Valitse 'Ei tiedossa', jos et halua lisätä tunnistetta.")
     <| metadataIdTypeSelect metadataId.metadataIdType d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
@@ -991,14 +988,13 @@ securityEditorView datasetIdx securityIdx security d = div []
 
 contactIdEditorView : ContactId -> Bool -> Html Msg
 contactIdEditorView c d = div []
-  [ h4 [] [ text "Kontaktin tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Jos kontaktilla on pysyväistunniste (esim. ORCID), lisää se tähän.")
+  [ inputFieldView "Tunniste: " (Just "Jos kontaktilla on pysyväistunniste (esim. ORCID), lisää se tähän.")
     <| input
       [ value <| withDefault "" c.contactIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos kontaktilla ei ole tunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos kontaktilla ei ole tunnistetta.")
     <| personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType
   ]
 
@@ -1028,14 +1024,13 @@ contactEditorView c d = div []
 
 contributorIdEditorView : Int -> ContributorId -> Bool -> Html Msg
 contributorIdEditorView idx c d = div []
-  [ h4 [] [ text "Osallistujan tunniste" ]
-  , inputFieldView "Tunniste: " (Just "Jos osallistujalla on pysyväistunniste (esim. ORCID), lisää se tähän.")
+  [ inputFieldView "Tunniste: " (Just "Jos osallistujalla on pysyväistunniste (esim. ORCID), lisää se tähän.")
     <| input
       [ value <| withDefault "" c.contributorIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdIdentifier << parseMaybe
       ] []
-  , inputFieldView "Tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos osallistujalla ei ole tunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos osallistujalla ei ole tunnistetta.")
     <| personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType
   ]
 

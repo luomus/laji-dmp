@@ -54,22 +54,19 @@ maybeFieldView label m = case m of
 
 dmpIdView : DmpId -> Html Msg
 dmpIdView dmpId = div []
-  [ h4 [] [ text "DMP:n tunniste" ]
-  , maybeFieldView "Tunniste: " dmpId.dmpIdIdentifier
-  , fieldView "Tyyppi: " <| showDocumentIdType dmpId.dmpIdType
+  [ maybeFieldView "Tunniste: " dmpId.dmpIdIdentifier
+  , fieldView "Tunnisteen tyyppi: " <| showDocumentIdType dmpId.dmpIdType
   ]
 
 contactIdView : ContactId -> Html Msg
 contactIdView contactId = div []
-  [ h4 [] [ text "Kontaktin tunniste" ]
-  , maybeFieldView "Tunniste: " contactId.contactIdIdentifier
-  , fieldView "Tyyppi: " <| showPersonIdType contactId.contactIdType
+  [ maybeFieldView "Tunniste: " contactId.contactIdIdentifier
+  , fieldView "Tunnisteen tyyppi: " <| showPersonIdType contactId.contactIdType
   ]
 
 contactView : Contact -> Html Msg
 contactView contact = div []
-  [ h3 [] [ text "Kontakti" ]
-  , fieldView "Sähköpostiosoite: " contact.contactMbox
+  [ fieldView "Sähköpostiosoite: " contact.contactMbox
   , fieldView "Nimi: " contact.contactName
   , maybeFieldView "Organisaatio: " contact.contactOrganization
   , contactIdView contact.contactContactId
@@ -77,9 +74,8 @@ contactView contact = div []
 
 contributorIdView : ContributorId -> Html Msg
 contributorIdView c = div []
-  [ h4 [] [ text "Osallistujan tunniste" ]
-  , maybeFieldView "Tunniste: " c.contributorIdIdentifier
-  , fieldView "Tyyppi: " <| showPersonIdType c.contributorIdType
+  [ maybeFieldView "Tunniste: " c.contributorIdIdentifier
+  , fieldView "Tunnisteen tyyppi: " <| showPersonIdType c.contributorIdType
   ]
 
 contributorView : Int -> Contributor -> Html Msg
@@ -106,9 +102,8 @@ dataLifeCycleView d = div []
 
 datasetIdView : DatasetId -> Html Msg
 datasetIdView d = div []
-  [ h4 [] [ text "Aineiston tunniste" ]
-  , maybeFieldView "Tunniste: " d.datasetIdIdentifier
-  , fieldView "Tyyppi: " <| showDocumentIdType d.datasetIdType
+  [ maybeFieldView "Tunniste: " d.datasetIdIdentifier
+  , fieldView "Tunnisteen tyyppi: " <| showDocumentIdType d.datasetIdType
   ]
 
 licenseView : Int -> License -> Html Msg
