@@ -780,7 +780,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Käytettävä lisenssi: " (Just "Lisää linkki käytettävään lisenssiin, esim: https://creativecommons.org/licenses/by/4.0/")
+    [ inputFieldView "Käytettävä lisenssi*: " (Just "Lisää linkki käytettävään lisenssiin, esim: https://creativecommons.org/licenses/by/4.0/")
       <| input
         [ value license.licenseRef
         , disabled d

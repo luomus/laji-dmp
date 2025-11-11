@@ -114,10 +114,10 @@ roleTypeToStr v =
 
 showRoleType : RoleType -> String
 showRoleType role = case role of
-  RoleTypeProjectDataController -> "Projektin datan hallinnoija"
+  RoleTypeProjectDataController -> "Hankkeen datakoordinaattori"
   RoleTypeDataOwner -> "Datan omistaja"
-  RoleTypeOrganizationDataController -> "Organisaation datan hallinoija"
-  RoleTypeDatasetAuthor -> "Aineiston tekijä"
+  RoleTypeOrganizationDataController -> "Organisaation datakoordinaattori"
+  RoleTypeDatasetAuthor -> "Datan tuottaja"
   RoleTypeOther -> "Muu"
 
 personIdTypeFromStr : String -> PersonIdType
@@ -235,8 +235,8 @@ showDataAccessType d = case d of
   DataAccessTypeOpen -> "Kaikille avoin"
   DataAccessTypeShared -> "Saatavilla pyydettäessä"
   DataAccessTypeClosed -> "Suljettu"
-  DataAccessTypeClassified -> "Salattu"
-  DataAccessTypeEmbargoed -> "Estetty"
+  DataAccessTypeClassified -> "Turvallisuusluokiteltu aineisto"
+  DataAccessTypeEmbargoed -> "Hankkeen aikainen aineisto"
 
 showMetadataIdType : MetadataIdType -> String
 showMetadataIdType m = case m of
