@@ -109,7 +109,7 @@ datasetIdView d = div []
 licenseView : Int -> License -> Html Msg
 licenseView idx l = div []
   [ h5 [] [ text <| "Lisenssi " ++ String.fromInt (idx + 1) ]
-  , fieldView "Käytetty lisenssi: " <| l.licenseRef
+  , fieldView "Käytettävä lisenssi: " <| l.licenseRef
   , fieldView "Lisenssin käyttöönottopäivä: " <| showDay l.licenseStartDate
   ]
 
@@ -118,10 +118,10 @@ licensesView c = div [] <| Array.toList <| Array.indexedMap licenseView c
 
 distributionView : Int -> Distribution -> Html Msg
 distributionView idx d = div []
-  [ h4 [] [ text <| "Julkaisu " ++ String.fromInt (idx + 1) ]
+  [ h4 [] [ text <| "Aineiston jakelu" ++ String.fromInt (idx + 1) ]
   , fieldView "Otsikko: " <| d.distributionTitle
   , maybeFieldView "Kuvaus: " d.distributionDescription
-  , maybeFieldView "Julkaisun osoite: " d.distributionAccessUrl
+  , maybeFieldView "Jakelun osoite: " d.distributionAccessUrl
   , maybeFieldView "Saatavuus: " <| Maybe.map showDataAccessType d.distributionDataAccess
   , maybeFieldView "Latausosoite: " d.distributionDownloadUri
   , maybeFieldView "Tiedostotyyppi: " d.distributionFormat
