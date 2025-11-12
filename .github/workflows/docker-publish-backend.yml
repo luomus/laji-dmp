@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  MODE: ${{ github.ref == 'refs.heads.main' && 'production' || 'staging' }}
+  MODE: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
