@@ -741,14 +741,14 @@ maybeBoolSelect curr d toMsg =
 
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
-  [ inputFieldView "Tunniste: " (Just "Jos DMP:lle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
+  [ inputFieldView "Vaihtoehtoinen tunniste: " (Just "Jos DMP:lle on jo luotu pysyväistunniste (esim. DOI), lisää se tähän.")
     <| input
       [ value <| withDefault "" dmpId.dmpIdIdentifier
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdIdentifier << parseMaybe
       , type_ "text"
       ] []
-  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos DMP:llä ei ole pysyväistunnistetta.")
+  , inputFieldView "Vaihtoehtoisen tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tunnistetta', jos DMP:llä ei ole pysyväistunnistetta.")
     <| documentIdTypeSelect dmpId.dmpIdType d <| OnModifyDmp << ModifyDmpDmpId << ModifyDmpIdType
   ]
 
@@ -761,7 +761,7 @@ datasetIdEditorView idx id d = div []
       , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdIdentifier << parseMaybe
       , type_ "text"
       ] []
-  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos aineistolla ei ole pysyväistunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tunnistetta', jos aineistolla ei ole pysyväistunnistetta.")
     <| documentIdTypeSelect id.datasetIdType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDatasetId << ModifyDatasetIdType
   ]
 
@@ -889,7 +889,7 @@ metadataIdEditorView datasetIdx metadataIdx metadataId d = div []
         << parseMaybe
       , type_ "text"
       ] []
-  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta metadatan standardin tunnisteen tyyppi. Valitse 'Ei tiedossa', jos et halua lisätä tunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta metadatan standardin tunnisteen tyyppi. Valitse 'Ei tunnistetta', jos et halua lisätä tunnistetta.")
     <| metadataIdTypeSelect metadataId.metadataIdType d <| OnModifyDmp
       << ModifyDmpDataset datasetIdx
       << ModifyDatasetMetadata metadataIdx
@@ -1011,7 +1011,7 @@ contactIdEditorView c d = div []
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdIdentifier << parseMaybe
       , type_ "text"
       ] []
-  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos kontaktilla ei ole tunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tunnistetta', jos kontaktilla ei ole tunnistetta.")
     <| personIdTypeSelect c.contactIdType d <| OnModifyDmp << ModifyDmpContact << ModifyContactContactId << ModifyContactIdType
   ]
 
@@ -1051,7 +1051,7 @@ contributorIdEditorView idx c d = div []
       , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdIdentifier << parseMaybe
       , type_ "text"
       ] []
-  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tiedossa', jos osallistujalla ei ole tunnistetta.")
+  , inputFieldView "Tunnisteen tyyppi: " (Just "Valitse listasta tunnisteen tyyppi. Valitse 'Ei tunnistetta', jos osallistujalla ei ole tunnistetta.")
     <| personIdTypeSelect c.contributorIdType d <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorId << ModifyContributorIdType
   ]
 
@@ -1232,9 +1232,9 @@ datasetEditorView idx elem d = div []
         ] []
     , inputFieldView "Aineiston uudelleenkäyttö: " (Just "Onko aineisto tuotettu jo ennen projektia?")
       <| maybeBoolSelect elem.datasetReuseDataset d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetReuseDataset
-    , inputFieldView "Henkilötiedot: " (Just "Sisältääkö aineisto henkilötietoja, esim. henkilöiden nimi, henkilötunnus, sähköposti, puhelinnumero?")
+    , inputFieldView "Sisältääkö aineisto henkilötietoja?: " (Just "Henkilötietoja ovat esim. henkilöiden nimi, henkilötunnus, sähköposti ja puhelinnumero.")
       <| personalDataTypeSelect elem.datasetPersonalData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetPersonalData
-    , inputFieldView "Sensitiivinen data: " (Just "Sisältääkö aineisto sensitiivistä dataa, esim. uhanalaisten lajien paikkatietoa, tms.?")
+    , inputFieldView "Sisältääkö aineisto sensitiivistä dataa?: " (Just "Sensitiivistä dataa on esim. uhanalaisten lajien paikkatieto.")
       <| sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData
     ,  inputFieldView "Laadunvarmistuksen kuvaus: " (Just "Kirjoita tähän vapaamuotoisesti aineiston laadunvarmistuksesta, esim. validoinnista ja käytetyistä menetelmistä.")
       <| input
@@ -1323,7 +1323,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
       [ text "x" ]
     ]
   , div [ class "sub-form" ]
-    [ inputFieldView "Eettisiä haasteita on: " (Just "Liittyykö aineistonhallintasuunnitelman kuvailemaan dataan eettisiä haasteita?")
+    [ inputFieldView "Liittyykö dataan eettisiä haasteita?: " (Just "Liittyykö aineistonhallintasuunnitelman kuvailemaan dataan eettisiä haasteita?")
         <| ethicalIssuesTypeSelect ethicalIssue.ethicalIssueExist d <| OnModifyDmp
         << ModifyDmpEthicalIssue idx
         << ModifyEthicalIssueExist

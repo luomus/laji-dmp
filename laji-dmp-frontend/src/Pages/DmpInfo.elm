@@ -54,8 +54,8 @@ maybeFieldView label m = case m of
 
 dmpIdView : DmpId -> Html Msg
 dmpIdView dmpId = div []
-  [ maybeFieldView "Tunniste: " dmpId.dmpIdIdentifier
-  , fieldView "Tunnisteen tyyppi: " <| showDocumentIdType dmpId.dmpIdType
+  [ maybeFieldView "Vaihtoehtoinen tunniste: " dmpId.dmpIdIdentifier
+  , fieldView "Vaihtoehtoisen tunnisteen tyyppi: " <| showDocumentIdType dmpId.dmpIdType
   ]
 
 contactIdView : ContactId -> Html Msg
@@ -66,8 +66,9 @@ contactIdView contactId = div []
 
 contactView : Contact -> Html Msg
 contactView contact = div []
-  [ fieldView "Sähköpostiosoite: " contact.contactMbox
+  [ h5 [] [ text <| "Kontakti" ]
   , fieldView "Nimi: " contact.contactName
+  , fieldView "Sähköpostiosoite: " contact.contactMbox
   , maybeFieldView "Organisaatio: " contact.contactOrganization
   , contactIdView contact.contactContactId
   ]
@@ -81,8 +82,8 @@ contributorIdView c = div []
 contributorView : Int -> Contributor -> Html Msg
 contributorView idx c = div []
   [ h3 [] [ text <| "Osallistuja " ++ String.fromInt (idx + 1) ]
-  , maybeFieldView "Sähköpostiosoite: " c.contributorMbox
   , fieldView "Nimi: " <| c.contributorName
+  , maybeFieldView "Sähköpostiosoite: " c.contributorMbox
   , maybeFieldView "Organisaatio: " c.contributorOrganization
   , fieldView "Rooli: " <| showRoleType c.contributorRole
   , contributorIdView c.contributorContributorId
@@ -90,6 +91,18 @@ contributorView idx c = div []
 
 contributorsView : Array Contributor -> Html Msg
 contributorsView c = div [] <| Array.toList <| Array.indexedMap contributorView c
+
+projectView : Int -> Project -> Html Msg
+projectView idx s = div []
+  [ h3 [] [ text <| "Projekti " ++ String.fromInt (idx + 1) ]
+  , fieldView "Otsikko: " <| s.projectTitle
+  , fieldView "Kuvaus: " <| s.projectDescription
+  , fieldView "Projektin alkamispäivä: " <| unwrapDay s.projectStartDate
+  , maybeFieldView "Projektin loppumispäivä: " <| Maybe.map unwrapDay s.projectEndDate
+  ]
+
+projectsView : Array Project -> Html Msg
+projectsView c = div [] <| Array.toList <| Array.indexedMap projectView c
 
 dataLifeCycleView : DataLifeCycle -> Html Msg
 dataLifeCycleView d = div []
@@ -118,11 +131,11 @@ licensesView c = div [] <| Array.toList <| Array.indexedMap licenseView c
 
 distributionView : Int -> Distribution -> Html Msg
 distributionView idx d = div []
-  [ h4 [] [ text <| "Aineiston jakelu" ++ String.fromInt (idx + 1) ]
+  [ h4 [] [ text <| "Aineiston jakelu " ++ String.fromInt (idx + 1) ]
   , fieldView "Otsikko: " <| d.distributionTitle
-  , maybeFieldView "Kuvaus: " d.distributionDescription
   , maybeFieldView "Jakelun osoite: " d.distributionAccessUrl
-  , maybeFieldView "Saatavuus: " <| Maybe.map showDataAccessType d.distributionDataAccess
+  , maybeFieldView "Avoimuus: " <| Maybe.map showDataAccessType d.distributionDataAccess
+  , maybeFieldView "Lisätiedot: " d.distributionDescription
   , maybeFieldView "Latausosoite: " d.distributionDownloadUri
   , maybeFieldView "Tiedostotyyppi: " d.distributionFormat
   , section [] [ licensesView d.distributionLicenses ]
@@ -140,9 +153,9 @@ metadataIdView m = div []
 metadataView : Int -> Metadata -> Html Msg
 metadataView idx m = div []
   [ h4 [] [ text <| "Metadata " ++ String.fromInt (idx + 1) ]
-  , fieldView "Kieli: " <| showLanguage m.metadataLanguage
-  , maybeFieldView "Metadatan avoimuus: " <| Maybe.map boolToString m.metadataOpen
   , maybeFieldView "Metadatan osoite: " m.metadataLocation
+  , fieldView "Kieli: " <| showLanguage m.metadataLanguage
+  , maybeFieldView "Ovatko metatiedot avoimesti saatavilla?: " <| Maybe.map boolToString m.metadataOpen
   , maybeFieldView "Metadatan standardit: " <| Maybe.map (Array.toList >> String.join ",") m.metadataStandards
   , metadataIdView m.metadataMetadataId
   ]
@@ -163,17 +176,17 @@ securityArrView c = div [] <| Array.toList <| Array.indexedMap securityView c
 datasetView : Int -> Dataset -> Html Msg
 datasetView idx d = div []
   [ h3 [] [ text <| "Aineisto " ++ String.fromInt (idx + 1) ]
+  , fieldView "Otsikko: " <| d.datasetTitle
+  , maybeFieldView "Aineiston kuvaus: " d.datasetDescription
+  , maybeFieldView "Tyyppi: " d.datasetType
+  , fieldView "Kieli: " <| showLanguage d.datasetLanguage
+  , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
+  , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
+  , maybeFieldView "Onko aineisto tuotettu jo ennen projektia?: " <| Maybe.map boolToString d.datasetReuseDataset
+  , fieldView "Sisältääkö aineisto henkilötietoja?: " <| showPersonalDataType d.datasetPersonalData
+  , fieldView "Sisältääkö aineisto sensitiivistä dataa?: " <| showSensitiveDataType d.datasetSensitiveData
   , maybeFieldView "Laadunvarmistuksen kuvaus: " d.datasetDataQualityAssurance
   , maybeFieldView "Datanjakamisen haasteet: " d.datasetDataSharingIssues
-  , maybeFieldView "Aineiston kuvaus: " d.datasetDescription
-  , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
-  , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
-  , fieldView "Kieli: " <| showLanguage d.datasetLanguage
-  , fieldView "Henkilötiedot: " <| showPersonalDataType d.datasetPersonalData
-  , fieldView "Sensitiivinen data: " <| showSensitiveDataType d.datasetSensitiveData
-  , maybeFieldView "Aineston uudelleenkäyttö: " <| Maybe.map boolToString d.datasetReuseDataset
-  , fieldView "Otsikko: " <| d.datasetTitle
-  , maybeFieldView "Tyyppi: " d.datasetType
   , maybeFieldView "Sanastot: " <| Maybe.map (Array.toList >> String.join ",") d.datasetVocabulary
   , datasetIdView d.datasetDatasetId
   , section [] [ distributionsView d.datasetDistributions ]
@@ -189,24 +202,12 @@ ethicalIssueView : Int -> EthicalIssue -> Html Msg
 ethicalIssueView idx s = div []
   [ h3 [] [ text <| "Eettiset haasteet " ++ String.fromInt (idx + 1) ]
   , maybeFieldView "Kuvaus eettisistä haasteista: " s.ethicalIssueDescription
-  , fieldView "Eettisiä haasteita on: " <| showEthicalIssuesType s.ethicalIssueExist
+  , fieldView "Liittyykö dataan eettisiä haasteita?: " <| showEthicalIssuesType s.ethicalIssueExist
   , maybeFieldView "Raportti eettisistä haasteista: " s.ethicalIssueReport
   ]
 
 ethicalIssuesView : Array EthicalIssue -> Html Msg
 ethicalIssuesView c = div [] <| Array.toList <| Array.indexedMap ethicalIssueView c
-
-projectView : Int -> Project -> Html Msg
-projectView idx s = div []
-  [ h3 [] [ text <| "Projekti " ++ String.fromInt (idx + 1) ]
-  , fieldView "Kuvaus: " <| s.projectDescription
-  , maybeFieldView "Projektin loppumispäivä: " <| Maybe.map unwrapDay s.projectEndDate
-  , fieldView "Projektin alkamispäivä: " <| unwrapDay s.projectStartDate
-  , fieldView "Otsikko: " <| s.projectTitle
-  ]
-
-projectsView : Array Project -> Html Msg
-projectsView c = div [] <| Array.toList <| Array.indexedMap projectView c
 
 fieldView : String -> String -> Html Msg
 fieldView label value = 
@@ -215,19 +216,19 @@ fieldView label value =
 dmpView : Dmp -> OrgLookup -> Html Msg
 dmpView dmp orgs = div []
   [ fieldView "Otsikko: " dmp.dmpTitle
+  , maybeFieldView "Kuvaus: " <| dmp.dmpDescription
   , fieldView "Organisaatio: " <| showOrgName dmp orgs
   , maybeFieldView "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated
   , maybeFieldView "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified
-  , maybeFieldView "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp
   , fieldView "Kieli: " <| showLanguage dmp.dmpLanguage
+  , maybeFieldView "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp
   , fieldView "Tyyppi: " <| showDmpType dmp.dmpTypeDmp
-  , maybeFieldView "Kuvaus: " <| dmp.dmpDescription
   , dmpIdView dmp.dmpDmpId
   , contactView dmp.dmpContact
   , section [] [ contributorsView dmp.dmpContributors ]
+  , section [] [ projectsView dmp.dmpProjects ]
   , section [] [ datasetsView dmp.dmpDatasets ]
   , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
-  , section [] [ projectsView dmp.dmpProjects ]
   ]
 
 view : Config -> Model -> OrgLookup -> { title : String, body : Html Msg }
