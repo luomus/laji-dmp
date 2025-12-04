@@ -47,7 +47,7 @@ data LajiApiConfig = LajiApiConfig
 lookupLajiApiConfig :: IO LajiApiConfig
 lookupLajiApiConfig = do
   hostName <- lookupEnv "LAJI_API_HOSTNAME" <&> Data.Maybe.fromMaybe "dev.laji.fi"
-  accessToken <- lookupEnv "LAJI_API_ACCESS_TOKEN" <&> Data.Maybe.fromMaybe "2fa73578d9328ff47705a34bb3073a000953c8b1569205c798e540b80e9aea10"
+  accessToken <- lookupEnv "LAJI_API_ACCESS_TOKEN" <&> Data.Maybe.fromMaybe ""
   return LajiApiConfig { lajiApiHostName = hostName, lajiApiAccessToken = accessToken}
 
 defaultClientParams :: (HostName, BS.ByteString) -> CertificateStore -> ClientParams
