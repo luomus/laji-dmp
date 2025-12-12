@@ -64,11 +64,11 @@ dmpTableView dmpList orgs = div [] (Array.toList <| Array.map (\a -> dmpElementV
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
-  { title = "DMP luettelo"
+  { title = "DMP-luettelo"
   , body = div [class "dmp-index"]
     [ div [] <| case model.dmpList of
       Error err -> [ text <| "Virhe: " ++ err ]
-      Loading -> [ text "Ladataan DMP luetteloa..." ]
+      Loading -> [ text "Ladataan DMP-luetteloa..." ]
       DmpList dmpList -> 
         [
           dmpTableView dmpList orgs

@@ -93,7 +93,7 @@ showDocumentIdType a = case a of
   DocumentIdTypeArk -> "ark"
   DocumentIdTypeUrl -> "url"
   DocumentIdTypeOther -> "Muu"
-  DocumentIdTypeNone -> "Ei tiedossa"
+  DocumentIdTypeNone -> "Ei tunnistetta"
 
 roleTypeFromStr : String -> RoleType
 roleTypeFromStr s = case s of
@@ -143,7 +143,7 @@ showPersonIdType t = case t of
   PersonIdTypeIsni -> "Isni"
   PersonIdTypeOpenid -> "OpenId"
   PersonIdTypeOther -> "Muu"
-  PersonIdTypeNone -> "Ei tiedossa"
+  PersonIdTypeNone -> "Ei tunnistetta"
   
 personalDataTypeFromStr : String -> PersonalDataType
 personalDataTypeFromStr s = case s of
@@ -242,7 +242,7 @@ showMetadataIdType : MetadataIdType -> String
 showMetadataIdType m = case m of
   MetadataIdTypeUrl -> "url"
   MetadataIdTypeOther -> "Muu"
-  MetadataIdTypeNone -> "Ei tiedossa"
+  MetadataIdTypeNone -> "Ei tunnistetta"
 
 parseMaybe : String -> Maybe String
 parseMaybe s = case s of
