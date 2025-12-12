@@ -1112,7 +1112,6 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         , type_ "checkbox"
         , disabled d
         , onCheck <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleArchivingServicesData
-        , type_ "text"
         ] []
     , inputFieldView "Datan varmuuskopiointi*: " (Just "Kuvaile, kuinka aineisto varmuuskopioidaan.")
       <| input
