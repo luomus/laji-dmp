@@ -95,7 +95,7 @@ contributorsView c = div [] <| Array.toList <| Array.indexedMap contributorView 
 projectView : Int -> Project -> Html Msg
 projectView idx s = div []
   [ h3 [] [ text <| "Projekti " ++ String.fromInt (idx + 1) ]
-  , fieldView "Otsikko: " <| s.projectTitle
+  , fieldView "Nimi: " <| s.projectTitle
   , fieldView "Kuvaus: " <| s.projectDescription
   , fieldView "Projektin alkamispäivä: " <| unwrapDay s.projectStartDate
   , maybeFieldView "Projektin loppumispäivä: " <| Maybe.map unwrapDay s.projectEndDate
@@ -166,7 +166,7 @@ metadatasView c = div [] <| Array.toList <| Array.indexedMap metadataView c
 securityView : Int -> SecurityAndPrivacy -> Html Msg
 securityView idx s = div []
   [ h4 [] [ text <| "Tietoturva " ++ String.fromInt (idx + 1) ]
-  , fieldView "Otsikko: " <| s.securityTitle
+  , fieldView "Tietoturvakäytännön nimi: " <| s.securityTitle
   , fieldView "Tietoturvakäytäntöjen kuvaus: " <| s.securityDescription
   ]
 
@@ -176,13 +176,13 @@ securityArrView c = div [] <| Array.toList <| Array.indexedMap securityView c
 datasetView : Int -> Dataset -> Html Msg
 datasetView idx d = div []
   [ h3 [] [ text <| "Aineisto " ++ String.fromInt (idx + 1) ]
-  , fieldView "Otsikko: " <| d.datasetTitle
+  , fieldView "Nimi: " <| d.datasetTitle
   , maybeFieldView "Aineiston kuvaus: " d.datasetDescription
   , maybeFieldView "Tyyppi: " d.datasetType
   , fieldView "Kieli: " <| showLanguage d.datasetLanguage
   , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
   , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
-  , maybeFieldView "Onko aineisto tuotettu jo ennen projektia?: " <| Maybe.map boolToString d.datasetReuseDataset
+  , maybeFieldView "Aineiston uudelleenkäyttö: " <| Maybe.map boolToString d.datasetReuseDataset
   , fieldView "Sisältääkö aineisto henkilötietoja?: " <| showPersonalDataType d.datasetPersonalData
   , fieldView "Sisältääkö aineisto sensitiivistä dataa?: " <| showSensitiveDataType d.datasetSensitiveData
   , maybeFieldView "Laadunvarmistuksen kuvaus: " d.datasetDataQualityAssurance
@@ -201,8 +201,8 @@ datasetsView c = div [] <| Array.toList <| Array.indexedMap datasetView c
 ethicalIssueView : Int -> EthicalIssue -> Html Msg
 ethicalIssueView idx s = div []
   [ h3 [] [ text <| "Eettiset haasteet " ++ String.fromInt (idx + 1) ]
-  , maybeFieldView "Kuvaus eettisistä haasteista: " s.ethicalIssueDescription
   , fieldView "Liittyykö dataan eettisiä haasteita?: " <| showEthicalIssuesType s.ethicalIssueExist
+  , maybeFieldView "Kuvaus eettisistä haasteista: " s.ethicalIssueDescription
   , maybeFieldView "Raportti eettisistä haasteista: " s.ethicalIssueReport
   ]
 
