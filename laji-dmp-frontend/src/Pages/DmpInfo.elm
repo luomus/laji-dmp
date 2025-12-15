@@ -147,7 +147,7 @@ distributionsView c = div [] <| Array.toList <| Array.indexedMap distributionVie
 metadataIdView : MetadataId -> Html Msg
 metadataIdView m = div []
   [ maybeFieldView "Tunniste: " m.metadataIdIdentifier
-  , fieldView "Tyyppi: " <| showMetadataIdType m.metadataIdType
+  , fieldView "Tunnisteen tyyppi: " <| showMetadataIdType m.metadataIdType
   ]
 
 metadataView : Int -> Metadata -> Html Msg
@@ -187,7 +187,7 @@ datasetView idx d = div []
   , fieldView "Kieli: " <| showLanguage d.datasetLanguage
   , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
   , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
-  , maybeFieldView "Aineiston uudelleenkäyttö: " <| Maybe.map boolToString d.datasetReuseDataset
+  , maybeFieldView "Onko aineisto tuotettu jo ennen projektia?: " <| Maybe.map boolToString d.datasetReuseDataset
   , fieldView "Sisältääkö aineisto henkilötietoja?: " <| showPersonalDataType d.datasetPersonalData
   , fieldView "Sisältääkö aineisto sensitiivistä dataa?: " <| showSensitiveDataType d.datasetSensitiveData
   , maybeFieldView "Laadunvarmistuksen kuvaus: " d.datasetDataQualityAssurance

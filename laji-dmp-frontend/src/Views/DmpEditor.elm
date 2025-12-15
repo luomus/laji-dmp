@@ -996,16 +996,17 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         << ModifyDmpDataset datasetIdx
         << ModifyDatasetMetadata metadataIdx
         << ModifyMetadataOpen
-    , section []
-      [ div [] <| Array.toList
-        <| Array.indexedMap (\standardIdx standard -> standardEditorView datasetIdx metadataIdx standardIdx standard d) (Maybe.withDefault Array.empty metadata.metadataStandards)
-      , button
-        [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| ModifyDatasetMetadata metadataIdx <| AddMetadataStandard
-        , disabled d
-        , class "btn"
+    , inputFieldView "Metadatan standardit: " (Just "Lisää standardit, joita metadata noudattaa (Esim. DCAT-AP).")
+      <| div []
+        [ div [] <| Array.toList
+          <| Array.indexedMap (\standardIdx standard -> standardEditorView datasetIdx metadataIdx standardIdx standard d) (Maybe.withDefault Array.empty metadata.metadataStandards)
+        , button
+          [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| ModifyDatasetMetadata metadataIdx <| AddMetadataStandard
+          , disabled d
+          , class "btn"
+          ]
+          [ text "+ Lisää standardi" ]
         ]
-        [ text "+ Lisää standardi" ]
-      ]
     , section [] [ metadataIdEditorView datasetIdx metadataIdx metadata.metadataMetadataId d ]
     ]
   ]
@@ -1035,14 +1036,16 @@ securityEditorView datasetIdx securityIdx security d = div []
         , type_ "text"
         ] []
     , inputFieldView "Tietoturvakäytännön kuvaus*: " (Just "Kuvaile nimettyä tietoturvakäytäntöä, jolla sensitiivistä dataa suojataan. Esimerkkivastaus: Nimet, osoitteet ja puhelinnumerot korvataan aineistoon pseudonyymeillä. Tallennuspäivät korvataan päivämääräväleillä.")
-      <| input
+      <| textarea
         [ value <| security.securityDescription
         , disabled d
         , onInput <| OnModifyDmp
           << ModifyDmpDataset datasetIdx
           << ModifyDatasetSecurity securityIdx
           << ModifySecurityDescription
-        , type_ "text"
+        , class "d-block"
+        , rows 6
+        , cols 60
         ] []
     ]
   ]
@@ -1159,11 +1162,13 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         , onCheck <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleArchivingServicesData
         ] []
     , inputFieldView "Datan varmuuskopiointi*: " (Just "Kuvaile, kuinka aineisto varmuuskopioidaan.")
-      <| input
+      <| textarea
         [ value elem.dataLifeCycleBackupData
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleBackupData
-        , type_ "text"
+        , class "d-block"
+        , rows 6
+        , cols 60
         ] []
     , inputFieldView "Datan poistamispäivä: " (Just "Jos aineistolle on määritelty poistamispäivä, ilmoita se tähän.")
       <| input
@@ -1284,16 +1289,17 @@ datasetEditorView idx elem d = div []
         ] []
     , inputFieldView "Kieli: " Nothing
       <| languageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage
-    , section []
-      [ div [] <| Array.toList
-        <| Array.indexedMap (\keywordIdx keyword -> keywordEditorView idx keywordIdx keyword d) (Maybe.withDefault Array.empty elem.datasetKeywords)
-      , button
-        [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetKeyword
-        , disabled d
-        , class "btn"
+    , inputFieldView "Avainsanat: " (Just "Voit lisätä avainsanoja, jotka kuvaavat aineistoa.")
+      <| div []
+        [ div [] <| Array.toList
+          <| Array.indexedMap (\keywordIdx keyword -> keywordEditorView idx keywordIdx keyword d) (Maybe.withDefault Array.empty elem.datasetKeywords)
+        , button
+          [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetKeyword
+          , disabled d
+          , class "btn"
+          ]
+          [ text "+ Lisää avainsana" ]
         ]
-        [ text "+ Lisää avainsana" ]
-      ]
     , inputFieldView "Aineiston tuotantoajankohta: " (Just "Ilmoita aineiston tuotantoajankohta, eli päivämäärä milloin sen tuottaminen valmistuu tai on valmistunut, ellei aineisto ole jatkuvasti ylläpidossa.")
       <| input
         [ type_ "date"
@@ -1308,29 +1314,34 @@ datasetEditorView idx elem d = div []
     , inputFieldView "Sisältääkö aineisto sensitiivistä dataa?: " (Just "Sensitiivistä dataa on esim. uhanalaisten lajien paikkatieto.")
       <| sensitiveDataTypeSelect elem.datasetSensitiveData d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetSensitiveData
     ,  inputFieldView "Laadunvarmistuksen kuvaus: " (Just "Kirjoita tähän vapaamuotoisesti aineiston laadunvarmistuksesta, esim. validoinnista ja käytetyistä menetelmistä.")
-      <| input
+      <| textarea
         [ value <| withDefault "" elem.datasetDataQualityAssurance
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataQualityAssurance << parseMaybe
-        , type_ "text"
+        , class "d-block"
+        , rows 6
+        , cols 60
         ] []
     , inputFieldView "Datanjakamisen haasteet: " (Just "Miten datan jakamiseen liittyvät oikeudelliset ja eettiset kysymykset (esim. omistajuus, tekijänoikeudet, arkaluontoisuus) ratkaistaan, jos sellaisia on?")
-      <| input
+      <| textarea
         [ value <| withDefault "" elem.datasetDataSharingIssues
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataSharingIssues << parseMaybe
-        , type_ "text"
+        , class "d-block"
+        , rows 6
+        , cols 60
         ] []
-    , section []
-      [ div [] <| Array.toList
-        <| Array.indexedMap (\vocabularyIdx vocabulary -> vocabularyEditorView idx vocabularyIdx vocabulary d) (Maybe.withDefault Array.empty elem.datasetVocabulary)
-      , button
-        [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetVocabulary
-        , disabled d
-        , class "btn"
+    , inputFieldView "Sanastot: " (Just "Lisää sanastot, joita aineisto noudattaa (esim. DarwinCore).")
+      <| div []
+        [ div [] <| Array.toList
+          <| Array.indexedMap (\vocabularyIdx vocabulary -> vocabularyEditorView idx vocabularyIdx vocabulary d) (Maybe.withDefault Array.empty elem.datasetVocabulary)
+        , button
+          [ onClick <| OnModifyDmp <| ModifyDmpDataset idx <| AddDatasetVocabulary
+          , disabled d
+          , class "btn"
+          ]
+          [ text "+ Lisää sanasto" ]
         ]
-        [ text "+ Lisää sanasto" ]
-      ]
     , section [] [ datasetIdEditorView idx elem.datasetDatasetId d ]
     , section []
       [ div []
