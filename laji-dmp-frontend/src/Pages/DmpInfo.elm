@@ -178,6 +178,11 @@ datasetView idx d = div []
   [ h3 [] [ text <| "Aineisto " ++ String.fromInt (idx + 1) ]
   , fieldView "Nimi: " <| d.datasetTitle
   , maybeFieldView "Aineiston kuvaus: " d.datasetDescription
+  , fieldView "Aineistosta vastaava taho: " d.datasetResponsiblePartyTitle
+  , fieldView "Vastaavan tahon sähköposti: " d.datasetResponsiblePartyEmail
+  , maybeFieldView "Aineiston historiatiedot: " d.datasetLineage
+  , fieldView "Tiedot saa viedä Luontotieto.fi -palveluun: " <| boolToString d.datasetShareToSyke
+  , fieldView "Aineistotyyppi: " <| showDataType d.datasetDataType
   , maybeFieldView "Tyyppi: " d.datasetType
   , fieldView "Kieli: " <| showLanguage d.datasetLanguage
   , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords

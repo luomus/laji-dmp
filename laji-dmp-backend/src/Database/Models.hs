@@ -66,6 +66,48 @@ instance ToField DataAccessType where
   toField DataAccessTypeShared = toField ("shared" :: Text)
   toField DataAccessTypeClosed = toField ("closed" :: Text)
 
+data DataType
+  = DataTypeCitizenScienceData
+  | DataTypeCollection
+  | DataTypeFieldObservation
+  | DataTypeLaserScanning
+  | DataTypeModel
+  | DataTypeMolecularBiology
+  | DataTypeRemoteSensing
+  | DataTypeReport
+  | DataTypeSatelliteImagesAndOrtophotos
+  | DataTypeSpatialData
+  | DataTypeOther
+  deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
+
+instance FromField DataType where
+  fromField f mbs = case fmap decodeUtf8 mbs of
+    Just "citizen_science_data" -> return DataTypeCitizenScienceData
+    Just "collection" -> return DataTypeCollection
+    Just "field_observation" -> return DataTypeFieldObservation
+    Just "laser_scanning" -> return DataTypeLaserScanning
+    Just "model" -> return DataTypeModel
+    Just "molecular_biology" -> return DataTypeMolecularBiology
+    Just "remote_sensing" -> return DataTypeRemoteSensing
+    Just "report" -> return DataTypeReport
+    Just "satellite_images_and_ortophotos" -> return DataTypeSatelliteImagesAndOrtophotos
+    Just "spatial_data" -> return DataTypeSpatialData
+    Just "other" -> return DataTypeOther
+    _ -> returnError ConversionFailed f $ "Invalid value for DataType: " ++ show mbs
+
+instance ToField DataType where
+  toField DataTypeCitizenScienceData = toField ("citizen_science_data" :: Text)
+  toField DataTypeCollection = toField ("collection" :: Text)
+  toField DataTypeFieldObservation = toField ("field_observation" :: Text)
+  toField DataTypeLaserScanning = toField ("laser_scanning" :: Text)
+  toField DataTypeModel = toField ("model" :: Text)
+  toField DataTypeMolecularBiology = toField ("molecular_biology" :: Text)
+  toField DataTypeRemoteSensing = toField ("remote_sensing" :: Text)
+  toField DataTypeReport = toField ("report" :: Text)
+  toField DataTypeSatelliteImagesAndOrtophotos = toField ("satellite_images_and_ortophotos" :: Text)
+  toField DataTypeSpatialData = toField ("spatial_data" :: Text)
+  toField DataTypeOther = toField ("other" :: Text)
+
 data DmpType
   = DmpTypeStudent
   | DmpTypeAcademic
@@ -315,6 +357,11 @@ data Dataset = Dataset
   , datasetTitle :: NonEmptyText
   , datasetType :: Maybe Text
   , datasetVocabulary :: Maybe [Text]
+  , datasetResponsiblePartyTitle :: NonEmptyText
+  , datasetResponsiblePartyEmail :: NonEmptyText
+  , datasetLineage :: Maybe Text
+  , datasetShareToSyke :: Bool
+  , datasetDataType :: DataType
   , datasetDatasetId :: DatasetId
   , datasetDistributions :: [Distribution]
   , datasetMetadata :: [Metadata]
@@ -395,4 +442,3 @@ data SecurityAndPrivacy = SecurityAndPrivacy
   { securityDescription :: NonEmptyText
   , securityTitle :: NonEmptyText
   } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
-

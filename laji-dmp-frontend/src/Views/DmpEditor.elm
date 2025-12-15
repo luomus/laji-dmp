@@ -131,6 +131,11 @@ type ModifySecurityMsg
 type ModifyDatasetMsg
   = ModifyDatasetDataQualityAssurance (Maybe String)
   | ModifyDatasetDataSharingIssues (Maybe String)
+  | ModifyDatasetResponsiblePartyTitle String
+  | ModifyDatasetResponsiblePartyEmail String
+  | ModifyDatasetLineage (Maybe String)
+  | ModifyDatasetShareToSyke Bool
+  | ModifyDatasetDataType DataType
   | ModifyDatasetDescription (Maybe String)
   | ModifyDatasetIssued (Maybe Day)
   | ModifyDatasetKeywords Int String
@@ -255,6 +260,11 @@ defaultDataset =
   , datasetTitle = ""
   , datasetType = Nothing
   , datasetVocabulary = Nothing
+  , datasetResponsiblePartyTitle = ""
+  , datasetResponsiblePartyEmail = ""
+  , datasetLineage = Nothing
+  , datasetShareToSyke = False
+  , datasetDataType = DataTypeOther
   , datasetDatasetId = { datasetIdIdentifier = Nothing, datasetIdType = DocumentIdTypeNone }
   , datasetDistributions = Array.empty
   , datasetMetadata = Array.empty
@@ -439,6 +449,11 @@ updateDataset : ModifyDatasetMsg -> Dataset -> Dataset
 updateDataset msg val = case msg of
   ModifyDatasetDataQualityAssurance v -> { val | datasetDataQualityAssurance = v }
   ModifyDatasetDataSharingIssues v -> { val | datasetDataSharingIssues = v }
+  ModifyDatasetResponsiblePartyTitle v -> { val | datasetResponsiblePartyTitle = v }
+  ModifyDatasetResponsiblePartyEmail v -> { val | datasetResponsiblePartyEmail = v }
+  ModifyDatasetLineage v -> { val | datasetLineage = v }
+  ModifyDatasetShareToSyke v -> { val | datasetShareToSyke = v }
+  ModifyDatasetDataType v -> { val | datasetDataType = v }
   ModifyDatasetDescription v -> { val | datasetDescription = v }
   ModifyDatasetIssued v -> { val | datasetIssued = v }
   ModifyDatasetLanguage v -> { val | datasetLanguage = v }
@@ -671,6 +686,29 @@ sensitiveDataTypeSelect curr d toMsg = enumSelect
   , disabled = d
   }
 
+dataTypeSelect : DataType -> Bool -> (DataType -> msg) -> Html msg
+dataTypeSelect curr d toMsg = enumSelect
+  { current = curr
+  , options =
+      [ DataTypeCitizenScienceData
+      , DataTypeCollection
+      , DataTypeFieldObservation
+      , DataTypeLaserScanning
+      , DataTypeModel
+      , DataTypeMolecularBiology
+      , DataTypeRemoteSensing
+      , DataTypeReport
+      , DataTypeSatelliteImagesAndOrtophotos
+      , DataTypeSpatialData
+      , DataTypeOther
+      ]
+  , optionToString = dataTypeToStr
+  , optionFromString = dataTypeFromStr
+  , optionToLabel = showDataType
+  , msg = toMsg
+  , disabled = d
+  }
+
 ethicalIssuesTypeSelect : EthicalIssuesType -> Bool -> (EthicalIssuesType -> msg) -> Html msg
 ethicalIssuesTypeSelect curr d toMsg = enumSelect
   { current = curr
@@ -738,6 +776,18 @@ maybeBoolSelect curr d toMsg =
       , msg = toMsg
       , disabled = d
       }
+
+boolSelect : Bool -> Bool -> (Bool -> a) -> Html a
+boolSelect curr d toMsg =
+  enumSelect
+    { current = curr
+    , options = [ True, False ]
+    , optionToString = boolToString
+    , optionFromString = boolFromString
+    , optionToLabel = showBool
+    , msg = toMsg
+    , disabled = d
+    }
 
 dmpIdEditorView : DmpId -> Bool -> Html Msg
 dmpIdEditorView dmpId d = div []
@@ -1203,6 +1253,33 @@ datasetEditorView idx elem d = div []
         , rows 6
         , cols 60
         ] []
+    , inputFieldView "Aineistosta vastaava taho*: " Nothing
+      <| input
+        [ value elem.datasetResponsiblePartyTitle
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetResponsiblePartyTitle
+        , type_ "text"
+        ] []
+    , inputFieldView "Vastaavan tahon sähköposti*: " Nothing
+      <| input
+        [ value elem.datasetResponsiblePartyEmail
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetResponsiblePartyEmail
+        , type_ "email"
+        ] []
+    , inputFieldView "Aineiston historiatiedot: " (Just "Kuvaile aineiston synty, mahdolliset aiemmat versiot ja merkittävät muutokset.")
+      <| textarea
+        [ value <| withDefault "" elem.datasetLineage
+        , disabled d
+        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLineage << parseMaybe
+        , class "d-block"
+        , rows 4
+        , cols 60
+        ] []
+    , inputFieldView "Tiedot saa viedä Luontotieto.fi -palveluun: " Nothing
+      <| boolSelect elem.datasetShareToSyke d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetShareToSyke
+    , inputFieldView "Aineistotyyppi*: " Nothing
+      <| dataTypeSelect elem.datasetDataType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataType
     , inputFieldView "Tyyppi: " (Just "Aineiston tyyppi, esim. aineisto, raakadata, paikkatietoaineisto, taulukko, tietokantapoiminta.")
       <| input
         [ value <| withDefault "" elem.datasetType
@@ -1326,7 +1403,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
         <| ethicalIssuesTypeSelect ethicalIssue.ethicalIssueExist d <| OnModifyDmp
         << ModifyDmpEthicalIssue idx
         << ModifyEthicalIssueExist
-    ,  inputFieldView "Kuvaus: " (Just "Kuvaile vapaamuotoisesti eettisiä haasteita, joita aineistonhallintasuunnitelman kuvailemaan dataan liittyy.")
+    ,  inputFieldView "Kuvaus eettisistä haasteista: " (Just "Kuvaile vapaamuotoisesti eettisiä haasteita, joita aineistonhallintasuunnitelman kuvailemaan dataan liittyy.")
       <| textarea
         [ value <| withDefault "" ethicalIssue.ethicalIssueDescription
         , disabled d
@@ -1547,4 +1624,3 @@ editorFormView model orgs =
 
 view : Model -> OrgLookup -> Html Msg
 view = editorFormView
-

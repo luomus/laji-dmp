@@ -195,6 +195,36 @@ encodeSensitiveDataType t = E.string <| case t of
   SensitiveDataTypeNo -> "SensitiveDataTypeNo"
   SensitiveDataTypeUnknown -> "SensitiveDataTypeUnknown"
 
+dataTypeDecoder : Json.Decode.Decoder DataType
+dataTypeDecoder = Json.Decode.map
+  (\str -> case str of
+    "DataTypeCitizenScienceData" -> DataTypeCitizenScienceData
+    "DataTypeCollection" -> DataTypeCollection
+    "DataTypeFieldObservation" -> DataTypeFieldObservation
+    "DataTypeLaserScanning" -> DataTypeLaserScanning
+    "DataTypeModel" -> DataTypeModel
+    "DataTypeMolecularBiology" -> DataTypeMolecularBiology
+    "DataTypeRemoteSensing" -> DataTypeRemoteSensing
+    "DataTypeReport" -> DataTypeReport
+    "DataTypeSatelliteImagesAndOrtophotos" -> DataTypeSatelliteImagesAndOrtophotos
+    "DataTypeSpatialData" -> DataTypeSpatialData
+    _ -> DataTypeOther
+  ) D.string
+
+encodeDataType : DataType -> E.Value
+encodeDataType t = E.string <| case t of
+  DataTypeCitizenScienceData -> "DataTypeCitizenScienceData"
+  DataTypeCollection -> "DataTypeCollection"
+  DataTypeFieldObservation -> "DataTypeFieldObservation"
+  DataTypeLaserScanning -> "DataTypeLaserScanning"
+  DataTypeModel -> "DataTypeModel"
+  DataTypeMolecularBiology -> "DataTypeMolecularBiology"
+  DataTypeRemoteSensing -> "DataTypeRemoteSensing"
+  DataTypeReport -> "DataTypeReport"
+  DataTypeSatelliteImagesAndOrtophotos -> "DataTypeSatelliteImagesAndOrtophotos"
+  DataTypeSpatialData -> "DataTypeSpatialData"
+  DataTypeOther -> "DataTypeOther"
+
 contactDecoder : Json.Decode.Decoder Contact
 contactDecoder = Json.Decode.succeed Contact
   |> DP.required "contactMbox" D.string
@@ -278,6 +308,11 @@ datasetDecoder = Json.Decode.succeed Dataset
   |> DP.required "datasetTitle" D.string
   |> DP.optional "datasetType" (D.nullable D.string) Nothing
   |> DP.optional "datasetVocabulary" (D.nullable (D.array D.string)) Nothing
+  |> DP.required "datasetResponsiblePartyTitle" D.string
+  |> DP.required "datasetResponsiblePartyEmail" D.string
+  |> DP.optional "datasetLineage" (D.nullable D.string) Nothing
+  |> DP.required "datasetShareToSyke" D.bool
+  |> DP.required "datasetDataType" dataTypeDecoder
   |> DP.required "datasetDatasetId" datasetIdDecoder
   |> DP.required "datasetDistributions" (D.array distributionDecoder)
   |> DP.required "datasetMetadata" (D.array metadataDecoder)
@@ -298,6 +333,11 @@ encodeDataset t = E.object
   , ( "datasetTitle", E.string t.datasetTitle)
   , ( "datasetType", encodeMaybe E.string t.datasetType)
   , ( "datasetVocabulary", encodeMaybe (E.array E.string) t.datasetVocabulary)
+  , ( "datasetResponsiblePartyTitle", E.string t.datasetResponsiblePartyTitle)
+  , ( "datasetResponsiblePartyEmail", E.string t.datasetResponsiblePartyEmail)
+  , ( "datasetLineage", encodeMaybe E.string t.datasetLineage)
+  , ( "datasetShareToSyke", E.bool t.datasetShareToSyke)
+  , ( "datasetDataType", encodeDataType t.datasetDataType)
   , ( "datasetDatasetId", encodeDatasetId t.datasetDatasetId)
   , ( "datasetDistributions", E.array encodeDistribution t.datasetDistributions)
   , ( "datasetMetadata", E.array encodeMetadata t.datasetMetadata)
@@ -556,4 +596,3 @@ deleteDmp cfg id personToken msg =
     , timeout = Nothing
     , tracker = Nothing
     }
-

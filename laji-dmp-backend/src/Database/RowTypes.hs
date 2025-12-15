@@ -71,6 +71,11 @@ data DmpJoinRow = DmpJoinRow
     datasetTitle :: Maybe Text,
     datasetType :: Maybe Text,
     datasetVocabulary :: Maybe (PGArray Text),
+    datasetResponsiblePartyTitle :: Maybe Text,
+    datasetResponsiblePartyEmail :: Maybe Text,
+    datasetLineage :: Maybe Text,
+    datasetShareToSyke :: Maybe Bool,
+    datasetDataType :: Maybe Models.DataType,
 
     datasetIdsId :: Maybe Int,
     datasetIdsIdentifier :: Maybe Text,
@@ -119,6 +124,22 @@ data DmpJoinRow = DmpJoinRow
   } deriving (Show)
 
 instance FromRow DmpJoinRow where
-  fromRow = DmpJoinRow <$>
-    field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
-
+  fromRow = DmpJoinRow
+    <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field

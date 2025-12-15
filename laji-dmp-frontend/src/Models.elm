@@ -75,6 +75,19 @@ type SensitiveDataType
   | SensitiveDataTypeNo
   | SensitiveDataTypeUnknown
 
+type DataType
+  = DataTypeCitizenScienceData
+  | DataTypeCollection
+  | DataTypeFieldObservation
+  | DataTypeLaserScanning
+  | DataTypeModel
+  | DataTypeMolecularBiology
+  | DataTypeRemoteSensing
+  | DataTypeReport
+  | DataTypeSatelliteImagesAndOrtophotos
+  | DataTypeSpatialData
+  | DataTypeOther
+
 type alias Contact =
   { contactMbox: String
   , contactName: String
@@ -120,6 +133,11 @@ type alias Dataset =
   , datasetTitle: String
   , datasetType: Maybe String
   , datasetVocabulary: Maybe (Array.Array String)
+  , datasetResponsiblePartyTitle: String
+  , datasetResponsiblePartyEmail: String
+  , datasetLineage: Maybe String
+  , datasetShareToSyke: Bool
+  , datasetDataType: DataType
   , datasetDatasetId: DatasetId
   , datasetDistributions: Array.Array Distribution
   , datasetMetadata: Array.Array Metadata
@@ -200,4 +218,3 @@ type alias SecurityAndPrivacy =
   { securityDescription: String
   , securityTitle: String
   }
-

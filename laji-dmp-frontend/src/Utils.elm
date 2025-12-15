@@ -224,6 +224,48 @@ showSensitiveDataType p = case p of
   SensitiveDataTypeNo -> "Ei"
   SensitiveDataTypeUnknown -> "Ei tiedossa"
 
+dataTypeFromStr : String -> DataType
+dataTypeFromStr s = case s of
+  "DataTypeCitizenScienceData" -> DataTypeCitizenScienceData
+  "DataTypeCollection" -> DataTypeCollection
+  "DataTypeFieldObservation" -> DataTypeFieldObservation
+  "DataTypeLaserScanning" -> DataTypeLaserScanning
+  "DataTypeModel" -> DataTypeModel
+  "DataTypeMolecularBiology" -> DataTypeMolecularBiology
+  "DataTypeRemoteSensing" -> DataTypeRemoteSensing
+  "DataTypeReport" -> DataTypeReport
+  "DataTypeSatelliteImagesAndOrtophotos" -> DataTypeSatelliteImagesAndOrtophotos
+  "DataTypeSpatialData" -> DataTypeSpatialData
+  _ -> DataTypeOther
+
+dataTypeToStr : DataType -> String
+dataTypeToStr v = case v of
+  DataTypeCitizenScienceData -> "DataTypeCitizenScienceData"
+  DataTypeCollection -> "DataTypeCollection"
+  DataTypeFieldObservation -> "DataTypeFieldObservation"
+  DataTypeLaserScanning -> "DataTypeLaserScanning"
+  DataTypeModel -> "DataTypeModel"
+  DataTypeMolecularBiology -> "DataTypeMolecularBiology"
+  DataTypeRemoteSensing -> "DataTypeRemoteSensing"
+  DataTypeReport -> "DataTypeReport"
+  DataTypeSatelliteImagesAndOrtophotos -> "DataTypeSatelliteImagesAndOrtophotos"
+  DataTypeSpatialData -> "DataTypeSpatialData"
+  DataTypeOther -> "DataTypeOther"
+
+showDataType : DataType -> String
+showDataType v = case v of
+  DataTypeCitizenScienceData -> "Kansalaishavainnot"
+  DataTypeCollection -> "Kokoelma"
+  DataTypeFieldObservation -> "Maastohavainnot"
+  DataTypeLaserScanning -> "Laserkeilaus"
+  DataTypeModel -> "Mallit"
+  DataTypeMolecularBiology -> "Molekyylibiologiset aineistot"
+  DataTypeRemoteSensing -> "Kaukokartoitus"
+  DataTypeReport -> "Raportti"
+  DataTypeSatelliteImagesAndOrtophotos -> "Satelliitti- ja ilmakuvat"
+  DataTypeSpatialData -> "Paikkatietoaineistot"
+  DataTypeOther -> "Muu tyyppi"
+
 showEthicalIssuesType : EthicalIssuesType -> String
 showEthicalIssuesType p = case p of
   EthicalIssuesTypeYes -> "Kyllä"
@@ -274,4 +316,3 @@ showOrgName : Dmp -> Organization.OrgLookup -> String
 showOrgName dmp orgs = case Dict.get dmp.dmpOrgId orgs of
   Just org -> String.join " - " <| List.filterMap identity [org.organizationLevel1, org.organizationLevel2, org.organizationLevel3, org.organizationLevel4]
   Nothing -> dmp.dmpOrgId
-

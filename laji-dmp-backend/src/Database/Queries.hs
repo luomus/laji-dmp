@@ -208,13 +208,18 @@ parseDataset rows =
       , RowTypes.datasetTitle = Just j
       , RowTypes.datasetType = k
       , RowTypes.datasetVocabulary = l
+      , RowTypes.datasetResponsiblePartyTitle = Just m
+      , RowTypes.datasetResponsiblePartyEmail = Just n
+      , RowTypes.datasetLineage = o
+      , RowTypes.datasetShareToSyke = Just p
+      , RowTypes.datasetDataType = Just q
       } = do
         datasetId <- parseDatasetId row
         distributions <- parseDistributions rows
         metadatas <- parseMetadatas rows
         security <- parseSecurityAndPrivacyArr rows
         dataLifeCycles <- parseDataLifeCycles rows
-        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) k (fmap fromPGArray l) datasetId distributions metadatas security (listToMaybe dataLifeCycles)
+        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) k (fmap fromPGArray l) (NonEmptyText m) (NonEmptyText n) o p q datasetId distributions metadatas security (listToMaybe dataLifeCycles)
 
     parseRow row =
       Left $ "Could not parse Dataset: " ++ show row
@@ -341,6 +346,11 @@ SELECT
   datasets.title AS datasets_title,
   datasets.type AS datasets_type,
   datasets.vocabulary AS datasets_vocabulary,
+  datasets.responsible_party_title AS datasets_responsible_party_title,
+  datasets.responsible_party_email AS datasets_responsible_party_email,
+  datasets.lineage AS datasets_lineage,
+  datasets.share_to_syke AS datasets_share_to_syke,
+  datasets.data_type AS datasets_data_type,
 
   dataset_ids.id AS dataset_ids_id,
   dataset_ids.identifier AS dataset_ids_identifier,
@@ -456,6 +466,11 @@ SELECT
   datasets.title AS datasets_title,
   datasets.type AS datasets_type,
   datasets.vocabulary AS datasets_vocabulary,
+  datasets.responsible_party_title AS datasets_responsible_party_title,
+  datasets.responsible_party_email AS datasets_responsible_party_email,
+  datasets.lineage AS datasets_lineage,
+  datasets.share_to_syke AS datasets_share_to_syke,
+  datasets.data_type AS datasets_data_type,
 
   dataset_ids.id AS dataset_ids_id,
   dataset_ids.identifier AS dataset_ids_identifier,
@@ -600,8 +615,9 @@ insertDataset conn self parentId = do
   [Only i] <- query conn [r|
 INSERT INTO datasets (
   dmp_id, data_quality_assurance, data_sharing_issues, description, issued, keywords,
-  language, personal_data, sensitive_data, reuse_dataset, title, type, vocabulary
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
+  language, personal_data, sensitive_data, reuse_dataset, title, type, vocabulary,
+  responsible_party_title, responsible_party_email, lineage, share_to_syke, data_type
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
   |]
     ( parentId
     , Models.datasetDataQualityAssurance self
@@ -616,6 +632,11 @@ INSERT INTO datasets (
     , Models.datasetTitle self
     , Models.datasetType self
     , PGArray <$> Models.datasetVocabulary self
+    , Models.datasetResponsiblePartyTitle self
+    , Models.datasetResponsiblePartyEmail self
+    , Models.datasetLineage self
+    , Models.datasetShareToSyke self
+    , Models.datasetDataType self
     )
   forM_ (Models.datasetDistributions self) (\a -> insertDistribution conn a i)
   forM_ (Models.datasetMetadata self) (\a -> insertMetadata conn a i)
@@ -840,4 +861,3 @@ deleteDataManagementPlan conn i =
   void $ execute conn [r|
 DELETE FROM dmps WHERE id = ?;
   |] [i]
-
