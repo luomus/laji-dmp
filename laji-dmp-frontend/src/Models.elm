@@ -19,14 +19,6 @@ type DataAccessType
   | DataAccessTypeClassified
   | DataAccessTypeEmbargoed
 
-type DmpType
-  = DmpTypeStudent
-  | DmpTypeAcademic
-  | DmpTypeNational
-  | DmpTypeInternational
-  | DmpTypeOrganizational
-  | DmpTypePriodiversityLife
-
 type DocumentIdType
   = DocumentIdTypeHandle
   | DocumentIdTypeDoi
@@ -131,7 +123,6 @@ type alias Dataset =
   , datasetSensitiveData: SensitiveDataType
   , datasetReuseDataset: Maybe Bool
   , datasetTitle: String
-  , datasetType: Maybe String
   , datasetVocabulary: Maybe (Array.Array String)
   , datasetResponsiblePartyTitle: String
   , datasetResponsiblePartyEmail: String
@@ -164,12 +155,10 @@ type alias Dmp =
   { dmpId: Maybe Int
   , dmpCreated: Maybe UTCTime
   , dmpDescription: Maybe String
-  , dmpLanguage: LanguageType
   , dmpModified: Maybe UTCTime
   , dmpNextReviewDmp: Maybe Day
   , dmpOrgId: String
   , dmpTitle: String
-  , dmpTypeDmp: DmpType
   , dmpContact: Contact
   , dmpDmpId: DmpId
   , dmpContributors: Array.Array Contributor

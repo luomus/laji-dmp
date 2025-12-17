@@ -39,34 +39,6 @@ showLanguage lang = case lang of
   LanguageTypeSv -> "Ruotsi"
   LanguageTypeOther -> "Muu"
 
-dmpTypeFromStr : String -> DmpType
-dmpTypeFromStr s = case s of
-  "DmpTypeStudent" -> DmpTypeStudent
-  "DmpTypeAcademic" -> DmpTypeAcademic
-  "DmpTypeNational" -> DmpTypeNational
-  "DmpTypeInternational" -> DmpTypeInternational
-  "DmpTypePriodiversityLife" -> DmpTypePriodiversityLife
-  _ -> DmpTypeOrganizational
-
-dmpTypeToStr : DmpType -> String
-dmpTypeToStr v =
-  case v of
-    DmpTypeStudent       -> "DmpTypeStudent"
-    DmpTypeAcademic      -> "DmpTypeAcademic"
-    DmpTypeNational      -> "DmpTypeNational"
-    DmpTypeInternational -> "DmpTypeInternational"
-    DmpTypeOrganizational -> "DmpTypeOrganizational"
-    DmpTypePriodiversityLife -> "DmpTypePriodiversityLife"
-
-showDmpType : DmpType -> String
-showDmpType a = case a of
-  DmpTypeStudent -> "Opiskelijaprojekti"
-  DmpTypeAcademic -> "Akateeminen"
-  DmpTypeNational -> "Kansallinen"
-  DmpTypeInternational -> "Kansainvälinen"
-  DmpTypeOrganizational -> "Organisaation sisäinen"
-  DmpTypePriodiversityLife -> "Priodiversity LIFE"
-
 documentIdTypeFromStr : String -> DocumentIdType
 documentIdTypeFromStr s = case s of
   "DocumentIdTypeHandle" -> DocumentIdTypeHandle

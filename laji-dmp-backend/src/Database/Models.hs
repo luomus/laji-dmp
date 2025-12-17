@@ -108,33 +108,6 @@ instance ToField DataType where
   toField DataTypeSpatialData = toField ("spatial_data" :: Text)
   toField DataTypeOther = toField ("other" :: Text)
 
-data DmpType
-  = DmpTypeStudent
-  | DmpTypeAcademic
-  | DmpTypeNational
-  | DmpTypeInternational
-  | DmpTypeOrganizational
-  | DmpTypePriodiversityLife
-  deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
-
-instance FromField DmpType where
-  fromField f mbs = case fmap decodeUtf8 mbs of
-    Just "student" -> return DmpTypeStudent
-    Just "academic" -> return DmpTypeAcademic
-    Just "national" -> return DmpTypeNational
-    Just "international" -> return DmpTypeInternational
-    Just "organizational" -> return DmpTypeOrganizational
-    Just "priodiversity-life" -> return DmpTypePriodiversityLife
-    _ -> returnError ConversionFailed f $ "Invalid value for DmpType: " ++ show mbs
-
-instance ToField DmpType where
-  toField DmpTypeStudent = toField ("student" :: Text)
-  toField DmpTypeAcademic = toField ("academic" :: Text)
-  toField DmpTypeNational = toField ("national" :: Text)
-  toField DmpTypeInternational = toField ("international" :: Text)
-  toField DmpTypeOrganizational = toField ("organizational" :: Text)
-  toField DmpTypePriodiversityLife = toField ("priodiversity-life" :: Text)
-
 data DocumentIdType
   = DocumentIdTypeHandle
   | DocumentIdTypeDoi
@@ -355,7 +328,6 @@ data Dataset = Dataset
   , datasetSensitiveData :: SensitiveDataType
   , datasetReuseDataset :: Maybe Bool
   , datasetTitle :: NonEmptyText
-  , datasetType :: Maybe Text
   , datasetVocabulary :: Maybe [Text]
   , datasetResponsiblePartyTitle :: NonEmptyText
   , datasetResponsiblePartyEmail :: NonEmptyText
@@ -388,12 +360,10 @@ data Dmp = Dmp
   { dmpId :: Maybe Int
   , dmpCreated :: Maybe UTCTime
   , dmpDescription :: Maybe Text
-  , dmpLanguage :: LanguageType
   , dmpModified :: Maybe UTCTime
   , dmpNextReviewDmp :: Maybe Day
   , dmpOrgId :: Text
   , dmpTitle :: NonEmptyText
-  , dmpTypeDmp :: DmpType
   , dmpContact :: Contact
   , dmpDmpId :: DmpId
   , dmpContributors :: [Contributor]

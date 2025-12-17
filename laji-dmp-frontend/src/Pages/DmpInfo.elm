@@ -183,7 +183,6 @@ datasetView idx d = div []
   , maybeFieldView "Aineiston historiatiedot: " d.datasetLineage
   , fieldView "Tiedot saa viedä Luontotieto.fi -palveluun: " <| boolToString d.datasetShareToSyke
   , fieldView "Aineistotyyppi: " <| showDataType d.datasetDataType
-  , maybeFieldView "Tyyppi: " d.datasetType
   , fieldView "Kieli: " <| showLanguage d.datasetLanguage
   , maybeFieldView "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords
   , maybeFieldView "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued
@@ -225,9 +224,7 @@ dmpView dmp orgs = div []
   , fieldView "Organisaatio: " <| showOrgName dmp orgs
   , maybeFieldView "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated
   , maybeFieldView "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified
-  , fieldView "Kieli: " <| showLanguage dmp.dmpLanguage
   , maybeFieldView "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp
-  , fieldView "Tyyppi: " <| showDmpType dmp.dmpTypeDmp
   , dmpIdView dmp.dmpDmpId
   , contactView dmp.dmpContact
   , section [] [ contributorsView dmp.dmpContributors ]

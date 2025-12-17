@@ -47,26 +47,6 @@ encodeDataAccessType t = E.string
     DataAccessTypeClassified -> "DataAccessTypeClassified"
     DataAccessTypeEmbargoed -> "DataAccessTypeEmbargoed"
 
-dmpTypeDecoder : Json.Decode.Decoder DmpType
-dmpTypeDecoder = Json.Decode.map
-  (\str -> case str of
-    "DmpTypeStudent" -> DmpTypeStudent
-    "DmpTypeAcademic" -> DmpTypeAcademic
-    "DmpTypeNational" -> DmpTypeNational
-    "DmpTypeInternational" -> DmpTypeInternational
-    "DmpTypePriodiversityLife" -> DmpTypePriodiversityLife
-    _ -> DmpTypeOrganizational
-  ) D.string
-
-encodeDmpType : DmpType -> E.Value
-encodeDmpType t = E.string <| case t of
-  DmpTypeStudent -> "DmpTypeStudent"
-  DmpTypeAcademic -> "DmpTypeAcademic"
-  DmpTypeNational -> "DmpTypeNational"
-  DmpTypeInternational -> "DmpTypeInternational"
-  DmpTypeOrganizational -> "DmpTypeOrganizational"
-  DmpTypePriodiversityLife -> "DmpTypePriodiversityLife"
-
 documentIdTypeDecoder : Json.Decode.Decoder DocumentIdType
 documentIdTypeDecoder = Json.Decode.map
   (\str -> case str of
@@ -306,7 +286,6 @@ datasetDecoder = Json.Decode.succeed Dataset
   |> DP.required "datasetSensitiveData" sensitiveDataTypeDecoder
   |> DP.optional "datasetReuseDataset" (D.nullable D.bool) Nothing
   |> DP.required "datasetTitle" D.string
-  |> DP.optional "datasetType" (D.nullable D.string) Nothing
   |> DP.optional "datasetVocabulary" (D.nullable (D.array D.string)) Nothing
   |> DP.required "datasetResponsiblePartyTitle" D.string
   |> DP.required "datasetResponsiblePartyEmail" D.string
@@ -331,7 +310,6 @@ encodeDataset t = E.object
   , ( "datasetSensitiveData", encodeSensitiveDataType t.datasetSensitiveData)
   , ( "datasetReuseDataset", encodeMaybe E.bool t.datasetReuseDataset)
   , ( "datasetTitle", E.string t.datasetTitle)
-  , ( "datasetType", encodeMaybe E.string t.datasetType)
   , ( "datasetVocabulary", encodeMaybe (E.array E.string) t.datasetVocabulary)
   , ( "datasetResponsiblePartyTitle", E.string t.datasetResponsiblePartyTitle)
   , ( "datasetResponsiblePartyEmail", E.string t.datasetResponsiblePartyEmail)
@@ -382,12 +360,10 @@ dmpDecoder = Json.Decode.succeed Dmp
   |> DP.optional "dmpId" (D.nullable D.int) Nothing
   |> DP.optional "dmpCreated" (D.nullable utcTimeDecoder) Nothing
   |> DP.optional "dmpDescription" (D.nullable D.string) Nothing
-  |> DP.required "dmpLanguage" languageTypeDecoder
   |> DP.optional "dmpModified" (D.nullable utcTimeDecoder) Nothing
   |> DP.optional "dmpNextReviewDmp" (D.nullable dayDecoder) Nothing
   |> DP.required "dmpOrgId" D.string
   |> DP.required "dmpTitle" D.string
-  |> DP.required "dmpTypeDmp" dmpTypeDecoder
   |> DP.required "dmpContact" contactDecoder
   |> DP.required "dmpDmpId" dmpIdDecoder
   |> DP.required "dmpContributors" (D.array contributorDecoder)
@@ -400,12 +376,10 @@ encodeDmp t = E.object
   [ ( "dmpId", encodeMaybe E.int t.dmpId)
   , ( "dmpCreated", encodeMaybe encodeUtcTime t.dmpCreated)
   , ( "dmpDescription", encodeMaybe E.string t.dmpDescription)
-  , ( "dmpLanguage", encodeLanguageType t.dmpLanguage)
   , ( "dmpModified", encodeMaybe encodeUtcTime t.dmpModified)
   , ( "dmpNextReviewDmp", encodeMaybe encodeDay t.dmpNextReviewDmp)
   , ( "dmpOrgId", E.string t.dmpOrgId)
   , ( "dmpTitle", E.string t.dmpTitle)
-  , ( "dmpTypeDmp", encodeDmpType t.dmpTypeDmp)
   , ( "dmpContact", encodeContact t.dmpContact)
   , ( "dmpDmpId", encodeDmpId t.dmpDmpId)
   , ( "dmpContributors", E.array encodeContributor t.dmpContributors)

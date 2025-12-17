@@ -146,7 +146,6 @@ type ModifyDatasetMsg
   | ModifyDatasetSensitiveData SensitiveDataType
   | ModifyDatasetReuseDataset (Maybe Bool)
   | ModifyDatasetTitle String
-  | ModifyDatasetType (Maybe String)
   | ModifyDatasetVocabulary Int String
   | AddDatasetVocabulary
   | RemoveDatasetVocabulary Int
@@ -178,10 +177,8 @@ type ModifyProjectMsg
 type ModifyDmpMsg
   = ModifyDmpOrgId String
   | ModifyDmpDescription (Maybe String)
-  | ModifyDmpLanguage LanguageType
   | ModifyDmpNextReviewDmp (Maybe Day)
   | ModifyDmpTitle String
-  | ModifyDmpTypeDmp DmpType
   | ModifyDmpContact ModifyContactMsg
   | ModifyDmpDmpId ModifyDmpIdMsg
   | ModifyDmpContributor Int ModifyContributorMsg
@@ -258,7 +255,6 @@ defaultDataset =
   , datasetSensitiveData = SensitiveDataTypeUnknown
   , datasetReuseDataset = Nothing
   , datasetTitle = ""
-  , datasetType = Nothing
   , datasetVocabulary = Nothing
   , datasetResponsiblePartyTitle = ""
   , datasetResponsiblePartyEmail = ""
@@ -300,12 +296,10 @@ defaultDmp org =
   { dmpId = Nothing
   , dmpCreated = Nothing
   , dmpDescription = Nothing
-  , dmpLanguage = LanguageTypeFi
   , dmpModified = Nothing
   , dmpNextReviewDmp = Nothing
   , dmpOrgId = org
   , dmpTitle = ""
-  , dmpTypeDmp = DmpTypePriodiversityLife
   , dmpContact =
     { contactMbox = ""
     , contactName = ""
@@ -456,7 +450,6 @@ updateDataset msg val = case msg of
   ModifyDatasetSensitiveData v -> { val | datasetSensitiveData = v }
   ModifyDatasetReuseDataset v -> { val | datasetReuseDataset = v }
   ModifyDatasetTitle v -> { val | datasetTitle = v }
-  ModifyDatasetType v -> { val | datasetType = v }
   ModifyDatasetDatasetId v -> { val | datasetDatasetId = updateDatasetId v val.datasetDatasetId }
 
   ModifyDatasetKeywords idx v -> { val | datasetKeywords = Maybe.map (updateAt idx (\_ -> v)) val.datasetKeywords }
@@ -507,11 +500,9 @@ updateProject msg val = case msg of
 updateDmp : ModifyDmpMsg -> Dmp -> Dmp
 updateDmp msg dmp = case msg of
   ModifyDmpDescription v -> { dmp | dmpDescription = v }
-  ModifyDmpLanguage v -> { dmp | dmpLanguage = v }
   ModifyDmpNextReviewDmp v -> { dmp | dmpNextReviewDmp = v }
   ModifyDmpOrgId v -> { dmp | dmpOrgId = v }
   ModifyDmpTitle v -> { dmp | dmpTitle = v }
-  ModifyDmpTypeDmp v -> { dmp | dmpTypeDmp = v }
   ModifyDmpContact v -> { dmp | dmpContact = updateContact v dmp.dmpContact }
   ModifyDmpDmpId v -> { dmp | dmpDmpId = updateDmpId v dmp.dmpDmpId }
 
@@ -610,18 +601,6 @@ maybeLanguageSelect curr d toMsg =
       , msg = toMsg
       , disabled = d
       }
-
-dmpTypeSelect : DmpType -> Bool -> (DmpType -> msg) -> Html msg
-dmpTypeSelect curr d toMsg =
-  enumSelect
-    { current = curr
-    , options = [ DmpTypePriodiversityLife, DmpTypeStudent, DmpTypeAcademic, DmpTypeNational, DmpTypeInternational, DmpTypeOrganizational ]
-    , optionToString = dmpTypeToStr
-    , optionFromString = dmpTypeFromStr
-    , optionToLabel = showDmpType
-    , msg = toMsg
-    , disabled = d
-    }
 
 documentIdTypeSelect : DocumentIdType -> Bool -> (DocumentIdType -> msg) -> Html msg
 documentIdTypeSelect curr d toMsg =
@@ -1280,13 +1259,6 @@ datasetEditorView idx elem d = div []
       <| boolSelect elem.datasetShareToSyke d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetShareToSyke
     , inputFieldView "Aineistotyyppi*: " Nothing
       <| dataTypeSelect elem.datasetDataType d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetDataType
-    , inputFieldView "Tyyppi: " (Just "Aineiston tyyppi, esim. aineisto, raakadata, paikkatietoaineisto, taulukko, tietokantapoiminta.")
-      <| input
-        [ value <| withDefault "" elem.datasetType
-        , disabled d
-        , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetType << parseMaybe
-        , type_ "text"
-        ] []
     , inputFieldView "Kieli: " Nothing
       <| languageSelect elem.datasetLanguage d <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetLanguage
     , inputFieldView "Avainsanat: " (Just "Voit lisätä avainsanoja, jotka kuvaavat aineistoa.")
@@ -1553,8 +1525,6 @@ dmpEditorView dmp d mode session orgs =
           , cols 60
           ]
           []
-    , inputFieldView "Kieli: " Nothing
-        <| languageSelect dmp.dmpLanguage d <| OnModifyDmp << ModifyDmpLanguage
     , inputFieldView "Seuraava tarkastuspäivä: " (Just "Ilmoita tähän päivämäärä, jolloin aineistonhallintasuunnitelma tarkastetaan seuraavan kerran.")
         <| input
           [ type_ "date"
@@ -1563,8 +1533,6 @@ dmpEditorView dmp d mode session orgs =
           , onInput <| OnModifyDmp << ModifyDmpNextReviewDmp << Maybe.map Day << parseMaybe
           ]
           []
-    , inputFieldView "Tyyppi: " (Just "Ilmoita 'Priodiversity LIFE', mikäli aineistonhallintasuunnitelma liittyy Priodiversity LIFE -hankkeeseen.")
-        <| dmpTypeSelect dmp.dmpTypeDmp d <| OnModifyDmp << ModifyDmpTypeDmp
     , section [] [ dmpIdEditorView dmp.dmpDmpId d ]
     , section [] [ contactEditorView dmp.dmpContact d ]
     , section []

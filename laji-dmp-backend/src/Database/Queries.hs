@@ -206,20 +206,19 @@ parseDataset rows =
       , RowTypes.datasetSensitiveData = Just h
       , RowTypes.datasetReuseDataset = i
       , RowTypes.datasetTitle = Just j
-      , RowTypes.datasetType = k
-      , RowTypes.datasetVocabulary = l
-      , RowTypes.datasetResponsiblePartyTitle = Just m
-      , RowTypes.datasetResponsiblePartyEmail = Just n
-      , RowTypes.datasetLineage = o
-      , RowTypes.datasetShareToSyke = Just p
-      , RowTypes.datasetDataType = Just q
+      , RowTypes.datasetVocabulary = k
+      , RowTypes.datasetResponsiblePartyTitle = Just l
+      , RowTypes.datasetResponsiblePartyEmail = Just m
+      , RowTypes.datasetLineage = n
+      , RowTypes.datasetShareToSyke = Just o
+      , RowTypes.datasetDataType = Just p
       } = do
         datasetId <- parseDatasetId row
         distributions <- parseDistributions rows
         metadatas <- parseMetadatas rows
         security <- parseSecurityAndPrivacyArr rows
         dataLifeCycles <- parseDataLifeCycles rows
-        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) k (fmap fromPGArray l) (NonEmptyText m) (NonEmptyText n) o p q datasetId distributions metadatas security (listToMaybe dataLifeCycles)
+        return $ Models.Dataset a b c d (fmap fromPGArray e) f g h i (NonEmptyText j) (fmap fromPGArray k) (NonEmptyText l) (NonEmptyText m) n o p datasetId distributions metadatas security (listToMaybe dataLifeCycles)
 
     parseRow row =
       Left $ "Could not parse Dataset: " ++ show row
@@ -262,11 +261,9 @@ parseDmp rows =
       , RowTypes.dmpOrgId = orgId
       , RowTypes.dmpCreated = created
       , RowTypes.dmpDescription = desc
-      , RowTypes.dmpLanguage = lang
       , RowTypes.dmpModified = modified
       , RowTypes.dmpNextReviewDmp = nextReview
       , RowTypes.dmpTitle = title
-      , RowTypes.dmpTypeDmp = typ
       } = do
         contacts <- parseContacts rows
         dmpIds <- parseDmpIds rows
@@ -278,12 +275,10 @@ parseDmp rows =
           (Just a)
           (Just $ RowTypes.unTextTimestamp created)
           desc
-          lang
           (Just $ RowTypes.unTextTimestamp modified)
           nextReview
           orgId
           (NonEmptyText title)
-          typ
           (head contacts)
           (head dmpIds)
           contributors
@@ -301,12 +296,10 @@ SELECT
   dmps.created::text AS created,
   dmps.description AS description,
   dmps.id AS id,
-  dmps.language AS language,
   dmps.modified::text AS modified,
   dmps.nextreview_dmp AS nextreview_dmp,
   dmps.org_id AS org_id,
   dmps.title AS title,
-  dmps.type_dmp AS type_dmp,
 
   contacts.id AS contact_id,
   contacts.mbox AS contact_mbox,
@@ -344,7 +337,6 @@ SELECT
   datasets.sensitive_data AS datasets_sensitive_data,
   datasets.reuse_dataset AS datasets_reuse_dataset,
   datasets.title AS datasets_title,
-  datasets.type AS datasets_type,
   datasets.vocabulary AS datasets_vocabulary,
   datasets.responsible_party_title AS datasets_responsible_party_title,
   datasets.responsible_party_email AS datasets_responsible_party_email,
@@ -421,12 +413,10 @@ SELECT
   dmps.created::text AS created,
   dmps.description AS description,
   dmps.id AS id,
-  dmps.language AS language,
   dmps.modified::text AS modified,
   dmps.nextreview_dmp AS nextreview_dmp,
   dmps.org_id AS org_id,
   dmps.title AS title,
-  dmps.type_dmp AS type_dmp,
 
   contacts.id AS contact_id,
   contacts.mbox AS contact_mbox,
@@ -464,7 +454,6 @@ SELECT
   datasets.sensitive_data AS datasets_sensitive_data,
   datasets.reuse_dataset AS datasets_reuse_dataset,
   datasets.title AS datasets_title,
-  datasets.type AS datasets_type,
   datasets.vocabulary AS datasets_vocabulary,
   datasets.responsible_party_title AS datasets_responsible_party_title,
   datasets.responsible_party_email AS datasets_responsible_party_email,
@@ -615,9 +604,9 @@ insertDataset conn self parentId = do
   [Only i] <- query conn [r|
 INSERT INTO datasets (
   dmp_id, data_quality_assurance, data_sharing_issues, description, issued, keywords,
-  language, personal_data, sensitive_data, reuse_dataset, title, type, vocabulary,
+  language, personal_data, sensitive_data, reuse_dataset, title, vocabulary,
   responsible_party_title, responsible_party_email, lineage, share_to_syke, data_type
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
   |]
     ( parentId
     , Models.datasetDataQualityAssurance self
@@ -630,7 +619,6 @@ INSERT INTO datasets (
     , Models.datasetSensitiveData self
     , Models.datasetReuseDataset self
     , Models.datasetTitle self
-    , Models.datasetType self
     , PGArray <$> Models.datasetVocabulary self
     , Models.datasetResponsiblePartyTitle self
     , Models.datasetResponsiblePartyEmail self
@@ -752,17 +740,15 @@ insertDataManagementPlan conn self = do
   now <- getCurrentTime
   [Only i] <- query conn [r|
 INSERT INTO dmps
-(created, description, language, modified, nextreview_dmp, org_id, title, type_dmp)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
+(created, description, modified, nextreview_dmp, org_id, title)
+VALUES (?, ?, ?, ?, ?, ?) RETURNING id;
   |]
     ( Data.Maybe.fromMaybe now (Models.dmpCreated self)
     , Models.dmpDescription self
-    , Models.dmpLanguage self
     , now
     , Models.dmpNextReviewDmp self
     , Models.dmpOrgId self
     , Models.dmpTitle self
-    , Models.dmpTypeDmp self
     )
   forM_ (Models.dmpContributors self) (\a -> insertContributor conn a i)
   forM_ (Models.dmpDatasets self) (\a -> insertDataset conn a i)
@@ -825,22 +811,18 @@ updateDataManagementPlan conn i self = do
 UPDATE dmps SET
   created = ?,
   description = ?,
-  language = ?,
   modified = ?,
   nextreview_dmp = ?,
   org_id = ?,
-  title = ?,
-  type_dmp = ?
+  title = ?
 WHERE id = ?;
   |]
     ( Models.dmpCreated self
     , Models.dmpDescription self
-    , Models.dmpLanguage self
     , Models.dmpModified self
     , Models.dmpNextReviewDmp self
     , Models.dmpOrgId self
     , Models.dmpTitle self
-    , Models.dmpTypeDmp self
     , i
     )
   _ <- deleteContacts conn i

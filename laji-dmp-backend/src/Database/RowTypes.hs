@@ -26,12 +26,10 @@ data DmpJoinRow = DmpJoinRow
   { dmpCreated :: TextTimestamp,
     dmpDescription :: Maybe Text,
     dmpId :: Int,
-    dmpLanguage :: Models.LanguageType,
     dmpModified :: TextTimestamp,
     dmpNextReviewDmp :: Maybe Day,
     dmpOrgId :: Text,
     dmpTitle :: Text,
-    dmpTypeDmp :: Models.DmpType,
 
     contactId :: Maybe Int,
     contactMbox :: Maybe Text,
@@ -69,7 +67,6 @@ data DmpJoinRow = DmpJoinRow
     datasetSensitiveData :: Maybe Models.SensitiveDataType,
     datasetReuseDataset :: Maybe Bool,
     datasetTitle :: Maybe Text,
-    datasetType :: Maybe Text,
     datasetVocabulary :: Maybe (PGArray Text),
     datasetResponsiblePartyTitle :: Maybe Text,
     datasetResponsiblePartyEmail :: Maybe Text,
@@ -125,21 +122,19 @@ data DmpJoinRow = DmpJoinRow
 
 instance FromRow DmpJoinRow where
   fromRow = DmpJoinRow
-    <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+    <$> field <*> field <*> field <*> field <*> field <*> field <*> field
     <*> field <*> field <*> field <*> field
     <*> field <*> field <*> field
     <*> field <*> field <*> field <*> field <*> field
     <*> field <*> field <*> field
     <*> field <*> field <*> field <*> field <*> field
-    <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
-    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
     <*> field <*> field <*> field
     <*> field <*> field <*> field <*> field <*> field <*> field <*> field
     <*> field <*> field <*> field
-    <*> field <*> field <*> field <*> field
-    <*> field <*> field <*> field
+    <*> field <*> field <*> field <*> field <*> field
     <*> field <*> field <*> field
     <*> field <*> field <*> field
     <*> field <*> field <*> field <*> field <*> field
-    <*> field <*> field <*> field <*> field <*> field
+    <*> field <*> field <*> field
     <*> field <*> field <*> field <*> field

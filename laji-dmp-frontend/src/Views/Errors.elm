@@ -18,12 +18,10 @@ localizeDmpConstructor str =
     "dmpId" -> "ID"
     "dmpCreated" -> "Luotu"
     "dmpDescription" -> "Kuvaus"
-    "dmpLanguage" -> "Kieli"
     "dmpModified" -> "Muokattu"
     "dmpNextReviewDmp" -> "Seuraava tarkistus"
     "dmpOrgId" -> "Organisaation tunnus"
     "dmpTitle" -> "Otsikko"
-    "dmpTypeDmp" -> "Dmp:n tyyppi"
     "dmpContact" -> "Kontakti"
     "dmpDmpId" -> "Dmp:n tunniste"
     "dmpContributors" -> "Osallistujat"
@@ -74,7 +72,6 @@ localizeDmpConstructor str =
     "datasetSensitiveData" -> "Sensitiivinen data"
     "datasetReuseDataset" -> "Aineiston uudelleenkäyttö"
     "datasetTitle" -> "Otsikko"
-    "datasetType" -> "Tyyppi"
     "datasetVocabulary" -> "Sanastot"
     "datasetDatasetId" -> "Aineiston tunniste"
     "datasetDistributions" -> "Julkaisut"
@@ -158,4 +155,3 @@ errorResponseView err = div [] <| case err of
   DmpApi.NetworkError -> [ text "Verkkovirhe" ]
   DmpApi.BadStatus res -> badStatusView res
   DmpApi.BadBody str -> [ text <| "Virhe: " ++ str ]
-
