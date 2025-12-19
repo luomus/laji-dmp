@@ -11,9 +11,54 @@ import Dict
 import Organization exposing (Organization)
 import Dict exposing (Dict)
 import Organization
+import Iso8601
+import Time exposing (Month(..), Posix)
+import String
 
 showUtcTime : UTCTime -> String
-showUtcTime (UTCTime str) = str
+showUtcTime (UTCTime str) =
+  case Iso8601.toTime str of
+    Ok posix ->
+      let
+        zone = Time.utc
+
+        pad2 : Int -> String
+        pad2 n =
+          if n < 10 then
+            "0" ++ String.fromInt n
+          else
+            String.fromInt n
+
+        monthToInt : Month -> Int
+        monthToInt month =
+          case month of
+            Jan -> 1
+            Feb -> 2
+            Mar -> 3
+            Apr -> 4
+            May -> 5
+            Jun -> 6
+            Jul -> 7
+            Aug -> 8
+            Sep -> 9
+            Oct -> 10
+            Nov -> 11
+            Dec -> 12
+      in
+      String.join " "
+        [ String.join "-"
+            [ String.fromInt (Time.toYear zone posix)
+            , pad2 (monthToInt (Time.toMonth zone posix))
+            , pad2 (Time.toDay zone posix)
+            ]
+        , String.join ":"
+            [ pad2 (Time.toHour zone posix)
+            , pad2 (Time.toMinute zone posix)
+            ]
+        ]
+
+    Err _ ->
+      str
 
 showDay : Day -> String
 showDay (Day str) = str
