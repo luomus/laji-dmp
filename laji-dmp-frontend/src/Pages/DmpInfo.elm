@@ -178,7 +178,7 @@ metadataView idx m =
     , fieldsTable <|
         maybeFieldRows "Metadatan osoite: " m.metadataLocation
           ++ [ fieldRow "Kieli: " <| showLanguage m.metadataLanguage ]
-          ++ (maybeFieldRows "Ovatko metatiedot avoimesti saatavilla?: " <| Maybe.map boolToString m.metadataOpen)
+          ++ (maybeFieldRows "Ovatko metatiedot avoimesti saatavilla?: " <| Maybe.map showBool m.metadataOpen)
           ++ (maybeFieldRows "Metadatan standardit: " <| Maybe.map (Array.toList >> String.join ",") m.metadataStandards)
           ++ metadataIdRows m.metadataMetadataId
     ]
@@ -213,13 +213,13 @@ datasetView idx d =
              , fieldRow "Vastaavan tahon sähköposti: " <| d.datasetResponsiblePartyEmail
              ]
           ++ (maybeFieldRows "Aineiston historiatiedot: " d.datasetLineage)
-          ++ [ fieldRow "Tiedot saa viedä Luontotieto.fi -palveluun: " <| boolToString d.datasetShareToSyke
+          ++ [ fieldRow "Tiedot saa viedä Luontotieto.fi -palveluun: " <| showBool d.datasetShareToSyke
              , fieldRow "Aineistotyyppi: " <| showDataType d.datasetDataType
              , fieldRow "Kieli: " <| showLanguage d.datasetLanguage
              ]
           ++ (maybeFieldRows "Avainsanat: " <| Maybe.map (Array.toList >> String.join ",") d.datasetKeywords)
           ++ (maybeFieldRows "Aineiston tuotantoajankohta: " <| Maybe.map showDay d.datasetIssued)
-          ++ (maybeFieldRows "Onko aineisto tuotettu jo ennen projektia?: " <| Maybe.map boolToString d.datasetReuseDataset)
+          ++ (maybeFieldRows "Onko aineisto tuotettu jo ennen projektia?: " <| Maybe.map showBool d.datasetReuseDataset)
           ++ [ fieldRow "Sisältääkö aineisto henkilötietoja?: " <| showPersonalDataType d.datasetPersonalData
              , fieldRow "Sisältääkö aineisto sensitiivistä dataa?: " <| showSensitiveDataType d.datasetSensitiveData
              ]
