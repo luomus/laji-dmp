@@ -1,12 +1,17 @@
-.info-field {
-  margin: 16px 0px;
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 18px 0;
+}
+.info-field td {
+  padding: 6px 12px;
 }
 .info-field .field-label {
-  display: inline;
   color: var(--neutral-7);
+  white-space: nowrap;
+  width: 35%;
 }
 .info-field .field-value {
-  display: inline;
   color: var(--neutral-8);
   font-size: 18px;
 }
