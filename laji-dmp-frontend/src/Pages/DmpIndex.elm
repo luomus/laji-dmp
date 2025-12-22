@@ -27,18 +27,31 @@ import Dict exposing (Dict)
 import Organization exposing (Organization)
 import Utils exposing (showOrgName)
 import Organization exposing (OrgLookup)
+import Set exposing (Set)
+import Html exposing (label)
+import Html exposing (input)
+import Html.Attributes exposing (value)
+import Html.Attributes exposing (disabled)
+import Html.Events exposing (onInput)
+import Html.Attributes exposing (type_)
 
 type DmpListState = Loading | Error String | DmpList (Array.Array Dmp)
 
 type alias Model =
   { dmpList: DmpListState
   , session: LoginSession
+  , orgFilter: String
   }
 
-type Msg = GotDmpListResponse (Result Http.Error (Array.Array Dmp))
+type Msg
+  = GotDmpListResponse (Result Http.Error (Array.Array Dmp))
+  | OnModifyOrgFilter String
 
 init : Config -> LoginSession -> ( Model, Cmd Msg )
-init cfg session = ({ dmpList = Loading, session = session }, getDmpList cfg GotDmpListResponse)
+init cfg session =
+  ( { dmpList = Loading, session = session, orgFilter = "" }
+    , getDmpList cfg GotDmpListResponse
+  )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -48,6 +61,10 @@ update msg model =
         Ok dmpList -> ({ model | dmpList = DmpList dmpList }, Cmd.none)
         Err e ->
           ({ model | dmpList = Error "Failed to load DMP list response" }, Cmd.none )
+    OnModifyOrgFilter str ->
+      ( { model | orgFilter = str }
+      , Cmd.none
+      )
 
 dmpElementView : Dmp -> OrgLookup -> Html msg
 dmpElementView elem orgs =
@@ -59,19 +76,40 @@ dmpElementView elem orgs =
       ]
     Nothing -> li [] [text "Virhe: DMP:n tunniste puuttuu"]
 
-dmpTableView : Array.Array Dmp -> OrgLookup -> Html Msg
-dmpTableView dmpList orgs = div [] (Array.toList <| Array.map (\a -> dmpElementView a orgs) dmpList)
+dmpTableView : Array.Array Dmp -> String -> OrgLookup -> Html Msg
+dmpTableView dmpList filterStr orgs
+  = div []
+    <| Array.toList
+    <| Array.map (\a -> dmpElementView a orgs)
+    <| Array.filter
+      ( \dmp 
+        -> String.contains (String.toLower filterStr)
+        <| String.toLower
+        <| showOrgName dmp orgs
+      ) dmpList
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
   { title = "DMP-luettelo"
   , body = div [class "dmp-index"]
-    [ div [] <| case model.dmpList of
+    [ label []
+      [ text "Suodata organisaation nimellä: "
+      , input 
+        [ value model.orgFilter
+        , disabled <| case model.dmpList of
+            DmpList _ -> False
+            _ -> True
+        , onInput <| OnModifyOrgFilter
+        , type_ "text"
+        ]
+        []
+      ]
+    , div [] <| case model.dmpList of
       Error err -> [ text <| "Virhe: " ++ err ]
       Loading -> [ text "Ladataan DMP-luetteloa..." ]
       DmpList dmpList -> 
         [
-          dmpTableView dmpList orgs
+          dmpTableView dmpList model.orgFilter orgs
         ]
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->
