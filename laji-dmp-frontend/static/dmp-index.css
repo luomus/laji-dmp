@@ -2,9 +2,16 @@
   margin-bottom: 32px;
 }
 
+.dmp-index.dmp-element {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
 .dmp-index-dmp-box {
   font-size: 16px;
   display: block;
+  flex-grow: 1;
   text-decoration: none;
   color: var(--neutral-8);
   background-color: var(--neutral-1);
@@ -20,7 +27,7 @@
   color: inherit;
 }
 
-
 .dmp-index-dmp-box:hover {
   background-color: var(--primary-1);
 }
+
