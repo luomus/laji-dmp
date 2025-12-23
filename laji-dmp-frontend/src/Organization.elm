@@ -52,7 +52,7 @@ getOrganizations cfg msg =
   Http.request
     { method = "GET"
     , headers = [Http.header "API-Version" "1", Http.header "accept" "application/json"]
-    , url = cfg.lajiApiBase ++ "/organizations?selectedFields=id,organizationLevel1,organizationLevel2,organizationLevel3,organizationLevel4&page=1&pageSize=2000"
+    , url = cfg.lajiApiBase ++ "/organizations?selectedFields=id,organizationLevel1,organizationLevel2,organizationLevel3,organizationLevel4&page=1&pageSize=3000"
     , body = Http.emptyBody
     , expect = Http.expectJson msg pagedOrganizationsDecoder
     , timeout = Nothing
