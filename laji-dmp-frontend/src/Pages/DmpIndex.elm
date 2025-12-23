@@ -37,12 +37,7 @@ import Html.Attributes exposing (type_)
 import User exposing (LoginSession(..))
 import Html exposing (h4)
 
-type alias DmpListPartition = 
-  { hasAccess: List Dmp
-  , noAccess: List Dmp
-  }
-
-type DmpListState = Loading | Error String | DmpList DmpListPartition
+type DmpListState = Loading | Error String | DmpList (Array.Array Dmp)
 
 type alias Model =
   { dmpList: DmpListState
@@ -60,25 +55,28 @@ init cfg session =
     , getDmpList cfg GotDmpListResponse
   )
 
-partitionDmps : Array.Array Dmp -> LoginSession -> DmpListPartition
-partitionDmps dmps session =
+hasEditAccess : Dmp -> LoginSession -> Bool
+hasEditAccess dmp session = case session of
+  LoggedIn token person ->
+    Array.length (Array.filter (\org -> org == dmp.dmpOrgId) person.organisation) > 0
+  _ -> False
+
+dmpsWithAccess : Array.Array Dmp -> LoginSession -> List Dmp
+dmpsWithAccess dmps session = Array.toList <| Array.filter (\dmp -> hasEditAccess dmp session) dmps
+
+dmpsWithoutAccess : Array.Array Dmp -> LoginSession -> List Dmp
+dmpsWithoutAccess dmps session =
   let
-    hasAccess : Dmp -> Bool
-    hasAccess dmp = case session of
-      LoggedIn token person ->
-        Array.length (Array.filter (\org -> org == dmp.dmpOrgId) person.organisation) > 0
-      _ -> False
-    dmpsWithAccess = Array.filter hasAccess dmps
-    dmpsWithoutAccess = Array.filter (\dmp -> not <| hasAccess dmp) dmps
-    dmpsWithoutAccessSorted = List.sortBy .dmpOrgId (Array.toList dmpsWithoutAccess)
-  in { hasAccess = Array.toList dmpsWithAccess, noAccess = dmpsWithoutAccessSorted }
+    filtered = Array.filter (\dmp -> not <| hasEditAccess dmp session) dmps
+    filteredAndSorted = List.sortBy .dmpOrgId (Array.toList filtered)
+  in filteredAndSorted
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     GotDmpListResponse res ->
       case res of
-        Ok dmpList -> ({ model | dmpList = DmpList (partitionDmps dmpList model.session) }, Cmd.none)
+        Ok dmpList -> ({ model | dmpList = DmpList dmpList }, Cmd.none)
         Err e ->
           ({ model | dmpList = Error "Failed to load DMP list response" }, Cmd.none )
     OnModifyOrgFilter str ->
@@ -133,9 +131,9 @@ view model orgs =
       Loading -> [ text "Ladataan DMP-luetteloa..." ]
       DmpList dmpList -> 
         [ h4 [] [ text "Oman organisaation DMP:t" ]
-        , dmpTableView dmpList.hasAccess True model.orgFilter orgs
+        , dmpTableView (dmpsWithAccess dmpList model.session) True model.orgFilter orgs
         , h4 [] [ text "Muiden organisaatioiden DMP:t" ]
-        , dmpTableView dmpList.noAccess False model.orgFilter orgs
+        , dmpTableView (dmpsWithoutAccess dmpList model.session) False model.orgFilter orgs
         ]
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->
