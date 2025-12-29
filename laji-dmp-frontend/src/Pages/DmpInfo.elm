@@ -254,23 +254,33 @@ ethicalIssuesView c =
 
 dmpView : Dmp -> OrgLookup -> Html Msg
 dmpView dmp orgs =
-  div []
-    [ fieldsTable <|
-        [ fieldRow "Otsikko: " dmp.dmpTitle
-        ]
-          ++ (maybeFieldRows "Kuvaus: " <| dmp.dmpDescription)
-          ++ [ fieldRow "Organisaatio: " <| showOrgName dmp orgs
-             ]
-          ++ (maybeFieldRows "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated)
-          ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
-          ++ (maybeFieldRows "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp)
-          ++ dmpIdRows dmp.dmpDmpId
-    , contactView dmp.dmpContact
-    , section [] [ contributorsView dmp.dmpContributors ]
-    , section [] [ projectsView dmp.dmpProjects ]
-    , section [] [ datasetsView dmp.dmpDatasets ]
-    , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
-    ]
+  let
+    tunUrl id = "http://tun.fi/DMP." ++ String.fromInt id
+  in
+    div []
+      [ fieldsTable <|
+          [ fieldRow "Otsikko: " dmp.dmpTitle
+          ]
+            ++ (maybeFieldRows "Kuvaus: " <| dmp.dmpDescription)
+            ++ [ fieldRow "Organisaatio: " <| showOrgName dmp orgs
+               ]
+            ++ (maybeFieldRows "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated)
+            ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
+            ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
+            ++ (case dmp.dmpId of 
+              Just id -> [ tr [ class "info-field" ]
+                [ td [ class "field-label" ] [ text "Id: " ]
+                , td [ class "field-value" ] [ a [ href <| tunUrl id ] [ text <| tunUrl id ] ]
+                ] ]
+              Nothing -> []
+            ) ++ (maybeFieldRows "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp)
+            ++ dmpIdRows dmp.dmpDmpId
+      , contactView dmp.dmpContact
+      , section [] [ contributorsView dmp.dmpContributors ]
+      , section [] [ projectsView dmp.dmpProjects ]
+      , section [] [ datasetsView dmp.dmpDatasets ]
+      , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
+      ]
 
 view : Config -> Model -> OrgLookup -> { title : String, body : Html Msg }
 view cfg model orgs =
