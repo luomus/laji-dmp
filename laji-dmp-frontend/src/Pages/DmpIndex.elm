@@ -61,13 +61,30 @@ hasEditAccess dmp session = case session of
     Array.length (Array.filter (\org -> org == dmp.dmpOrgId) person.organisation) > 0
   _ -> False
 
-dmpsWithAccess : Array.Array Dmp -> LoginSession -> List Dmp
-dmpsWithAccess dmps session = Array.toList <| Array.filter (\dmp -> hasEditAccess dmp session) dmps
+dmpsWithAccess : Array.Array Dmp -> LoginSession -> String -> OrgLookup -> List Dmp
+dmpsWithAccess dmps session filterStr orgs = 
+  Array.toList
+  <| Array.filter (
+    \dmp ->
+      (hasEditAccess dmp session)
+      && ( String.contains (String.toLower filterStr)
+        <| String.toLower
+        <| showOrgName dmp orgs
+      )
+  ) dmps
 
-dmpsWithoutAccess : Array.Array Dmp -> LoginSession -> List Dmp
-dmpsWithoutAccess dmps session =
+
+dmpsWithoutAccess : Array.Array Dmp -> LoginSession -> String -> OrgLookup -> List Dmp
+dmpsWithoutAccess dmps session filterStr orgs =
   let
-    filtered = Array.filter (\dmp -> not <| hasEditAccess dmp session) dmps
+    filtered = Array.filter
+      ( \dmp ->
+        (not (hasEditAccess dmp session))
+        && ( String.contains (String.toLower filterStr)
+          <| String.toLower
+          <| showOrgName dmp orgs
+        )
+      ) dmps
     filteredAndSorted = List.sortBy .dmpOrgId (Array.toList filtered)
   in filteredAndSorted
 
@@ -99,16 +116,31 @@ dmpElementView elem hasAccess orgs =
       ]
     Nothing -> li [] [text "Virhe: DMP:n tunniste puuttuu"]
 
-dmpTableView : List Dmp -> Bool -> String -> OrgLookup -> Html Msg
-dmpTableView dmpList hasAccess filterStr orgs
+dmpTableView : List Dmp -> Bool -> OrgLookup -> Html Msg
+dmpTableView dmpList hasAccess orgs
   = div []
     <| List.map (\a -> dmpElementView a hasAccess orgs)
-    <| List.filter
-      ( \dmp 
-        -> String.contains (String.toLower filterStr)
-        <| String.toLower
-        <| showOrgName dmp orgs
-      ) dmpList
+    dmpList
+
+dmpListView : (Array.Array Dmp) -> Model -> OrgLookup -> List (Html Msg)
+dmpListView dmpList model orgs = 
+  let
+    withAccess = dmpsWithAccess dmpList model.session model.orgFilter orgs
+    withoutAccess = dmpsWithoutAccess dmpList model.session model.orgFilter orgs
+  in
+    ( if not (List.isEmpty withAccess)
+      then 
+        [  h4 [] [ text "Oman organisaation DMP:t" ]
+        , dmpTableView withAccess True orgs
+        ]
+      else []
+    ) ++ ( if not (List.isEmpty withoutAccess)
+      then 
+        [ h4 [] [ text "Muiden organisaatioiden DMP:t" ]
+        , dmpTableView withoutAccess False orgs
+        ]
+      else []
+    )
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
@@ -129,12 +161,7 @@ view model orgs =
     , div [] <| case model.dmpList of
       Error err -> [ text <| "Virhe: " ++ err ]
       Loading -> [ text "Ladataan DMP-luetteloa..." ]
-      DmpList dmpList -> 
-        [ h4 [] [ text "Oman organisaation DMP:t" ]
-        , dmpTableView (dmpsWithAccess dmpList model.session) True model.orgFilter orgs
-        , h4 [] [ text "Muiden organisaatioiden DMP:t" ]
-        , dmpTableView (dmpsWithoutAccess dmpList model.session) False model.orgFilter orgs
-        ]
+      DmpList dmpList -> dmpListView dmpList model orgs
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->
         if Array.isEmpty personResponse.organisation
