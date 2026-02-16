@@ -16,6 +16,7 @@ import Pages.DmpNew
 import Http
 import User exposing (LoginSession(..))
 import Views.Navigation
+import Views.Footer
 import Html.Attributes
 import Json.Decode.Pipeline
 import Config exposing (Config)
@@ -215,6 +216,7 @@ view model =
         [ Html.div [Html.Attributes.class "main"]
           [ Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
           , Html.map (\msg -> toMsg msg) subView.body
+          , Views.Footer.footerView
           ]
         ]
       }

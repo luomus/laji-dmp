@@ -1,6 +1,7 @@
 @import 'normalize.css';
 @import './vars.css';
 @import './navigation.css';
+@import './footer.css';
 @import './dmp-index.css';
 @import './dmp-edit.css';
 @import './dmp-editor.css';
