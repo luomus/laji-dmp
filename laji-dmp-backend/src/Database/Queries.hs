@@ -12,7 +12,7 @@ module Database.Queries where
 import qualified Database.RowTypes as RowTypes
 import qualified Database.Models as Models
 import Text.RawString.QQ (r)
-import Database.PostgreSQL.Simple (Connection, query_, Only (Only), query, execute)
+import Database.PostgreSQL.Simple (Connection, query_, Only (Only), query, execute, withTransaction)
 import Data.List (groupBy, sortOn)
 import Control.Monad (void, forM_)
 import Data.Time (getCurrentTime)
@@ -256,7 +256,7 @@ parseDmp :: [RowTypes.DmpJoinRow] -> Either String Models.Dmp
 parseDmp rows =
   let
     parseRow :: RowTypes.DmpJoinRow -> Either String Models.Dmp
-    parseRow row@RowTypes.DmpJoinRow
+    parseRow RowTypes.DmpJoinRow
       { RowTypes.dmpId = a
       , RowTypes.dmpOrgId = orgId
       , RowTypes.dmpCreated = created
@@ -267,6 +267,12 @@ parseDmp rows =
       } = do
         contacts <- parseContacts rows
         dmpIds <- parseDmpIds rows
+        contact <- case listToMaybe contacts of
+          Just value -> Right value
+          Nothing -> Left $ "Could not parse Dmp: missing contact for dmp id " ++ show a
+        dmpId <- case listToMaybe dmpIds of
+          Just value -> Right value
+          Nothing -> Left $ "Could not parse Dmp: missing dmp_id for dmp id " ++ show a
         contributors <- parseContributors rows
         datasets <- parseDatasets rows
         ethicalIssues <- parseEthicalIssues rows
@@ -279,13 +285,15 @@ parseDmp rows =
           nextReview
           orgId
           (NonEmptyText title)
-          (head contacts)
-          (head dmpIds)
+          contact
+          dmpId
           contributors
           datasets
           ethicalIssues
           projects
-  in parseRow $ head rows
+  in case listToMaybe rows of
+    Just row -> parseRow row
+    Nothing -> Left "Could not parse Dmp: empty row set"
 
 parseDmps :: [RowTypes.DmpJoinRow] -> Either String [Models.Dmp]
 parseDmps arr = mapM parseDmp (groupByDmp arr)
@@ -736,7 +744,7 @@ INSERT INTO security_and_privacy (dataset_id, description, title) VALUES (?, ?, 
   return i
 
 insertDataManagementPlan :: Connection -> Models.Dmp -> IO Int
-insertDataManagementPlan conn self = do
+insertDataManagementPlan conn self = withTransaction conn $ do
   now <- getCurrentTime
   [Only i] <- query conn [r|
 INSERT INTO dmps
@@ -806,7 +814,7 @@ DELETE FROM projects WHERE dmp_id = ?;
   |] [parentId]
 
 updateDataManagementPlan :: Connection -> Int -> Models.Dmp -> IO ()
-updateDataManagementPlan conn i self = do
+updateDataManagementPlan conn i self = withTransaction conn $ do
   void $ execute conn [r|
 UPDATE dmps SET
   created = ?,
@@ -839,7 +847,7 @@ WHERE id = ?;
   forM_ (Models.dmpProjects self) (\a -> insertProject conn a i)
 
 deleteDataManagementPlan :: Connection -> Int -> IO ()
-deleteDataManagementPlan conn i =
+deleteDataManagementPlan conn i = withTransaction conn $
   void $ execute conn [r|
 DELETE FROM dmps WHERE id = ?;
   |] [i]
