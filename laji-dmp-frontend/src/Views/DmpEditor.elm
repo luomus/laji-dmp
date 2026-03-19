@@ -48,6 +48,7 @@ import Views.Errors exposing (errorResponseView)
 import Organization exposing (OrgLookup)
 import Html.Attributes exposing (rows)
 import Html.Attributes exposing (cols)
+import Html.Attributes exposing (attribute)
 
 type ModelStatus = Editing | Submitting | SubmitError ErrorResponse | NotLoggedInError
 
@@ -800,6 +801,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
         <| RemoveDistributionLicense licenseIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista lisenssi " ++ String.fromInt (licenseIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -840,6 +842,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         <| RemoveDatasetDistribution distributionIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista aineiston jakelu " ++ String.fromInt (distributionIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -935,6 +938,7 @@ standardEditorView datasetIdx metadataIdx standardIdx standard d = div [ class "
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx << ModifyDatasetMetadata metadataIdx <| RemoveMetadataStandard standardIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista metadatastandardi " ++ String.fromInt standardIdx)
       ]
       [ text "x" ]
     ]
@@ -950,6 +954,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         <| RemoveDatasetMetadata metadataIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista metadata-osio " ++ String.fromInt (metadataIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -1000,6 +1005,7 @@ securityEditorView datasetIdx securityIdx security d = div []
         <| RemoveDatasetSecurity securityIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista tietoturva-osio " ++ String.fromInt (securityIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -1090,6 +1096,7 @@ contributorEditorView idx elem d = div []
         [ onClick <| OnModifyDmp <| RemoveDmpContributor idx
         , disabled d
         , class "btn btn-danger btn-remove"
+        , attribute "aria-label" ("Poista osallistuja " ++ String.fromInt (idx + 1))
         ]
         [ text "x" ]
       ]
@@ -1129,6 +1136,7 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetDataLifeCycle
         , disabled d
         , class "btn btn-danger btn-remove"
+        , attribute "aria-label" "Poista datan elinkaari -osio"
         ]
         [ text "x" ]
       ]
@@ -1180,6 +1188,7 @@ keywordEditorView datasetIdx keywordIdx keyword d = div [ class "form-field keyw
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetKeyword keywordIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista avainsana " ++ String.fromInt keywordIdx)
       ]
       [ text "x" ]
     ]
@@ -1199,6 +1208,7 @@ vocabularyEditorView datasetIdx vocabularyIdx vocabulary d = div [ class "form-f
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetVocabulary vocabularyIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista sanasto " ++ String.fromInt vocabularyIdx)
       ]
       [ text "x" ]
     ]
@@ -1212,6 +1222,7 @@ datasetEditorView idx elem d = div []
         [ onClick <| OnModifyDmp <| RemoveDmpDataset idx
         , disabled d
         , class "btn btn-danger btn-remove"
+        , attribute "aria-label" ("Poista aineisto " ++ String.fromInt (idx + 1))
         ]
         [ text "x" ]
       ]
@@ -1373,6 +1384,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
       [ onClick <| OnModifyDmp <| RemoveDmpEthicalIssue idx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista eettiset haasteet -osio " ++ String.fromInt (idx + 1))
       ]
       [ text "x" ]
     ]
@@ -1414,6 +1426,7 @@ projectEditorView idx project d = div []
       [ onClick <| OnModifyDmp <| RemoveDmpProject idx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista projekti " ++ String.fromInt (idx + 1))
       ]
       [ text "x" ]
     ]
