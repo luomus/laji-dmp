@@ -816,6 +816,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
           << ModifyDistributionLicense licenseIdx
           << ModifyLicenseRef
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Lisenssin käyttöönottopäivä*: " Nothing
       <| input
@@ -828,6 +829,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
           << ModifyDistributionLicense licenseIdx
           << ModifyLicenseStartDate
           << Day
+        , attribute "aria-required" "true"
         ] []
     ]
   ]
@@ -853,6 +855,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Jakelun osoite: " (Just "Verkkosivun osoite, jossa aineisto on julkaistu.")
       <| input
@@ -1019,6 +1022,7 @@ securityEditorView datasetIdx securityIdx security d = div []
           << ModifyDatasetSecurity securityIdx
           << ModifySecurityTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Tietoturvakäytännön kuvaus*: " (Just "Kuvaile nimettyä tietoturvakäytäntöä, jolla sensitiivistä dataa suojataan. Esimerkkivastaus: Nimet, osoitteet ja puhelinnumerot korvataan aineistoon pseudonyymeillä. Tallennuspäivät korvataan päivämääräväleillä.")
       <| textarea
@@ -1031,6 +1035,7 @@ securityEditorView datasetIdx securityIdx security d = div []
         , class "d-block"
         , rows 6
         , cols 60
+        , attribute "aria-required" "true"
         ] []
     ]
   ]
@@ -1057,6 +1062,7 @@ contactEditorView c d = div []
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactName
       , type_ "text"
+      , attribute "aria-required" "true"
       ] []
   , inputFieldView "Sähköpostiosoite*: " (Just "Ilmoita kontaktihenkilön tai organisaation sähköpostiosoite.")
     <| input
@@ -1064,6 +1070,7 @@ contactEditorView c d = div []
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
       , type_ "text"
+      , attribute "aria-required" "true"
       ] []
   , inputFieldView "Organisaatio: " Nothing
     <| input
@@ -1107,6 +1114,7 @@ contributorEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorName
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Sähköpostiosoite: " (Just "Ilmoita aineistonhallintasuunnitelmaan osallistuvan henkilön sähköpostiosoite.")
       <| input
@@ -1156,6 +1164,7 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         , class "d-block"
         , rows 6
         , cols 60
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Datan poistamispäivä: " (Just "Jos aineistolle on määritelty poistamispäivä, ilmoita se tähän.")
       <| input
@@ -1170,6 +1179,7 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleUpdateFrequency
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     ]
   ]
@@ -1233,6 +1243,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Kuvaus: " (Just "Kuvaile aineistoa lyhyesti, esimerkiksi perustuuko se joihinkin olemassa oleviin lähdeaineistoihin, tai uuteen aineistoon.")
       <| textarea
@@ -1249,6 +1260,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetResponsiblePartyTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Vastaavan tahon sähköposti*: " Nothing
       <| input
@@ -1256,6 +1268,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetResponsiblePartyEmail
         , type_ "email"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Aineiston historiatiedot: " (Just "Kuvaile aineiston synty, mahdolliset aiemmat versiot ja merkittävät muutokset.")
       <| textarea
@@ -1439,6 +1452,7 @@ projectEditorView idx project d = div []
           << ModifyDmpProject idx
           << ModifyProjectTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     ,  inputFieldView "Kuvaus*: " (Just "Projektin kuvaus.")
       <| textarea
@@ -1450,6 +1464,7 @@ projectEditorView idx project d = div []
         , class "d-block"
         , rows 6
         , cols 60
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Projektin alkamispäivä*: " Nothing
       <| input
@@ -1460,6 +1475,7 @@ projectEditorView idx project d = div []
           << ModifyDmpProject idx
           << ModifyProjectStartDate
           << Day
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Projektin loppumispäivä: " Nothing
       <| input
@@ -1515,6 +1531,7 @@ dmpEditorView dmp d mode session orgs =
                   Nothing -> ""
                 , disabled d
                 , onInput (\str -> OnModifyDmp (ModifyDmpOrgId str))
+                , attribute "aria-required" "true"
                 ]
                 (Array.toList <| Array.map orgToOption person.organisation)
               ]
@@ -1526,6 +1543,7 @@ dmpEditorView dmp d mode session orgs =
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ]
         []
     , inputFieldView "Kuvaus: " Nothing

@@ -213,7 +213,7 @@ view model =
   let
     viewPage toMsg subView =
       { title = subView.title, body =
-        [ Html.div [Html.Attributes.class "main"]
+        [ Html.node "main" [Html.Attributes.class "main"]
           [ Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
           , Html.map (\msg -> toMsg msg) subView.body
           , Views.Footer.footerView

@@ -8,6 +8,7 @@ import Html exposing (ul)
 import Html exposing (li)
 import Html exposing (nav)
 import Html.Attributes exposing (class)
+import Html.Attributes exposing (attribute)
 import Html exposing (h1)
 import User exposing (LoginSession)
 import User exposing (LoginSession(..))
@@ -78,7 +79,7 @@ navigation cfg loginSession maybeCurrentRoute deleteMsg =
           Nothing -> []
         Nothing -> []
   in
-    nav [ class "main-nav" ]
+    nav [ class "main-nav", attribute "aria-label" "Päänavigaatio" ]
       [ h1 [class "nav-title"] [text "Luonto-DMP"]
       , div [class "navbar"]
         [ ul []
