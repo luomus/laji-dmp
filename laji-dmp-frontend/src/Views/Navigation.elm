@@ -41,7 +41,7 @@ breadcrumbs currentRoute =
   let
     link url desc = a [href url, class "breadcrumbs-element"] [text desc]
     current desc = span [class "breadcrumbs-current"] [text desc]
-    sep = span [class "breadcrumbs-separator"] [text ">"]
+    sep = span [class "breadcrumbs-separator", attribute "aria-hidden" "true"] [text ">"]
   in
     div [class "breadcrumbs"] <| case currentRoute of
       DmpRoute dmpRoute -> case dmpRoute of

@@ -1069,7 +1069,7 @@ contactEditorView c d = div []
       [ value c.contactMbox
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
-      , type_ "text"
+      , type_ "email"
       , attribute "aria-required" "true"
       ] []
   , inputFieldView "Organisaatio: " Nothing
@@ -1121,7 +1121,7 @@ contributorEditorView idx elem d = div []
         [ value <| withDefault "" elem.contributorMbox
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
-        , type_ "text"
+        , type_ "email"
         ] []
     , inputFieldView "Organisaatio: " Nothing
       <| input
