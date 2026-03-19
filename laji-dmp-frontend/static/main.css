@@ -16,6 +16,30 @@ body {
   font-family: Verdana, sans-serif;
 }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+  padding: 12px 24px;
+  background-color: var(--neutral-1);
+  color: var(--neutral-9);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
 * {
   box-sizing: border-box;
 }
