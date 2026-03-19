@@ -220,7 +220,7 @@ view : Model -> Browser.Document Msg
 view model =
   let
     viewPage toMsg subView =
-      { title = subView.title, body =
+      { title = subView.title ++ " \u{2013} Luonto-DMP", body =
         [ Html.node "main" [Html.Attributes.class "main"]
           [ Html.a [ Html.Attributes.class "skip-link", Html.Attributes.href "#main-content" ] [ text "Siirry pääsisältöön" ]
           , Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
@@ -232,7 +232,7 @@ view model =
   in
     case model.routeModel of
       NoModel -> { title = "", body = [] }
-      ErrorModel e -> viewPage GotFrontMsg <| { title = "Error", body = text <| "Error: " ++ e }
+      ErrorModel e -> viewPage GotFrontMsg <| { title = "Virhe", body = text <| "Virhe: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
       DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel model.organizations
       DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel model.organizations
