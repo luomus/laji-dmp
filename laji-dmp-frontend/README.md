@@ -7,7 +7,7 @@ npm start
 
 To test login (the app has not been registered to laji-auth yet):
 ```
-http://localhost:8000/login?access_token=<your-apitest-token>&next=/dmp
+http://localhost:8000/login?token=<your-apitest-token>&next=/dmp
 ```
 
 Known issues:
