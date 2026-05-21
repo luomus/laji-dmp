@@ -1,11 +1,13 @@
 port module Main exposing (main)
 
 import Browser
+import Browser.Dom
 import Browser.Navigation as Nav
 import Html exposing (text)
 import Url
 import Json.Encode
 import Json.Decode
+import Task
 
 import Routes exposing (..)
 import Pages.Front
@@ -61,6 +63,7 @@ type Msg
   | GotOrganizations (Result Http.Error (PagedResponse Organization))
   | OnDeleteToken String
   | DeletedToken (Result Http.Error String)
+  | NoOp
 
 type alias Flags =
   { maybeLogin : Maybe String
@@ -164,7 +167,11 @@ update msg model =
       (LinkClicked urlRequest, _) ->
         case urlRequest of
           Browser.Internal url ->
-            ( model, Nav.pushUrl model.key (Url.toString url) )
+            case url.fragment of
+              Just fragment ->
+                ( model, Task.attempt (\_ -> NoOp) (Browser.Dom.focus fragment) )
+              Nothing ->
+                ( model, Nav.pushUrl model.key (Url.toString url) )
           Browser.External href ->
             ( model, Nav.load href )
       (UrlChanged url, _) -> changeRouteTo (fromUrl url) model
@@ -202,6 +209,7 @@ update msg model =
           Ok pagedResponse -> ({ model | organizations = updateOrganizationsDict pagedResponse model.organizations }, Cmd.none)
           Err e ->
             ({ model | routeModel = ErrorModel <| String.append "Unable to get organization names: " <| httpErrorToString e }, Cmd.none)
+      (NoOp, _) -> (model, Cmd.none)
       (_, _) -> (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
@@ -212,10 +220,11 @@ view : Model -> Browser.Document Msg
 view model =
   let
     viewPage toMsg subView =
-      { title = subView.title, body =
-        [ Html.div [Html.Attributes.class "main"]
-          [ Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
-          , Html.map (\msg -> toMsg msg) subView.body
+      { title = subView.title ++ " \u{2013} Luonto-DMP", body =
+        [ Html.node "main" [Html.Attributes.class "main"]
+          [ Html.a [ Html.Attributes.class "skip-link", Html.Attributes.href "#main-content" ] [ text "Siirry pääsisältöön" ]
+          , Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
+          , Html.div [ Html.Attributes.id "main-content", Html.Attributes.tabindex -1 ] [ Html.map (\msg -> toMsg msg) subView.body ]
           , Views.Footer.footerView
           ]
         ]
@@ -223,7 +232,7 @@ view model =
   in
     case model.routeModel of
       NoModel -> { title = "", body = [] }
-      ErrorModel e -> viewPage GotFrontMsg <| { title = "Error", body = text <| "Error: " ++ e }
+      ErrorModel e -> viewPage GotFrontMsg <| { title = "Virhe", body = text <| "Virhe: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
       DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel model.organizations
       DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel model.organizations
