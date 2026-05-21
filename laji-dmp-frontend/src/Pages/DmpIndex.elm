@@ -62,7 +62,7 @@ hasEditAccess dmp session = case session of
   _ -> False
 
 dmpsWithAccess : Array.Array Dmp -> LoginSession -> String -> OrgLookup -> List Dmp
-dmpsWithAccess dmps session filterStr orgs = 
+dmpsWithAccess dmps session filterStr orgs =
   Array.toList
   <| Array.filter (
     \dmp ->
@@ -123,19 +123,19 @@ dmpTableView dmpList hasAccess orgs
     dmpList
 
 dmpListView : (Array.Array Dmp) -> Model -> OrgLookup -> List (Html Msg)
-dmpListView dmpList model orgs = 
+dmpListView dmpList model orgs =
   let
     withAccess = dmpsWithAccess dmpList model.session model.orgFilter orgs
     withoutAccess = dmpsWithoutAccess dmpList model.session model.orgFilter orgs
   in
     ( if not (List.isEmpty withAccess)
-      then 
+      then
         [  h4 [] [ text "Oman organisaation DMP:t" ]
         , dmpTableView withAccess True orgs
         ]
       else []
     ) ++ ( if not (List.isEmpty withoutAccess)
-      then 
+      then
         [ h4 [] [ text "Muiden organisaatioiden DMP:t" ]
         , dmpTableView withoutAccess False orgs
         ]
@@ -144,11 +144,11 @@ dmpListView dmpList model orgs =
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
-  { title = "DMP-luettelo"
+  { title = "DMP-luettelo - Luonto DMP"
   , body = div [class "dmp-index"]
     [ label []
       [ text "Suodata organisaation nimellä: "
-      , input 
+      , input
         [ value model.orgFilter
         , disabled <| case model.dmpList of
             DmpList _ -> False

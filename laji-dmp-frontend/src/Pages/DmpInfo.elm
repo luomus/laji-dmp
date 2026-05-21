@@ -267,7 +267,7 @@ dmpView dmp orgs =
             ++ (maybeFieldRows "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated)
             ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
             ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
-            ++ (case dmp.dmpId of 
+            ++ (case dmp.dmpId of
               Just id -> [ tr [ class "info-field" ]
                 [ td [ class "field-label" ] [ text "Id: " ]
                 , td [ class "field-value" ] [ a [ href <| tunUrl id ] [ text <| tunUrl id ] ]
@@ -284,7 +284,7 @@ dmpView dmp orgs =
 
 view : Config -> Model -> OrgLookup -> { title : String, body : Html Msg }
 view cfg model orgs =
-  { title = "DMP:n tiedot"
+  { title = "DMP:n tiedot - Luonto DMP"
   , body =
     div [ class "dmp-info" ] <| case model.dmp of
       HasDmp dmp ->

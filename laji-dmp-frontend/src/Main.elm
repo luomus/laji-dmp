@@ -11,6 +11,7 @@ import Task
 
 import Routes exposing (..)
 import Pages.Front
+import Pages.Accessibility
 import Pages.DmpIndex
 import Pages.DmpInfo
 import Pages.DmpEdit
@@ -46,6 +47,7 @@ type RouteModel
   = NoModel
   | ErrorModel String
   | FrontModel Pages.Front.Model
+  | AccessibilityModel Pages.Accessibility.Model
   | DmpIndexModel Pages.DmpIndex.Model
   | DmpInfoModel Pages.DmpInfo.Model
   | DmpEditModel Pages.DmpEdit.Model
@@ -55,6 +57,7 @@ type Msg
   = LinkClicked Browser.UrlRequest
   | UrlChanged Url.Url
   | GotFrontMsg Pages.Front.Msg
+  | GotAccessibilityMsg Pages.Accessibility.Msg
   | GotDmpIndexMsg Pages.DmpIndex.Msg
   | GotDmpInfoMsg Pages.DmpInfo.Msg
   | GotDmpEditMsg Pages.DmpEdit.Msg
@@ -73,9 +76,9 @@ type alias Flags =
   }
 
 decodeFlags : Json.Decode.Value -> Result Json.Decode.Error Flags
-decodeFlags flags = 
+decodeFlags flags =
   let
-    decoder = 
+    decoder =
       Json.Decode.succeed Flags
       |> Json.Decode.Pipeline.optional "login" (Json.Decode.nullable Json.Decode.string) Nothing
       |> Json.Decode.Pipeline.required "dmpApiBase" Json.Decode.string
@@ -128,6 +131,7 @@ changeRouteTo maybeRoute model =
     case maybeRoute of
       Nothing -> ( model, Cmd.none )
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
+      Just AccessibilityRoute -> mapPageInit AccessibilityModel GotAccessibilityMsg Pages.Accessibility.init
       Just (DmpRoute dmpRoute) -> case dmpRoute of
         DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg <| Pages.DmpIndex.init model.config model.loginSession
         DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key model.loginSession
@@ -138,7 +142,7 @@ changeRouteTo maybeRoute model =
         case (maybeToken, maybeNext) of
           (Just token, next) ->
             ( { model | loginSession = LoadingPerson token }
-            , Cmd.batch 
+            , Cmd.batch
               [ Nav.pushUrl model.key <| case next of
                 Just n -> if String.length n > 0 then n else "/"
                 Nothing -> "/"
@@ -177,6 +181,8 @@ update msg model =
       (UrlChanged url, _) -> changeRouteTo (fromUrl url) model
       (GotFrontMsg subMsg, FrontModel mod) ->
         mapPageUpdate FrontModel GotFrontMsg (Pages.Front.update subMsg mod)
+      (GotAccessibilityMsg subMsg, AccessibilityModel mod) ->
+        mapPageUpdate AccessibilityModel GotAccessibilityMsg (Pages.Accessibility.update subMsg mod)
       (GotDmpIndexMsg subMsg, DmpIndexModel mod) ->
         mapPageUpdate DmpIndexModel GotDmpIndexMsg (Pages.DmpIndex.update subMsg mod)
       (GotDmpInfoMsg subMsg, DmpInfoModel mod) ->
@@ -234,6 +240,7 @@ view model =
       NoModel -> { title = "", body = [] }
       ErrorModel e -> viewPage GotFrontMsg <| { title = "Virhe", body = text <| "Virhe: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
+      AccessibilityModel subModel -> viewPage GotAccessibilityMsg <| Pages.Accessibility.view subModel
       DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel model.organizations
       DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel model.organizations
       DmpEditModel subModel -> viewPage GotDmpEditMsg <| Pages.DmpEdit.view subModel model.organizations
@@ -249,4 +256,3 @@ main =
     , onUrlChange = UrlChanged
     , onUrlRequest = LinkClicked
     }
-

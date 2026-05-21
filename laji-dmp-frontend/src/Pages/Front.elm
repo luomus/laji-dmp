@@ -20,7 +20,7 @@ update msg model =
 
 view : Model -> { title : String, body : Html Msg }
 view model =
-  { title = "Etusivu"
+  { title = "Etusivu - Luonto DMP"
   , body =
       Html.div []
         [ Html.h1 [] [ text "Vastuuvapauslauseke" ]

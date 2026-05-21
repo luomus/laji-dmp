@@ -17,7 +17,7 @@ footerView = div []
     [ hr [] []
     , div [ class "footer-links" ]
         [ a [ href "https://info.laji.fi/etusivu/lajitietokeskus/tietosuojaseloste/", target "_blank" ] [ text "Tietosuoja ↗︎" ]
-        -- , a [] [ text "Saavutettavuusseloste" ]
+        , a [ href "accessibility" ] [ text "Saavutettavuusseloste" ]
         ]
     , div [ class "footer-logos" ]
         [ img
@@ -34,4 +34,3 @@ footerView = div []
             , height 100] []
         ]
     ]
-
