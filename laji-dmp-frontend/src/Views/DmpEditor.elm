@@ -48,6 +48,7 @@ import Views.Errors exposing (errorResponseView)
 import Organization exposing (OrgLookup)
 import Html.Attributes exposing (rows)
 import Html.Attributes exposing (cols)
+import Html.Attributes exposing (attribute)
 
 type ModelStatus = Editing | Submitting | SubmitError ErrorResponse | NotLoggedInError
 
@@ -800,6 +801,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
         <| RemoveDistributionLicense licenseIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista lisenssi " ++ String.fromInt (licenseIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -814,6 +816,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
           << ModifyDistributionLicense licenseIdx
           << ModifyLicenseRef
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Lisenssin käyttöönottopäivä*: " Nothing
       <| input
@@ -826,6 +829,7 @@ licenseEditorView datasetIdx distributionIdx licenseIdx license d = div []
           << ModifyDistributionLicense licenseIdx
           << ModifyLicenseStartDate
           << Day
+        , attribute "aria-required" "true"
         ] []
     ]
   ]
@@ -840,6 +844,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         <| RemoveDatasetDistribution distributionIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista aineiston jakelu " ++ String.fromInt (distributionIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -850,6 +855,7 @@ distributionEditorView datasetIdx distributionIdx distribution d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDistribution distributionIdx << ModifyDistributionTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Jakelun osoite: " (Just "Verkkosivun osoite, jossa aineisto on julkaistu.")
       <| input
@@ -935,6 +941,7 @@ standardEditorView datasetIdx metadataIdx standardIdx standard d = div [ class "
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx << ModifyDatasetMetadata metadataIdx <| RemoveMetadataStandard standardIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista metadatastandardi " ++ String.fromInt standardIdx)
       ]
       [ text "x" ]
     ]
@@ -950,6 +957,7 @@ metadataEditorView datasetIdx metadataIdx metadata d = div []
         <| RemoveDatasetMetadata metadataIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista metadata-osio " ++ String.fromInt (metadataIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -1000,6 +1008,7 @@ securityEditorView datasetIdx securityIdx security d = div []
         <| RemoveDatasetSecurity securityIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista tietoturva-osio " ++ String.fromInt (securityIdx + 1))
       ]
       [ text "x" ]
     ]
@@ -1013,6 +1022,7 @@ securityEditorView datasetIdx securityIdx security d = div []
           << ModifyDatasetSecurity securityIdx
           << ModifySecurityTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Tietoturvakäytännön kuvaus*: " (Just "Kuvaile nimettyä tietoturvakäytäntöä, jolla sensitiivistä dataa suojataan. Esimerkkivastaus: Nimet, osoitteet ja puhelinnumerot korvataan aineistoon pseudonyymeillä. Tallennuspäivät korvataan päivämääräväleillä.")
       <| textarea
@@ -1025,6 +1035,7 @@ securityEditorView datasetIdx securityIdx security d = div []
         , class "d-block"
         , rows 6
         , cols 60
+        , attribute "aria-required" "true"
         ] []
     ]
   ]
@@ -1051,13 +1062,15 @@ contactEditorView c d = div []
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactName
       , type_ "text"
+      , attribute "aria-required" "true"
       ] []
   , inputFieldView "Sähköpostiosoite*: " (Just "Ilmoita kontaktihenkilön tai organisaation sähköpostiosoite.")
     <| input
       [ value c.contactMbox
       , disabled d
       , onInput <| OnModifyDmp << ModifyDmpContact << ModifyContactMbox
-      , type_ "text"
+      , type_ "email"
+      , attribute "aria-required" "true"
       ] []
   , inputFieldView "Organisaatio: " Nothing
     <| input
@@ -1090,6 +1103,7 @@ contributorEditorView idx elem d = div []
         [ onClick <| OnModifyDmp <| RemoveDmpContributor idx
         , disabled d
         , class "btn btn-danger btn-remove"
+        , attribute "aria-label" ("Poista osallistuja " ++ String.fromInt (idx + 1))
         ]
         [ text "x" ]
       ]
@@ -1100,13 +1114,14 @@ contributorEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorName
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Sähköpostiosoite: " (Just "Ilmoita aineistonhallintasuunnitelmaan osallistuvan henkilön sähköpostiosoite.")
       <| input
         [ value <| withDefault "" elem.contributorMbox
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpContributor idx << ModifyContributorMbox << parseMaybe
-        , type_ "text"
+        , type_ "email"
         ] []
     , inputFieldView "Organisaatio: " Nothing
       <| input
@@ -1129,6 +1144,7 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetDataLifeCycle
         , disabled d
         , class "btn btn-danger btn-remove"
+        , attribute "aria-label" "Poista datan elinkaari -osio"
         ]
         [ text "x" ]
       ]
@@ -1148,6 +1164,7 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         , class "d-block"
         , rows 6
         , cols 60
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Datan poistamispäivä: " (Just "Jos aineistolle on määritelty poistamispäivä, ilmoita se tähän.")
       <| input
@@ -1162,6 +1179,7 @@ dataLifeCycleEditorView datasetIdx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset datasetIdx << ModifyDatasetDataLifeCycle << ModifyDataLifeCycleUpdateFrequency
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     ]
   ]
@@ -1180,6 +1198,7 @@ keywordEditorView datasetIdx keywordIdx keyword d = div [ class "form-field keyw
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetKeyword keywordIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista avainsana " ++ String.fromInt keywordIdx)
       ]
       [ text "x" ]
     ]
@@ -1199,6 +1218,7 @@ vocabularyEditorView datasetIdx vocabularyIdx vocabulary d = div [ class "form-f
       [ onClick <| OnModifyDmp <| ModifyDmpDataset datasetIdx <| RemoveDatasetVocabulary vocabularyIdx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista sanasto " ++ String.fromInt vocabularyIdx)
       ]
       [ text "x" ]
     ]
@@ -1212,6 +1232,7 @@ datasetEditorView idx elem d = div []
         [ onClick <| OnModifyDmp <| RemoveDmpDataset idx
         , disabled d
         , class "btn btn-danger btn-remove"
+        , attribute "aria-label" ("Poista aineisto " ++ String.fromInt (idx + 1))
         ]
         [ text "x" ]
       ]
@@ -1222,6 +1243,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Kuvaus: " (Just "Kuvaile aineistoa lyhyesti, esimerkiksi perustuuko se joihinkin olemassa oleviin lähdeaineistoihin, tai uuteen aineistoon.")
       <| textarea
@@ -1238,6 +1260,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetResponsiblePartyTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Vastaavan tahon sähköposti*: " Nothing
       <| input
@@ -1245,6 +1268,7 @@ datasetEditorView idx elem d = div []
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpDataset idx << ModifyDatasetResponsiblePartyEmail
         , type_ "email"
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Aineiston historiatiedot: " (Just "Kuvaile aineiston synty, mahdolliset aiemmat versiot ja merkittävät muutokset.")
       <| textarea
@@ -1373,6 +1397,7 @@ ethicalIssueEditorView idx ethicalIssue d = div []
       [ onClick <| OnModifyDmp <| RemoveDmpEthicalIssue idx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista eettiset haasteet -osio " ++ String.fromInt (idx + 1))
       ]
       [ text "x" ]
     ]
@@ -1414,6 +1439,7 @@ projectEditorView idx project d = div []
       [ onClick <| OnModifyDmp <| RemoveDmpProject idx
       , disabled d
       , class "btn btn-danger btn-remove"
+      , attribute "aria-label" ("Poista projekti " ++ String.fromInt (idx + 1))
       ]
       [ text "x" ]
     ]
@@ -1426,6 +1452,7 @@ projectEditorView idx project d = div []
           << ModifyDmpProject idx
           << ModifyProjectTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ] []
     ,  inputFieldView "Kuvaus*: " (Just "Projektin kuvaus.")
       <| textarea
@@ -1437,6 +1464,7 @@ projectEditorView idx project d = div []
         , class "d-block"
         , rows 6
         , cols 60
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Projektin alkamispäivä*: " Nothing
       <| input
@@ -1447,6 +1475,7 @@ projectEditorView idx project d = div []
           << ModifyDmpProject idx
           << ModifyProjectStartDate
           << Day
+        , attribute "aria-required" "true"
         ] []
     , inputFieldView "Projektin loppumispäivä: " Nothing
       <| input
@@ -1502,6 +1531,7 @@ dmpEditorView dmp d mode session orgs =
                   Nothing -> ""
                 , disabled d
                 , onInput (\str -> OnModifyDmp (ModifyDmpOrgId str))
+                , attribute "aria-required" "true"
                 ]
                 (Array.toList <| Array.map orgToOption person.organisation)
               ]
@@ -1513,6 +1543,7 @@ dmpEditorView dmp d mode session orgs =
         , disabled d
         , onInput <| OnModifyDmp << ModifyDmpTitle
         , type_ "text"
+        , attribute "aria-required" "true"
         ]
         []
     , inputFieldView "Kuvaus: " Nothing
