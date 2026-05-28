@@ -23,9 +23,7 @@ view model =
   { title = "Etusivu"
   , body =
       Html.div []
-        [ Html.h1 [] [ text "Vastuuvapauslauseke" ]
-        , Html.p [] [ text "Hanke on saanut osarahoitusta Euroopan unionin LIFE-ohjelmasta. Aineiston sisältö heijastelee sen tekijöiden näkemyksiä, eikä Euroopan unioni tai CINEA ole vastuussa aineiston sisältämien tietojen käytöstä." ]
-        , Html.h1 [] [ text "Käyttöohjeet" ]
+        [ Html.h1 [] [ text "Käyttöohjeet" ]
         , Html.p [] [ text "Luonto-DMP sovelluksella voit hallita aineistonhallintasuunnitelmia (DMP). Sovelluksella voi tarkastella kaikkia DMP:itä kirjautumatta, mutta DMP:n luominen, muokkaaminen ja poistaminen vaatii kirjautumisen Lajitietokeskus-tilillä. Lisäksi Lajitietokeskus-tili tulee liittää organisaatioon ennen kirjautumista sovellukseen." ]
         , Html.h2 [] [ text "Kirjautuminen" ]
         , Html.p [] [ text "Jos sinulla ei ole Lajitietokeskus-tiliä, klikkaa ensin oikeasta yläkulmasta 'Kirjaudu' painiketta. Voit joko luoda erillisen Laji.fi käyttäjätunnuksen ja salasanan 'Luo tunnus' painikkeesta tai luoda tunnuksen muulla kirjautumistavalla, esim. Haka, Google tai Facebook." ]
@@ -42,6 +40,7 @@ view model =
         , Html.p [] [ text "GET -endpointit eivät vaadi kirjautumista. Voit siis hakea joko kaikki DMP:t GET /dmp -endpointista tai hakea tiettyä DMP:tä sen tunnisteella GET /dmp/{id} -endpointista. Muihin endpointteihin tarvitset Lajitietokeskus-tilisi personTokenin. PersonTokenin avulla voit lähettää DMP:itä POST /dmp -endpointtiin, poistaa oman organisaation DMP:itä DELETE /dmp/{id} -endpointilla ja muokata oman organisaation DMP:itä PUT /dmp/{id} -endpointilla. Tämä tekee rajapinnasta täysin koneluettavan ja -käytettävän." ]
         , Html.h2 [] [ text "Ongelmatilanteet" ]
         , Html.p [] [ text "Ongelmatilanteissa ota yhteyttä ", Html.a [ Html.Attributes.href "mailto:helpdesk@laji.fi" ] [ text "helpdesk@laji.fi" ]]
-        , Html.p [] [ text "2025 Luomus" ]
+        , Html.h1 [] [ text "Vastuuvapauslauseke" ]
+        , Html.p [] [ text "Hanke on saanut osarahoitusta Euroopan unionin LIFE-ohjelmasta. Aineiston sisältö heijastelee sen tekijöiden näkemyksiä, eikä Euroopan unioni tai CINEA ole vastuussa aineiston sisältämien tietojen käytöstä." ]
         ]
   }
