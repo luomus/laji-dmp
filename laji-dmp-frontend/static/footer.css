@@ -1,0 +1,12 @@
+.footer-links {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0px;
+}
+
+.footer-logos {
+  display: flex;
+  gap: 8px;
+  background: white;
+}
+

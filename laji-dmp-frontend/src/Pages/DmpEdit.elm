@@ -64,7 +64,7 @@ update cfg msg model = case (msg, model.state) of
         _ -> ({ model | state = Error "Tried to delete DMP while not logged in" }, Cmd.none)
       _ -> ({ model | state = Error "Tried to delete DMP while not in edit mode" }, Cmd.none)
   (GotDmpDeleteResponse res, EditorModel subModel) -> case res of
-    Ok str -> 
+    Ok str ->
       (model, Nav.pushUrl subModel.key "/dmp")
     Err e ->
       ({ model | state = EditorModel { subModel | status = SubmitError e }}, Cmd.none)
@@ -88,7 +88,7 @@ update cfg msg model = case (msg, model.state) of
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
-  { title = "DMP:n muokkaus"
+  { title = "DMP:n muokkaus - Luonto DMP"
   , body = case model.session of
     LoggedIn token person ->
       Html.div [] <| case model.state of

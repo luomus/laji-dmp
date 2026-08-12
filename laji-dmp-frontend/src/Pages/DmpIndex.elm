@@ -34,6 +34,8 @@ import Html.Attributes exposing (value)
 import Html.Attributes exposing (disabled)
 import Html.Events exposing (onInput)
 import Html.Attributes exposing (type_)
+import User exposing (LoginSession(..))
+import Html exposing (h4)
 
 type DmpListState = Loading | Error String | DmpList (Array.Array Dmp)
 
@@ -53,6 +55,39 @@ init cfg session =
     , getDmpList cfg GotDmpListResponse
   )
 
+hasEditAccess : Dmp -> LoginSession -> Bool
+hasEditAccess dmp session = case session of
+  LoggedIn token person ->
+    Array.length (Array.filter (\org -> org == dmp.dmpOrgId) person.organisation) > 0
+  _ -> False
+
+dmpsWithAccess : Array.Array Dmp -> LoginSession -> String -> OrgLookup -> List Dmp
+dmpsWithAccess dmps session filterStr orgs =
+  Array.toList
+  <| Array.filter (
+    \dmp ->
+      (hasEditAccess dmp session)
+      && ( String.contains (String.toLower filterStr)
+        <| String.toLower
+        <| showOrgName dmp orgs
+      )
+  ) dmps
+
+
+dmpsWithoutAccess : Array.Array Dmp -> LoginSession -> String -> OrgLookup -> List Dmp
+dmpsWithoutAccess dmps session filterStr orgs =
+  let
+    filtered = Array.filter
+      ( \dmp ->
+        (not (hasEditAccess dmp session))
+        && ( String.contains (String.toLower filterStr)
+          <| String.toLower
+          <| showOrgName dmp orgs
+        )
+      ) dmps
+    filteredAndSorted = List.sortBy .dmpOrgId (Array.toList filtered)
+  in filteredAndSorted
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -66,35 +101,54 @@ update msg model =
       , Cmd.none
       )
 
-dmpElementView : Dmp -> OrgLookup -> Html msg
-dmpElementView elem orgs =
+dmpElementView : Dmp -> Bool -> OrgLookup -> Html msg
+dmpElementView elem hasAccess orgs =
   case elem.dmpId of
-    Just id -> a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
-      [ h5 [] [ text <| elem.dmpTitle ]
-      , div [] [ text <| "Organisaatio: " ++ showOrgName elem orgs ]
-      , div [] [ text <| String.fromInt (Array.length elem.dmpDatasets) ++ " aineistoa" ]
+    Just id -> div [ class "dmp-index dmp-element" ]
+      [ a [ href <| "dmp/" ++ String.fromInt id, class "dmp-index-dmp-box" ]
+        [ h5 [] [ text <| elem.dmpTitle ]
+        , div [] [ text <| "Organisaatio: " ++ showOrgName elem orgs ]
+        , div [] [ text <| String.fromInt (Array.length elem.dmpDatasets) ++ " aineistoa" ]
+        ]
+      , if hasAccess
+        then div [] [a [href <| "/dmp/" ++ (String.fromInt id) ++"/edit", class "btn"] [text "Muokkaa"]]
+        else text ""
       ]
     Nothing -> li [] [text "Virhe: DMP:n tunniste puuttuu"]
 
-dmpTableView : Array.Array Dmp -> String -> OrgLookup -> Html Msg
-dmpTableView dmpList filterStr orgs
+dmpTableView : List Dmp -> Bool -> OrgLookup -> Html Msg
+dmpTableView dmpList hasAccess orgs
   = div []
-    <| Array.toList
-    <| Array.map (\a -> dmpElementView a orgs)
-    <| Array.filter
-      ( \dmp 
-        -> String.contains (String.toLower filterStr)
-        <| String.toLower
-        <| showOrgName dmp orgs
-      ) dmpList
+    <| List.map (\a -> dmpElementView a hasAccess orgs)
+    dmpList
+
+dmpListView : (Array.Array Dmp) -> Model -> OrgLookup -> List (Html Msg)
+dmpListView dmpList model orgs =
+  let
+    withAccess = dmpsWithAccess dmpList model.session model.orgFilter orgs
+    withoutAccess = dmpsWithoutAccess dmpList model.session model.orgFilter orgs
+  in
+    ( if not (List.isEmpty withAccess)
+      then
+        [  h4 [] [ text "Oman organisaation DMP:t" ]
+        , dmpTableView withAccess True orgs
+        ]
+      else []
+    ) ++ ( if not (List.isEmpty withoutAccess)
+      then
+        [ h4 [] [ text "Muiden organisaatioiden DMP:t" ]
+        , dmpTableView withoutAccess False orgs
+        ]
+      else []
+    )
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
-  { title = "DMP-luettelo"
+  { title = "DMP-luettelo - Luonto DMP"
   , body = div [class "dmp-index"]
     [ label []
       [ text "Suodata organisaation nimellä: "
-      , input 
+      , input
         [ value model.orgFilter
         , disabled <| case model.dmpList of
             DmpList _ -> False
@@ -107,10 +161,7 @@ view model orgs =
     , div [] <| case model.dmpList of
       Error err -> [ text <| "Virhe: " ++ err ]
       Loading -> [ text "Ladataan DMP-luetteloa..." ]
-      DmpList dmpList -> 
-        [
-          dmpTableView dmpList model.orgFilter orgs
-        ]
+      DmpList dmpList -> dmpListView dmpList model orgs
     , div [] <| case model.session of
       User.LoggedIn personToken personResponse ->
         if Array.isEmpty personResponse.organisation

@@ -1,6 +1,5 @@
 .info-table {
   width: 100%;
-  border-collapse: collapse;
   margin: 12px 0 18px 0;
 }
 .info-field td {
@@ -18,3 +17,10 @@
 .dmp-info .btn {
   margin-bottom: 16px;
 }
+
+.dmp-info.indent {
+  padding-left: 16px;
+  margin-left: 16px;
+  border-left: 1px dashed var(--neutral-5);
+}
+

@@ -6,6 +6,7 @@ import Url.Parser.Query as Query
 
 type Route
   = FrontRoute
+  | AccessibilityRoute
   | DmpRoute DmpSubRoute
   | LoginRoute (Maybe String) (Maybe String)
 
@@ -35,6 +36,7 @@ routeParser : Parser (Route -> a) a
 routeParser =
   oneOf
     [ map FrontRoute top
+    , map AccessibilityRoute (s "accessibility")
     , s "dmp" </> (map DmpRoute dmpRouteParser)
     , map LoginRoute (s "login" <?> Query.string "token" <?> Query.string "next")
     ]

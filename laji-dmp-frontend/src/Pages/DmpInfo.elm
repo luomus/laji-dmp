@@ -85,7 +85,7 @@ contributorIdRows c =
 
 contributorView : Int -> Contributor -> Html Msg
 contributorView idx c =
-  div []
+  div [ class "dmp-info indent" ]
     [ h3 [] [ text <| "Osallistuja " ++ String.fromInt (idx + 1) ]
     , fieldsTable <|
         [ fieldRow "Nimi: " <| c.contributorName
@@ -102,7 +102,7 @@ contributorsView c =
 
 projectView : Int -> Project -> Html Msg
 projectView idx s =
-  div []
+  div [ class "dmp-info indent" ]
     [ h3 [] [ text <| "Projekti " ++ String.fromInt (idx + 1) ]
     , fieldsTable <|
         [ fieldRow "Nimi: " <| s.projectTitle
@@ -118,7 +118,7 @@ projectsView c =
 
 dataLifeCycleView : DataLifeCycle -> Html Msg
 dataLifeCycleView d =
-  div []
+  div [ class "dmp-info indent" ]
     [ h3 [] [ text <| "Datan elinkaari" ]
     , fieldsTable <|
         [ fieldRow "Arkistointi: " <| showBool d.dataLifeCycleArchivingServicesData
@@ -135,7 +135,7 @@ datasetIdRows d =
 
 licenseView : Int -> License -> Html Msg
 licenseView idx l =
-  div []
+  div [ class "dmp-info indent" ]
     [ h5 [] [ text <| "Lisenssi " ++ String.fromInt (idx + 1) ]
     , fieldsTable
         [ fieldRow "Käytettävä lisenssi: " <| l.licenseRef
@@ -149,7 +149,7 @@ licensesView c =
 
 distributionView : Int -> Distribution -> Html Msg
 distributionView idx d =
-  div []
+  div [ class "dmp-info indent" ]
     [ h4 [] [ text <| "Aineiston jakelu " ++ String.fromInt (idx + 1) ]
     , fieldsTable <|
         [ fieldRow "Otsikko: " <| d.distributionTitle
@@ -173,7 +173,7 @@ metadataIdRows m =
 
 metadataView : Int -> Metadata -> Html Msg
 metadataView idx m =
-  div []
+  div [ class "dmp-info indent" ]
     [ h4 [] [ text <| "Metadata " ++ String.fromInt (idx + 1) ]
     , fieldsTable <|
         maybeFieldRows "Metadatan osoite: " m.metadataLocation
@@ -189,7 +189,7 @@ metadatasView c =
 
 securityView : Int -> SecurityAndPrivacy -> Html Msg
 securityView idx s =
-  div []
+  div [ class "dmp-info indent" ]
     [ h4 [] [ text <| "Tietoturva " ++ String.fromInt (idx + 1) ]
     , fieldsTable
         [ fieldRow "Tietoturvakäytännön nimi: " <| s.securityTitle
@@ -203,7 +203,7 @@ securityArrView c =
 
 datasetView : Int -> Dataset -> Html Msg
 datasetView idx d =
-  div []
+  div [ class "dmp-info indent" ]
     [ h3 [] [ text <| "Aineisto " ++ String.fromInt (idx + 1) ]
     , fieldsTable <|
         [ fieldRow "Nimi: " <| d.datasetTitle
@@ -239,7 +239,7 @@ datasetsView c =
 
 ethicalIssueView : Int -> EthicalIssue -> Html Msg
 ethicalIssueView idx s =
-  div []
+  div [ class "dmp-info indent" ]
     [ h3 [] [ text <| "Eettiset haasteet " ++ String.fromInt (idx + 1) ]
     , fieldsTable <|
         [ fieldRow "Liittyykö dataan eettisiä haasteita?: " <| showEthicalIssuesType s.ethicalIssueExist
@@ -254,27 +254,37 @@ ethicalIssuesView c =
 
 dmpView : Dmp -> OrgLookup -> Html Msg
 dmpView dmp orgs =
-  div []
-    [ fieldsTable <|
-        [ fieldRow "Otsikko: " dmp.dmpTitle
-        ]
-          ++ (maybeFieldRows "Kuvaus: " <| dmp.dmpDescription)
-          ++ [ fieldRow "Organisaatio: " <| showOrgName dmp orgs
-             ]
-          ++ (maybeFieldRows "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated)
-          ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
-          ++ (maybeFieldRows "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp)
-          ++ dmpIdRows dmp.dmpDmpId
-    , contactView dmp.dmpContact
-    , section [] [ contributorsView dmp.dmpContributors ]
-    , section [] [ projectsView dmp.dmpProjects ]
-    , section [] [ datasetsView dmp.dmpDatasets ]
-    , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
-    ]
+  let
+    tunUrl id = "http://tun.fi/DMP." ++ String.fromInt id
+  in
+    div []
+      [ fieldsTable <|
+          [ fieldRow "Otsikko: " dmp.dmpTitle
+          ]
+            ++ (maybeFieldRows "Kuvaus: " <| dmp.dmpDescription)
+            ++ [ fieldRow "Organisaatio: " <| showOrgName dmp orgs
+               ]
+            ++ (maybeFieldRows "Luomisaika: " <| Maybe.map showUtcTime dmp.dmpCreated)
+            ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
+            ++ (maybeFieldRows "Muokkausaika: " <| Maybe.map showUtcTime dmp.dmpModified)
+            ++ (case dmp.dmpId of
+              Just id -> [ tr [ class "info-field" ]
+                [ td [ class "field-label" ] [ text "Id: " ]
+                , td [ class "field-value" ] [ a [ href <| tunUrl id ] [ text <| tunUrl id ] ]
+                ] ]
+              Nothing -> []
+            ) ++ (maybeFieldRows "Seuraava tarkastuspäivä: " <| Maybe.map showDay dmp.dmpNextReviewDmp)
+            ++ dmpIdRows dmp.dmpDmpId
+      , contactView dmp.dmpContact
+      , section [] [ contributorsView dmp.dmpContributors ]
+      , section [] [ projectsView dmp.dmpProjects ]
+      , section [] [ datasetsView dmp.dmpDatasets ]
+      , section [] [ ethicalIssuesView dmp.dmpEthicalIssues ]
+      ]
 
 view : Config -> Model -> OrgLookup -> { title : String, body : Html Msg }
 view cfg model orgs =
-  { title = "DMP:n tiedot"
+  { title = "DMP:n tiedot - Luonto DMP"
   , body =
     div [ class "dmp-info" ] <| case model.dmp of
       HasDmp dmp ->

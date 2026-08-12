@@ -20,7 +20,7 @@ update msg model =
 
 view : Model -> { title : String, body : Html Msg }
 view model =
-  { title = "Etusivu"
+  { title = "Etusivu - Luonto DMP"
   , body =
       Html.div []
         [ Html.h1 [] [ text "Käyttöohjeet" ]
@@ -40,6 +40,7 @@ view model =
         , Html.p [] [ text "GET -endpointit eivät vaadi kirjautumista. Voit siis hakea joko kaikki DMP:t GET /dmp -endpointista tai hakea tiettyä DMP:tä sen tunnisteella GET /dmp/{id} -endpointista. Muihin endpointteihin tarvitset Lajitietokeskus-tilisi personTokenin. PersonTokenin avulla voit lähettää DMP:itä POST /dmp -endpointtiin, poistaa oman organisaation DMP:itä DELETE /dmp/{id} -endpointilla ja muokata oman organisaation DMP:itä PUT /dmp/{id} -endpointilla. Tämä tekee rajapinnasta täysin koneluettavan ja -käytettävän." ]
         , Html.h2 [] [ text "Ongelmatilanteet" ]
         , Html.p [] [ text "Ongelmatilanteissa ota yhteyttä ", Html.a [ Html.Attributes.href "mailto:helpdesk@laji.fi" ] [ text "helpdesk@laji.fi" ]]
-        , Html.p [] [ text "2025 Luomus" ]
+        , Html.h1 [] [ text "Vastuuvapauslauseke" ]
+        , Html.p [] [ text "Hanke on saanut osarahoitusta Euroopan unionin LIFE-ohjelmasta. Aineiston sisältö heijastelee sen tekijöiden näkemyksiä, eikä Euroopan unioni tai CINEA ole vastuussa aineiston sisältämien tietojen käytöstä." ]
         ]
   }

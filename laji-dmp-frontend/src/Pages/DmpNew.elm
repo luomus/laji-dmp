@@ -19,6 +19,6 @@ update = Views.DmpEditor.update
 
 view : Model -> OrgLookup -> { title : String, body : Html Msg }
 view model orgs =
-  { title = "Uusi DMP"
+  { title = "Uusi DMP - Luonto DMP"
   , body = Views.DmpEditor.view model orgs
   }

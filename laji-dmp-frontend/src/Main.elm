@@ -1,14 +1,17 @@
 port module Main exposing (main)
 
 import Browser
+import Browser.Dom
 import Browser.Navigation as Nav
 import Html exposing (text)
 import Url
 import Json.Encode
 import Json.Decode
+import Task
 
 import Routes exposing (..)
 import Pages.Front
+import Pages.Accessibility
 import Pages.DmpIndex
 import Pages.DmpInfo
 import Pages.DmpEdit
@@ -16,6 +19,7 @@ import Pages.DmpNew
 import Http
 import User exposing (LoginSession(..))
 import Views.Navigation
+import Views.Footer
 import Html.Attributes
 import Json.Decode.Pipeline
 import Config exposing (Config)
@@ -43,6 +47,7 @@ type RouteModel
   = NoModel
   | ErrorModel String
   | FrontModel Pages.Front.Model
+  | AccessibilityModel Pages.Accessibility.Model
   | DmpIndexModel Pages.DmpIndex.Model
   | DmpInfoModel Pages.DmpInfo.Model
   | DmpEditModel Pages.DmpEdit.Model
@@ -52,6 +57,7 @@ type Msg
   = LinkClicked Browser.UrlRequest
   | UrlChanged Url.Url
   | GotFrontMsg Pages.Front.Msg
+  | GotAccessibilityMsg Pages.Accessibility.Msg
   | GotDmpIndexMsg Pages.DmpIndex.Msg
   | GotDmpInfoMsg Pages.DmpInfo.Msg
   | GotDmpEditMsg Pages.DmpEdit.Msg
@@ -60,6 +66,7 @@ type Msg
   | GotOrganizations (Result Http.Error (PagedResponse Organization))
   | OnDeleteToken String
   | DeletedToken (Result Http.Error String)
+  | NoOp
 
 type alias Flags =
   { maybeLogin : Maybe String
@@ -69,9 +76,9 @@ type alias Flags =
   }
 
 decodeFlags : Json.Decode.Value -> Result Json.Decode.Error Flags
-decodeFlags flags = 
+decodeFlags flags =
   let
-    decoder = 
+    decoder =
       Json.Decode.succeed Flags
       |> Json.Decode.Pipeline.optional "login" (Json.Decode.nullable Json.Decode.string) Nothing
       |> Json.Decode.Pipeline.required "dmpApiBase" Json.Decode.string
@@ -124,6 +131,7 @@ changeRouteTo maybeRoute model =
     case maybeRoute of
       Nothing -> ( model, Cmd.none )
       Just FrontRoute -> mapPageInit FrontModel GotFrontMsg Pages.Front.init
+      Just AccessibilityRoute -> mapPageInit AccessibilityModel GotAccessibilityMsg Pages.Accessibility.init
       Just (DmpRoute dmpRoute) -> case dmpRoute of
         DmpIndexRoute -> mapPageInit DmpIndexModel GotDmpIndexMsg <| Pages.DmpIndex.init model.config model.loginSession
         DmpNewRoute -> mapPageInit DmpNewModel GotDmpNewMsg <| Pages.DmpNew.init model.key model.loginSession
@@ -134,7 +142,7 @@ changeRouteTo maybeRoute model =
         case (maybeToken, maybeNext) of
           (Just token, next) ->
             ( { model | loginSession = LoadingPerson token }
-            , Cmd.batch 
+            , Cmd.batch
               [ Nav.pushUrl model.key <| case next of
                 Just n -> if String.length n > 0 then n else "/"
                 Nothing -> "/"
@@ -163,12 +171,18 @@ update msg model =
       (LinkClicked urlRequest, _) ->
         case urlRequest of
           Browser.Internal url ->
-            ( model, Nav.pushUrl model.key (Url.toString url) )
+            case url.fragment of
+              Just fragment ->
+                ( model, Task.attempt (\_ -> NoOp) (Browser.Dom.focus fragment) )
+              Nothing ->
+                ( model, Nav.pushUrl model.key (Url.toString url) )
           Browser.External href ->
             ( model, Nav.load href )
       (UrlChanged url, _) -> changeRouteTo (fromUrl url) model
       (GotFrontMsg subMsg, FrontModel mod) ->
         mapPageUpdate FrontModel GotFrontMsg (Pages.Front.update subMsg mod)
+      (GotAccessibilityMsg subMsg, AccessibilityModel mod) ->
+        mapPageUpdate AccessibilityModel GotAccessibilityMsg (Pages.Accessibility.update subMsg mod)
       (GotDmpIndexMsg subMsg, DmpIndexModel mod) ->
         mapPageUpdate DmpIndexModel GotDmpIndexMsg (Pages.DmpIndex.update subMsg mod)
       (GotDmpInfoMsg subMsg, DmpInfoModel mod) ->
@@ -201,6 +215,7 @@ update msg model =
           Ok pagedResponse -> ({ model | organizations = updateOrganizationsDict pagedResponse model.organizations }, Cmd.none)
           Err e ->
             ({ model | routeModel = ErrorModel <| String.append "Unable to get organization names: " <| httpErrorToString e }, Cmd.none)
+      (NoOp, _) -> (model, Cmd.none)
       (_, _) -> (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
@@ -211,18 +226,21 @@ view : Model -> Browser.Document Msg
 view model =
   let
     viewPage toMsg subView =
-      { title = subView.title, body =
-        [ Html.div [Html.Attributes.class "main"]
-          [ Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
-          , Html.map (\msg -> toMsg msg) subView.body
+      { title = subView.title ++ " \u{2013} Luonto-DMP", body =
+        [ Html.node "main" [Html.Attributes.class "main"]
+          [ Html.a [ Html.Attributes.class "skip-link", Html.Attributes.href "#main-content" ] [ text "Siirry pääsisältöön" ]
+          , Views.Navigation.navigation model.config model.loginSession model.currentRoute OnDeleteToken
+          , Html.div [ Html.Attributes.id "main-content", Html.Attributes.tabindex -1 ] [ Html.map (\msg -> toMsg msg) subView.body ]
+          , Views.Footer.footerView
           ]
         ]
       }
   in
     case model.routeModel of
       NoModel -> { title = "", body = [] }
-      ErrorModel e -> viewPage GotFrontMsg <| { title = "Error", body = text <| "Error: " ++ e }
+      ErrorModel e -> viewPage GotFrontMsg <| { title = "Virhe", body = text <| "Virhe: " ++ e }
       FrontModel subModel -> viewPage GotFrontMsg <| Pages.Front.view subModel
+      AccessibilityModel subModel -> viewPage GotAccessibilityMsg <| Pages.Accessibility.view subModel
       DmpIndexModel subModel -> viewPage GotDmpIndexMsg <| Pages.DmpIndex.view subModel model.organizations
       DmpInfoModel subModel -> viewPage GotDmpInfoMsg <| Pages.DmpInfo.view model.config subModel model.organizations
       DmpEditModel subModel -> viewPage GotDmpEditMsg <| Pages.DmpEdit.view subModel model.organizations
@@ -238,4 +256,3 @@ main =
     , onUrlChange = UrlChanged
     , onUrlRequest = LinkClicked
     }
-
