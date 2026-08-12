@@ -4,8 +4,11 @@ services:
     container_name: dmp-frontend
     build:
       context: .
+      args:
+        MODE: development
       dockerfile: Dockerfile
     env_file:
       - .env.development
     ports:
       - "8000:80"
+      - "8080:8080"

@@ -10,7 +10,7 @@ RUN npm run build:${MODE}
 
 FROM nginxinc/nginx-unprivileged:1-alpine3.22-slim AS front-end
 
-COPY --chown=nginx:root --chmod=664 ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=nginx:root --chmod=777 ./nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dmp-frontend/dist /usr/share/nginx/html/
 
 CMD ["nginx", "-g", "daemon off;"]
