@@ -61,17 +61,28 @@ personDecoder =
 
 getPerson : Config -> String -> (Result Http.Error PersonResponse -> msg) -> Cmd msg
 getPerson cfg token msg =
-  Http.get
-    { url = cfg.lajiApiBase ++ "/person/" ++ token
+  Http.request
+    { method = "GET"
+    , headers =
+      [ Http.header "API-Version" "1"
+      , Http.header "Person-Token" token
+      ]
+    , url = cfg.lajiApiBase ++ "/person"
+    , body = Http.emptyBody
     , expect = Http.expectJson msg personDecoder
+    , timeout = Nothing
+    , tracker = Nothing
     }
 
 deleteToken : Config -> String -> (Result Http.Error String -> msg) -> Cmd msg
 deleteToken cfg token msg =
   Http.request
     { method = "DELETE"
-    , headers = []
-    , url = cfg.lajiApiBase ++ "/person-token/" ++ token
+    , headers =
+      [ Http.header "API-Version" "1"
+      , Http.header "Person-Token" token
+      ]
+    , url = cfg.lajiApiBase ++ "/authentication-event"
     , body = Http.emptyBody
     , expect = Http.expectString msg
     , timeout = Nothing
